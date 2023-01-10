@@ -24,9 +24,9 @@ class Cell:
                 else:
                     self.value = inp[1:]
             elif inp[0] == "=":
+                pass
                 # todo
-               
-            # evaluate contents to set value 
+                # evaluate contents to set value 
         else: 
             self.contents = None
             self.value = None
