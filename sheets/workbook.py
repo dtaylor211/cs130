@@ -1,8 +1,12 @@
+import re
+
 class Workbook:
     # A workbook containing zero or more named spreadsheets.
     #
     # Any and all operations on a workbook that may affect calculated cell
     # values should cause the workbook's contents to be updated properly.
+
+    DEFAULT_SHEET_NUM = 1
 
     def __init__(self):
         # Initialize a new empty workbook.
@@ -32,7 +36,7 @@ class Workbook:
         # workbook's internal state.
         
         # assume that each Sheet object has a name attribute
-        return [self.sheets[sheet_name] for sheet_name in self.sheet_list]
+        return self.sheet_names
 
     def new_sheet(self, sheet_name: Optional[str] = None) -> Tuple[int, str]:
         # Add a new sheet to the workbook.  If the sheet name is specified, it
@@ -49,31 +53,34 @@ class Workbook:
 
         # check if sheet name is specified
         if sheet_name is not None:
+            # checking empty string
+            if sheet_name == "":
+                raise ValueError("Invalid Sheet name: cannot be empty string")
             # check whitespace
-            if sheet_name != sheet_name.strip():
+            elif sheet_name != sheet_name.strip():
                 raise ValueError("Invalid Sheet name: cannot start/end with whitespace")
             # check valid characters (letters, numbers, spaces, .?!,:;!@#$%^&*()-_)
-            elif not bool(re.search(r"[a-zA-Z0-9 .?!,:;!@#\$%\^&\*\(\)-_]", sheet_name)):
+            elif not re.match(R'^[a-zA-Z0-9 .?!,:;!@#$%^&*\(\)\-\_]+$', sheet_name):
                 raise ValueError("Invalid Sheet name: improper characters used")
 
             # check uniqueness
-            if sheet_name.lower() in self.sheets:
+            if sheet_name.lower() in self.sheet_objects.keys():
                 raise ValueError("Sheet name already exists")
             
         # sheet name not specified -> generate ununused "Sheet" + "#" name
+        # EXPLICITLY TEST THIS
         else:
-            sheet_num = 1
-            while True:
-                sheet_name = "Sheet" + str(sheet_num)
-                if sheet_name.lower() not in self.sheet_names
-                    break
-                sheet_num += 1
+            sheet_name = "Sheet" + str(DEFAULT_SHEET_NUM)
+            while sheet_name not in self.sheet_objects.keys():
+                DEFAULT_SHEET_NUM += 1
+                sheet_name = "Sheet" + str(DEFAULT_SHEET_NUM)
+            DEFAULT_SHEET_NUM += 1
 
         # update list of sheet names and sheet dictionary
-        self.sheet_names.append(sheet_name.lower())
-        self.sheets[sheet_name.lower()] = Sheet(sheet_name) # need Sheet constructer
+        self.sheet_names.append(sheet_name) # preserves case
+        self.sheet_objects[sheet_name.lower()] = Sheet(sheet_name) # need Sheet constructer
 
-        return len(self.sheets) - 1, sheet_name
+        return self.num_sheets() - 1, sheet_name
 
 
     def del_sheet(self, sheet_name: str) -> None:
@@ -84,11 +91,11 @@ class Workbook:
         #
         # If the specified sheet name is not found, a KeyError is raised.
         
-        if sheet_name.lower() not in self.sheet_name:
+        if sheet_name.lower() not in self.sheet_objects.keys():
             raise KeyError("Specified sheet name is not found")
 
-        del self.sheets[sheet_name.lower()]
-        self.sheet_names.remove(sheet_name.lower())
+        del self.sheet_objects[sheet_name.lower()]
+        self.sheet_names.remove(sheet_name)
 
     def get_sheet_extent(self, sheet_name: str) -> Tuple[int, int]:
         # Return a tuple (num-cols, num-rows) indicating the current extent of
@@ -99,11 +106,11 @@ class Workbook:
         #
         # If the specified sheet name is not found, a KeyError is raised.
         
-        if sheet_name.lower() not in self.sheet_names:
+        if sheet_name.lower() not in self.sheet_objects.keys():
             raise KeyError("Specified sheet name is not found")
 
         # get_extent() should be a function of Sheet object (implemented in spreadsheet.py)
-        return self.sheets[sheet_name.lower()].get_extent() 
+        return self.sheet_objects[sheet_name.lower()].get_extent() 
 
     def set_cell_contents(self, sheet_name: str, location: str,
                           contents: Optional[str]) -> None:
@@ -168,7 +175,7 @@ class Workbook:
         # whole number.  For example, this function would not return
         # Decimal('1.000'); rather it would return Decimal('1').
         
-        if sheet_name.lower() not in self.sheet_names:
-            raise KeyError("Specified sheet name not in workbook")
+        if sheet_name.lower() not in self.sheet_objects.keys():
+            raise KeyError("Specified sheet name is not found")
 
         # NOT FINISHED
