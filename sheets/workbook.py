@@ -1,5 +1,7 @@
 import re
 
+from .sheet import Sheet
+
 class Workbook:
     # A workbook containing zero or more named spreadsheets.
     #
@@ -135,7 +137,7 @@ class Workbook:
         # rather, the cell's value will be a CellError object indicating the
         # naure of the issue.
 
-        # too complex to do at this point
+        # CALL CORRESPONDING FUNCTION IN SHEET
         pass
 
     def get_cell_contents(self, sheet_name: str, location: str) -> Optional[str]:
@@ -154,7 +156,11 @@ class Workbook:
         #
         # This method will never return a zero-length string; instead, empty
         # cells are indicated by a value of None.
-        pass
+
+        if sheet_name.lower() not in self.sheet_objects.keys():
+            raise KeyError("Specified sheet name is not found")
+        
+        return self.sheet_objects[sheet_name].get_cell_contents(location)
 
     def get_cell_value(self, sheet_name: str, location: str) -> Any:
         # Return the evaluated value of the specified cell on the specified
@@ -178,4 +184,5 @@ class Workbook:
         if sheet_name.lower() not in self.sheet_objects.keys():
             raise KeyError("Specified sheet name is not found")
 
-        # NOT FINISHED
+        # calls get_cell_value from Sheet
+        return self.sheet_objects[sheet_name].get_cell_value(location)
