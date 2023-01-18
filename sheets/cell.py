@@ -3,6 +3,7 @@ class CellType:
     LITERAL: int = 1
 =======
 import enum
+from decimal import Decimal
 
 class _CellType(enum.Enum):
     '''
@@ -73,10 +74,11 @@ class _Cell:
                 self.value = Formula(inp) #todo
                 pass # evaluate formula here, maybe formula class
 
-            # Otherwise set to LITERAL type
+            # Otherwise set to NUMBER type - works for now, will need to change
+            # if we can have other cell types
             else:
-                self.type = _CellType.NUMBER # want to do a better job figure out expression to match input  Lark?
-                self.value = inp # prob not what I want to do - maybe need string and int literals
+                self.type = _CellType.NUMBER 
+                self.value = Decimal(inp) 
         else: 
             self.contents = None
             self.value = None
@@ -90,7 +92,7 @@ class _Cell:
 
         self.contents = None
         self.value = None
-        self.type: int = CellType.EMPTY
+        self.type: int = _CellType.EMPTY
 
 
 g
