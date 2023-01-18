@@ -4,7 +4,7 @@ class CellType:
 =======
 import enum
 
-class CellType(enum.Enum):
+class _CellType(enum.Enum):
     '''
     This enum specifies the kinds of values that spreadsheet cells can hold.
     '''
@@ -18,7 +18,7 @@ class CellType(enum.Enum):
     # ERROR: int = 5 ?
 
 
-class Cell:
+class _Cell:
     '''
     A cell containing values of CellType and their string contents.
       
@@ -42,7 +42,7 @@ class Cell:
         # new Cell is treated as an empty cell, contents and values are None
         self.contents = None
         self.value = None
-        self.type: int = CellType.EMPTY
+        self.type: int = _CellType.EMPTY
 
     def set_value(self, input_str: str):
         '''
@@ -63,24 +63,24 @@ class Cell:
 
             # Check if there is a leading single quote, set to STRING type
             if inp[0] == "'":
-                self.type = CellType.STRING
+                self.type = _CellType.STRING
                 self.value = inp[1:]
 
             # Check if there is a leading equal sign, set to FORMULA type
             # and evaluate
             elif inp[0] == "=":
-                self.type = CellType.FORMULA
+                self.type = _CellType.FORMULA
                 self.value = Formula(inp) #todo
                 pass # evaluate formula here, maybe formula class
 
             # Otherwise set to LITERAL type
             else:
-                self.type = CellType.NUMBER # want to do a better job figure out expression to match input  Lark?
+                self.type = _CellType.NUMBER # want to do a better job figure out expression to match input  Lark?
                 self.value = inp # prob not what I want to do - maybe need string and int literals
         else: 
             self.contents = None
             self.value = None
-            self.type = CellType.EMPTY
+            self.type = _CellType.EMPTY
 
     def empty(self):
         '''
