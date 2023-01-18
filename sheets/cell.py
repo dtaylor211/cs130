@@ -45,44 +45,42 @@ class _Cell:
         self.value = None
         self.type: int = _CellType.EMPTY
 
-    def set_value(self, input_str: str):
+    def set_contents(self, input_str: Optional[str]):
         '''
-        Set the value of the cell.
+        Set the contents of the cell.
 
         Arguments:
         - input_str: str - specifications to set new cell value
 
         '''
 
+        # if input_str.strip() == "":
+        #     self.contents = None
+        #     self.value = None
+        #     self.type = _CellType.EMPTY
+        #     return
+
         # Remove leading and trailing whitespace
         inp = input_str.strip()
-    
-        # Check if empty string
-        if inp != "":
+        self.contents = inp
 
-            self.contents = inp
+        # Check if there is a leading single quote, set to STRING type
+        if inp[0] == "'":
+            self.type = _CellType.STRING
+            self.value = inp[1:]
 
-            # Check if there is a leading single quote, set to STRING type
-            if inp[0] == "'":
-                self.type = _CellType.STRING
-                self.value = inp[1:]
+        # Check if there is a leading equal sign, set to FORMULA type
+        # and evaluate
+        elif inp[0] == "=":
+            self.type = _CellType.FORMULA
+            self.value = Formula(inp) #todo
+            pass # evaluate formula here, maybe formula class
 
-            # Check if there is a leading equal sign, set to FORMULA type
-            # and evaluate
-            elif inp[0] == "=":
-                self.type = _CellType.FORMULA
-                self.value = Formula(inp) #todo
-                pass # evaluate formula here, maybe formula class
-
-            # Otherwise set to NUMBER type - works for now, will need to change
-            # if we can have other cell types
-            else:
-                self.type = _CellType.NUMBER 
-                self.value = Decimal(inp) 
-        else: 
-            self.contents = None
-            self.value = None
-            self.type = _CellType.EMPTY
+        # Otherwise set to NUMBER type - works for now, will need to change
+        # if we can have other cell types
+        else:
+            self.type = _CellType.NUMBER 
+            self.value = Decimal(inp) 
 
     def empty(self):
         '''
@@ -93,6 +91,3 @@ class _Cell:
         self.contents = None
         self.value = None
         self.type: int = _CellType.EMPTY
-
-
-g
