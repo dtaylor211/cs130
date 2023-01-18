@@ -82,9 +82,10 @@ class Cell:
         Empty the contents of a cell
 
         '''
-        
+
         self.contents = None
         self.value = None
         self.type: int = CellType.EMPTY
 
 
+g
