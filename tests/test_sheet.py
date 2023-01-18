@@ -1,5 +1,6 @@
 import pytest
 from sheets.sheet import Sheet
+from decimal import Decimal
 
 class TestSheet:
     '''
