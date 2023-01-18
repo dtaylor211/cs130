@@ -1,3 +1,5 @@
+import enum
+
 class CellErrorType(enum.Enum):
     '''
     This enum specifies the kinds of errors that spreadsheet cells can hold.
