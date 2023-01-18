@@ -1,4 +1,6 @@
 class CellType:
+    # Types of values contained in a cell
+    
     LITERAL: int = 1
     STRING: int = 2
     FORMULA: int = 3
@@ -6,10 +8,9 @@ class CellType:
 
 
 class Cell:
-    '''
-    This class represents an individual cell in a spreadsheet.
-
-    '''
+    # A cell containing values of CellType and their string contents.
+    #  
+    # This class represents an individual cell in a spreadsheet.
     
     def __init__(self):
         self.contents = None
@@ -34,5 +35,10 @@ class Cell:
             self.contents = None
             self.value = None
             self.type = CellType.EMPTY
+
+    def empty(self):
+        self.contents = None
+        self.value = None
+        self.type: int = CellType.EMPTY
 
 
