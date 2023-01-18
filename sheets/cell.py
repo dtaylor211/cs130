@@ -5,6 +5,8 @@ class CellType:
 import enum
 from decimal import Decimal
 from typing import Optional
+from .formula_evaluator import Evaluator
+from lark import Lark
 
 class _CellType(enum.Enum):
     '''
@@ -45,6 +47,8 @@ class _Cell:
         self.contents = None
         self.value = None
         self.type: int = _CellType.EMPTY
+        self.evaluator = Evaluator()
+        self.parser = Lark.open('formulas.lark', start='formula', rel_to=__file__)
 
     def set_contents(self, input_str: Optional[str]):
         '''
@@ -74,8 +78,9 @@ class _Cell:
         # and evaluate
         elif inp[0] == "=":
             self.type = _CellType.FORMULA
-            self.value = Formula(inp) #todo
-            pass # evaluate formula here, maybe formula class
+            tree = self.parser.parse(inp)
+            eval = self.evaluator.transform(tree)
+            self.value = eval.children[0]
 
         # Otherwise set to NUMBER type - works for now, will need to change
         # if we can have other cell types

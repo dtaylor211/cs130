@@ -1,0 +1,74 @@
+//=============================================================================
+// Caltech CS130 - Winter 2023
+
+%import common.WS
+%ignore WS
+
+//========================================
+// Top-level formulas and expressions
+
+?formula : "=" expression
+
+?expression : add_expr | concat_expr
+
+//========================================
+// Arithmetic expressions
+
+// This generates right-deep trees:  ?add_expr : mul_expr (ADD_OP add_expr)?
+// Instead we would prefer to generate left-deep trees when given a sequence
+// of operators at the same precedence level.
+?add_expr : (add_expr ADD_OP)? mul_expr
+
+?mul_expr : (mul_expr MUL_OP)? unary_op
+
+?unary_op : ADD_OP? base
+
+//========================================
+// String concatenation
+
+?concat_expr : (concat_expr "&")? base
+
+//========================================
+// Base values
+
+?base : cell
+      | ERROR_VALUE             -> error
+      | NUMBER                  -> number
+      | STRING                  -> string
+      | "(" expression ")"      -> parens
+
+cell : (_sheetname "!")? CELLREF
+
+_sheetname : SHEET_NAME | QUOTED_SHEET_NAME
+
+//========================================
+// Lexer terminals
+
+// Specify the operators as separately named lexer rules so that they aren't
+// discarded from the resulting parse tree.
+
+ADD_OP: ("+" | "-")
+MUL_OP: ("*" | "/")
+
+// Error values are also separately named lexer rules so we know what kind of
+// error is referenced.  All are case-insensitive.
+
+ERROR_VALUE: ("#ERROR!"i | "#CIRCREF!"i | "#REF!"i | "#NAME?"i | "#VALUE!"i | "#DIV/0!"i)
+
+// Lexer rules for different kinds of terminals
+
+CELLREF: /[A-Za-z]+[1-9][0-9]*/
+
+// Unquoted sheet names cannot contain spaces, and are otherwise very simple.
+SHEET_NAME: /[A-Za-z_][A-Za-z0-9_]*/
+
+// Quoted sheet names can contain spaces and other interesting characters.  Note
+// that this lexer rule also matches invalid sheet names, but that isn't a big
+// deal here.
+QUOTED_SHEET_NAME: /\'[^']*\'/
+
+// Don't need to support signs on numbers because we have unary +/- operator
+// support in the parser.
+NUMBER: /([0-9]+(\.[0-9]*)?)|(\.[0-9]+)/
+
+STRING: /\"[^"]*\"/
