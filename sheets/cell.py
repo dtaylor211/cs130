@@ -4,6 +4,7 @@ class CellType:
 =======
 import enum
 from decimal import Decimal
+from typing import Optional
 
 class _CellType(enum.Enum):
     '''
