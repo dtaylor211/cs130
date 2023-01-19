@@ -4,17 +4,39 @@ class CellType:
 =======
 import enum
 from decimal import Decimal, DecimalException
-from typing import Optional
+from typing import Optional, Tuple
 from .formula_evaluator import Evaluator
-import lark
-from .cell_error import CellError, CellErrorType, cell_error_dict
+from lark import Lark, Visitor
 
-RESTRICTED_VALUES = [
-    Decimal('Infinity'),
-    Decimal('-Infinity'), 
-    Decimal('NaN'),
-    Decimal('-NaN')
-]
+class _CellType(enum.Enum):
+    '''
+    This enum specifies the kinds of values that spreadsheet cells can hold.
+    '''
+
+    NUMBER: int = 1
+    STRING: int = 2
+    FORMULA: int = 3 # May want to remove
+    EMPTY: int = 4
+
+    # ERROR: int = 5 ?
+
+class CellTreeVisitor(Visitor):
+    '''
+    This visitor gets all children cells from the tree of a cell.
+    '''
+
+    def __init__(self, sheet):
+        self.children = set()
+        self.sheet = sheet
+
+    def cell(self, tree):
+        if len(tree.children) == 2:
+            cell_sheet = str(tree.children[0])
+            cell = str(tree.children[1])
+        else:
+            cell_sheet = self.sheet
+            cell = str(tree.children[0])
+        self.children.add(Tuple[cell_sheet, cell])
 
 class Cell:
     '''
@@ -41,6 +63,8 @@ class Cell:
         # new Cell is treated as an empty cell, contents and values are None
         self.contents = None
         self.value = None
+        self.children = None
+        self.type: int = _CellType.EMPTY
         self.evaluator = evaluator
         self.parser = lark.Lark.open(
             'formulas.lark', start='formula', rel_to=__file__)
@@ -70,13 +94,14 @@ class Cell:
             # and evaluate
             elif inp[0] == "=":
                 tree = self.parser.parse(inp)
-                eval = self.evaluator.transform(tree).children[0]
-
-                if isinstance(eval, CellError):
-                    self.contents = self.get_string_from_error(
-                        eval.get_type().value)
-                    
-                self.value = eval
+                visitor = CellTreeVisitor(str(self.evaluator.working_sheet))
+                visitor.visit(tree)
+                self.children = list(visitor.children)
+                print(tree)
+                print(self.children)
+                eval = self.evaluator.transform(tree)
+                print(eval)
+                self.value = eval.children[0]
 
             # Otherwise set to NUMBER type - works for now, will need to change
             # if we can have other cell types
