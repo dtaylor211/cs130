@@ -33,38 +33,36 @@ class TestSheet:
     def test_get_coords_from_loc(self):
         sheet = Sheet("Sheet1", None)
         with pytest.raises(ValueError):
-            sheet.get_coords_from_loc("A0") # check more cases?
+            sheet.get_coords_from_loc("A0")
+        with pytest.raises(ValueError):
+            sheet.get_coords_from_loc("A-1")
+        with pytest.raises(ValueError):
+            sheet.get_coords_from_loc("A 1")
+        with pytest.raises(ValueError):
+            sheet.get_coords_from_loc(" A1")
+        with pytest.raises(ValueError):
+            sheet.get_coords_from_loc("A1 ")
 
         (col, row) = sheet.get_coords_from_loc("A1")
+        assert (col, row) == (1, 1)
+
+        (col, row) = sheet.get_coords_from_loc("a1")
         assert (col, row) == (1, 1)
 
         (col, row) = sheet.get_coords_from_loc("A5")
         assert (col, row) == (1, 5)
 
+        (col, row) = sheet.get_coords_from_loc("a5")
+        assert (col, row) == (1, 5)
+
         (col, row) = sheet.get_coords_from_loc("AA15")
+        assert (col, row) == (27, 15)
+
+        (col, row) = sheet.get_coords_from_loc("Aa15")
         assert (col, row) == (27, 15)
 
         (col, row) = sheet.get_coords_from_loc("AAC750")
         assert (col, row) == (705, 750)
 
-    # REMOVE THIS FROM THIS TESTING FILE, TRANSFER RELEVANT STUFF TO TEST_WORKBOOK
-
-    # not applicable?
-    # def test_get_cell(self):
-    #     pass
-
-    # def test_get_contents(self):
-    #     sheet = Sheet("Sheet1")
-    #     assert sheet.set_cell_contents("A1") is None
-
-    #     sheet.set_cell_contents("A1", "1")
-    #     contents = sheet.get_cell_contents("A1")
-    #     assert contents == "1"
-
-    # def test_get_value(self):
-    #     sheet = Sheet("Sheet1")
-    #     assert sheet.set_cell_contents("A1") is None
-
-    #     sheet.set_cell_contents("A1", "1")
-    #     value = sheet.get_cell_value("A1")
-    #     assert value == Decimal(1)
+        (col, row) = sheet.get_coords_from_loc("AAc750")
+        assert (col, row) == (705, 750)

@@ -1,5 +1,5 @@
 import re
-from typing import Optional, List, Tuple, Any
+from typing import Optional, List, Tuple, Any, Dict
 from .sheet import Sheet
 from .formula_evaluator import Evaluator
 
@@ -18,7 +18,7 @@ class Workbook:
         self.sheet_names = [] # needs to be all lowercase?
 
         # dictionary that maps lowercase sheet name to Sheet object
-        self.sheet_objects = dict()
+        self.sheet_objects: Dict[str, Sheet] = {}
         self.evaluator = Evaluator(self, '')
 
     def num_sheets(self) -> int:
