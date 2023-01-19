@@ -1,7 +1,7 @@
 import re
 
 from typing import Dict, Tuple, Optional, Any
-from cell import Cell
+from.cell import Cell
 
 class Sheet:
     # A spreadsheet containing zero or more cells.
@@ -9,7 +9,7 @@ class Sheet:
     TODO
     '''
 
-    def __init__(self, sheet_name):
+    def __init__(self, sheet_name, evaluator):
         # Initialize a new spreadsheet.
         
         self.name = sheet_name 
@@ -17,7 +17,8 @@ class Sheet:
         # dictonary that maps (row, col) tuple -> Cell
         # need to make sure inputted location "D14" is converted to (4, 14)
         ## location = D14, coords = (4,14)
-        self.cells = Dict[Tuple[int, int], Cell] = {}
+        self.cells: Dict[Tuple[int, int], Cell] = {}
+        self.evaluator = evaluator
     
     def get_extent(self) -> Tuple[int, int]:
         # Get the extent of spreadsheet (# rows, # cols).
@@ -62,7 +63,8 @@ class Sheet:
     def set_cell_contents(self, location: str, contents: Optional[str]) -> None:
         coords = self.get_coords_from_loc(location)
         if coords not in self.cells.keys():
-            return None
+            cell = Cell(location, self.evaluator)
+            self.cells[coords] = cell
 
         if contents is None or contents.strip() == "":
             self.cells[coords].empty()
