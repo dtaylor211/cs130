@@ -36,7 +36,7 @@ class Sheet:
 
     def get_coords_from_loc(self, location: str) -> Tuple[int, int]:
         # raise ValueError is cell location isn't available
-        # need to check A-Z (max 4) then 0-9999 for valid lcoation
+        # need to check A-Z (max 4) then 1-9999 for valid lcoation
         
         if not re.match(r"^[A-Z]{1,4}[1-9][0-9]{0,3}$", location.upper()):
             raise ValueError("Cell location is invalid")
@@ -75,4 +75,4 @@ class Sheet:
         if coords not in self.cells.keys():
             return None
 
-        return self.cells[coords].value
+        return self.cells[coords].value # I think we need a get_value()
