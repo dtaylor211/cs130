@@ -200,6 +200,7 @@ class TestWorkbook:
         assert name == "Sheet1"
         wb.set_cell_contents(name, "A1", "1")
         wb.set_cell_contents(name, "B2", "=A1")
+        # TODO - check "Sheet1!=A1" and "'Sheet1'!=A1" and shEet1
 
         contents = wb.get_cell_contents(name, "A1")
         assert contents == "1"
@@ -218,6 +219,7 @@ class TestWorkbook:
         wb.set_cell_contents("Sheet1", "A1", "1")
         (index, name) = wb.new_sheet()
         wb.set_cell_contents("Sheet2", "B2", "=Sheet1!A1")
+        # TODO - check "Sheet1!=A1" and "'Sheet1'!=A1" and shEet1
         
         contents = wb.get_cell_contents("Sheet1", "A1")
         assert contents == "1"
@@ -228,6 +230,10 @@ class TestWorkbook:
         assert value == Decimal(1)
         value = wb.get_cell_value("Sheet2", "B2")
         assert value == Decimal(1)
+
+    def test_reference_other_sheet_diff_wb(self):
+        # Referring to other sheet in different workbook
+        pass
 
     def test_updating(self):
         wb = Workbook()
