@@ -1,6 +1,6 @@
 from lark import Tree, Transformer, Lark, Token
 from decimal import Decimal, DecimalException
-from cell_error import CellError, CellErrorType
+from .cell_error import CellError, CellErrorType
 from typing import *
 # from workbook import Workbook
 import sys # remove

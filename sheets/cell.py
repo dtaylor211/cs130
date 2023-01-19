@@ -5,7 +5,7 @@ class CellType:
 import enum
 from decimal import Decimal
 from typing import Optional
-from formula_evaluator import Evaluator
+from .formula_evaluator import Evaluator
 from lark import Lark
 
 class _CellType(enum.Enum):
@@ -22,7 +22,7 @@ class _CellType(enum.Enum):
     # ERROR: int = 5 ?
 
 
-class _Cell:
+class Cell:
     '''
     A cell containing values of CellType and their string contents.
       
@@ -80,7 +80,9 @@ class _Cell:
         elif inp[0] == "=":
             self.type = _CellType.FORMULA
             tree = self.parser.parse(inp)
+            print(tree)
             eval = self.evaluator.transform(tree)
+            print(eval)
             self.value = eval.children[0]
 
         # Otherwise set to NUMBER type - works for now, will need to change
