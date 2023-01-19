@@ -5,7 +5,7 @@ class CellType:
 import enum
 from decimal import Decimal
 from typing import Optional
-from .formula_evaluator import Evaluator
+from formula_evaluator import Evaluator
 from lark import Lark
 
 class _CellType(enum.Enum):
@@ -32,12 +32,13 @@ class _Cell:
 
     '''
     
-    def __init__(self, loc: str):
+    def __init__(self, loc: str, evaluator: Evaluator):
         '''
         Initialize a new Cell object
 
         Arguments:
         - loc: str - alphanumeric code representing location on a sheet (B2)
+        - evaluator: Evaluator - lark formula evaluator
 
         '''
 
@@ -47,7 +48,7 @@ class _Cell:
         self.contents = None
         self.value = None
         self.type: int = _CellType.EMPTY
-        self.evaluator = Evaluator()
+        self.evaluator = evaluator
         self.parser = Lark.open('formulas.lark', start='formula', rel_to=__file__)
 
     def set_contents(self, input_str: Optional[str]):
