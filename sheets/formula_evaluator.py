@@ -260,7 +260,6 @@ class Evaluator(Transformer):
 
             # Deal with empty cases
             result = [Decimal(0)] if result is None else [result]
-
             return Tree('value', result)
 
         except Exception as e:
