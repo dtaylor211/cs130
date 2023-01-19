@@ -2,6 +2,7 @@ from lark import Tree, Transformer, Lark, Token
 from decimal import Decimal, DecimalException
 from cell_error import CellError, CellErrorType
 from typing import *
+# from workbook import Workbook
 import sys # remove
 
 
@@ -13,19 +14,21 @@ class Evaluator(Transformer):
 
     '''
 
-    def __init__(self):
+    def __init__(self, workbook, sheet_name: str):
         '''
         Initialize an evaluator, as well as the Transformer
 
         '''
 
         Transformer.__init__(self)
+        self.workbook = workbook
+        self.working_sheet = sheet_name
         # If things break, it might be because I removed the parser 
         # from this file
 
 
     ########################################################################
-    # Token Values
+    # Terminals and Bases?
     ########################################################################
 
 
@@ -60,6 +63,21 @@ class Evaluator(Transformer):
         '''
 
         return str(token)[0][1:-1]
+
+    # def CELLREF(self, token: Token):
+    #     '''
+    #     Evaluate a CELLREF type
+
+    #     Arguments:
+    #     - token: Token - contains data about the cell reference
+
+    #     Returns:
+    #     - the original token passed in
+    #     I think unneeded
+
+    #     '''
+
+    #     return token
 
 
     ########################################################################
@@ -212,6 +230,41 @@ class Evaluator(Transformer):
 
         except Exception as e:
             return self.process_exceptions(e, 'string concatenation')
+
+
+    def cell(self, args: List) -> Tree:
+        '''
+        Evaluate a cell expression
+
+        Arguments:
+        - args: List - list of Tree and/or Token objects of format [sheet, cell]
+
+        Returns:
+        - Tree holding the resulting cell as a
+
+        Might not need this
+
+        '''
+        try:
+            if len(args) == 2:
+                self.working_sheet = args[0]
+                cell_name = args[1]
+            else:
+                cell_name = args[0]
+
+            result = self.workbook.get_cell_value(self.working_sheet, cell_name)
+
+            # Check for propogating errors
+            if isinstance(result, CellError):
+                return Tree('cell_error', [result])
+
+            # Deal with empty cases
+            result = [Decimal(0)] if result is None else [result]
+
+            return Tree('value', result)
+
+        except Exception as e:
+            return self.process_exceptions(e, 'cell operations')
 
 
     ########################################################################

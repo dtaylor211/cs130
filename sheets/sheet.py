@@ -1,7 +1,7 @@
 import re
 
 from typing import Dict, Tuple, Optional, Any
-from .cell import Cell
+from cell import Cell
 
 class Sheet:
     # A spreadsheet containing zero or more cells.

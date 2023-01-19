@@ -1,6 +1,7 @@
 import re
 from typing import Optional, List, Tuple, Any
-from .sheet import Sheet
+from sheet import Sheet
+from formula_evaluator import Evaluator
 
 class Workbook:
     # A workbook containing zero or more named spreadsheets.
@@ -18,6 +19,7 @@ class Workbook:
 
         # dictionary that maps lowercase sheet name to Sheet object
         self.sheet_objects = dict()
+        self.evaluator = Evaluator(self, '')
 
     def num_sheets(self) -> int:
         # Return the number of spreadsheets in the workbook.
@@ -81,6 +83,9 @@ class Workbook:
         # update list of sheet names and sheet dictionary
         self.sheet_names.append(sheet_name) # preserves case
         self.sheet_objects[sheet_name.lower()] = Sheet(sheet_name) # need Sheet constructer
+
+        # update evaluator to now have current sheet as the new sheet
+        self.evaluator.working_sheet = sheet_name
 
         return self.num_sheets() - 1, sheet_name
 
