@@ -4,7 +4,7 @@ from cell_error import CellError, CellErrorType
 from typing import *
 import sys # remove
 
-parser = Lark.open('formulas.lark', start='formula', rel_to=__file__)
+
 
 class Evaluator(Transformer):
     '''
@@ -20,6 +20,8 @@ class Evaluator(Transformer):
         '''
 
         Transformer.__init__(self)
+        # If things break, it might be because I removed the parser 
+        # from this file
 
 
     ########################################################################
@@ -64,6 +66,7 @@ class Evaluator(Transformer):
     # Expressions
     ########################################################################
 
+
     def expr(self, args: List) -> Tree:
         '''
         Evaluate an expression, such as add_expr or str_concat
@@ -77,6 +80,7 @@ class Evaluator(Transformer):
         '''
 
         return eval(args[0])
+
 
     def add_expr(self, args: List) -> Tree:
         '''
@@ -93,7 +97,7 @@ class Evaluator(Transformer):
         try:
             operator = args[1]
             x = args[0].children[-1]
-            y = args[2].children[-1]
+            y = args[-1].children[-1]
 
             # Check for propogating errors
             if isinstance(x, CellError):
@@ -109,7 +113,7 @@ class Evaluator(Transformer):
             return Tree('number', [Decimal(result)])
 
         except Exception as e:
-            self.process_exceptions(e, detail='adding/subtracting')
+            return self.process_exceptions(e, detail='adding/subtracting')
     
 
     def mul_expr(self, args: List) -> Tree:
@@ -127,7 +131,7 @@ class Evaluator(Transformer):
         try:
             operator = args[1]
             x = self.transform(args[0]).children[-1]
-            y = self.transform(args[2]).children[-1]
+            y = self.transform(args[-1]).children[-1]
 
             # Check for propogating errors
             if isinstance(x, CellError):
@@ -147,7 +151,7 @@ class Evaluator(Transformer):
             return Tree('number', [Decimal(result)])
 
         except Exception as e:
-            self.process_exceptions(e, detail='multiplication/division')    
+            return self.process_exceptions(e, detail='multiplication/division')    
 
 
     def unary_op(self, args: List) -> Tree:
@@ -166,6 +170,8 @@ class Evaluator(Transformer):
             operator = args[0]
             x = args[1].children[-1]
 
+            # Do i need to check for errors?
+
             # Check for compatible types, deal with empty case
             x = Decimal(0) if x is None else Decimal(x)
 
@@ -173,7 +179,39 @@ class Evaluator(Transformer):
             return Tree('number', [Decimal(result)])
 
         except Exception as e:
-            self.process_exceptions(e, detail='unary operations')
+            return self.process_exceptions(e, detail='unary operations')
+
+
+    def concat_expr(self, args: List) -> Tree:
+        '''
+        Evaluate a string concatenation expression within the Tree
+
+        Arguments:
+        - args: List - list with Tree and/or Token objects of format [s1, &, s2]
+
+        Returns:
+        - Tree holding the result as a String object
+
+        '''
+        
+        try:
+            s1 = self.transform(args[0]).children[-1]
+            s2 = self.transform(args[-1]).children[-1]
+
+            # Check for propogating errors
+            if isinstance(s1, CellError):
+                return Tree('cell_error', [s1])
+            if isinstance(s2, CellError):
+                return Tree('cell_error', [s2])
+
+            # Check for compatible types, deal with empty case
+            s1 = '' if s1 is None else str(s1)
+            s2 = '' if s2 is None else str(s2)
+
+            return Tree('string', [s1+s2])
+
+        except Exception as e:
+            return self.process_exceptions(e, 'string concatenation')
 
 
     ########################################################################
@@ -181,7 +219,7 @@ class Evaluator(Transformer):
     ########################################################################       
 
 
-    def process_exceptions(exception: Exception, detail: str = '') -> Tree:
+    def process_exceptions(self, exception: Exception, detail: str = '') -> Tree:
         '''
         Process the occurrence of an exception
 
@@ -196,15 +234,14 @@ class Evaluator(Transformer):
         '''
 
         error_type = None
-        if exception is DecimalException:
+        if isinstance(exception, DecimalException):
             detail = f'Attempting to perform {detail} on incompatible or '\
                 'incorrect types'
             error_type = CellErrorType.TYPE_ERROR
-        elif exception is ZeroDivisionError:
+        elif isinstance(exception, ZeroDivisionError):
             detail = 'Attempting to perform division with 0'
             error_type = CellErrorType.TYPE_ERROR
         else:
             detail = 'Unknown error'
         return Tree('cell_error', 
             [CellError(error_type, detail=detail, exception = exception)])
-            
