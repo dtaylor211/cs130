@@ -34,6 +34,7 @@ class CellGraph:
         stack = []
         lowlink = {}
             
+        # Currently recursive, in future assignments need to make iterative
         def strongconnect(cell):
             idx = len(lowlink)
             lowlink[cell] = idx
@@ -55,3 +56,25 @@ class CellGraph:
                 strongconnect(cell)
         
         return scc
+
+    def topological_sort(self) -> List[Cell]:
+        '''
+        Calculates a topological sort of the cell graph.
+        Follows the iterative implementation given in class.
+        Doesn't handle graphs with cycles.
+
+        '''
+        visited = set()
+        result = []
+        for cell in self.adjacency_list.keys():
+            stack = [(cell, True)]
+            while stack:
+                (cell, enter) = stack.pop()
+                if enter and cell not in visited:
+                    visited.add(cell)
+                    stack.append((cell, False))
+                    for n_cell in self.adjacency_list[cell]:
+                        if n_cell not in visited:
+                            stack.append((n_cell, True))
+                else: # Leaving the node
+                    result.append(cell)
