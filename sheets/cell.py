@@ -1,5 +1,5 @@
 import enum
-from decimal import Decimal
+from decimal import Decimal, DecimalException
 from typing import Optional
 from .formula_evaluator import Evaluator
 from lark import Lark
@@ -55,36 +55,36 @@ class Cell:
 
         '''
 
-        # if input_str.strip() == "":
-        #     self.contents = None
-        #     self.value = None
-        #     self.type = _CellType.EMPTY
-        #     return
+        try:
+            # Remove leading and trailing whitespace
+            inp = input_str.strip()
+            self.contents = inp
 
-        # Remove leading and trailing whitespace
-        inp = input_str.strip()
-        self.contents = inp
+            # Check if there is a leading single quote, set to STRING type
+            if inp[0] == "'":
+                self.type = _CellType.STRING
+                self.value = inp[1:]
 
-        # Check if there is a leading single quote, set to STRING type
-        if inp[0] == "'":
+            # Check if there is a leading equal sign, set to FORMULA type
+            # and evaluate
+            elif inp[0] == "=":
+                self.type = _CellType.FORMULA
+                tree = self.parser.parse(inp)
+                print(tree)
+                eval = self.evaluator.transform(tree)
+                print(eval)
+                self.value = eval.children[0]
+
+            # Otherwise set to NUMBER type - works for now, will need to change
+            # if we can have other cell types
+            else:
+                self.type = _CellType.NUMBER 
+                self.value = Decimal(inp) 
+
+        except DecimalException as d:
             self.type = _CellType.STRING
-            self.value = inp[1:]
+            self.value = inp
 
-        # Check if there is a leading equal sign, set to FORMULA type
-        # and evaluate
-        elif inp[0] == "=":
-            self.type = _CellType.FORMULA
-            tree = self.parser.parse(inp)
-            print(tree)
-            eval = self.evaluator.transform(tree)
-            print(eval)
-            self.value = eval.children[0]
-
-        # Otherwise set to NUMBER type - works for now, will need to change
-        # if we can have other cell types
-        else:
-            self.type = _CellType.NUMBER 
-            self.value = Decimal(inp) 
 
     def empty(self):
         '''
