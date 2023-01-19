@@ -75,4 +75,4 @@ class Sheet:
         if coords not in self.cells.keys():
             return None
 
-        return self.cells[coords].value
+        return self.cells[coords].value # I think we need a get_value()
