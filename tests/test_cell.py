@@ -6,8 +6,6 @@ from decimal import Decimal
 class TestCell:
     '''
     Cell tests (project 1)
-
-    -need separate test_formula.py?
     '''
 
     def test_empty_cell(self):
