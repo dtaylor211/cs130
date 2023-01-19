@@ -1,5 +1,6 @@
 from lark import Tree, Transformer, Lark, Token
 from decimal import Decimal
+import sys # remove
 
 parser = Lark.open('formulas.lark', start='formula', rel_to=__file__)
 
@@ -44,10 +45,17 @@ class Evaluator(Transformer):
         operator = args[1]
         a = args[0].children[-1]
         b = args[2].children[-1]
+
         if operator == '+':
-            return a + b
+            result =  a + b
         else:
-            return a - b
+            result = a - b
+        return Tree('number', [Decimal(result)])
+
+    def expr(self, args):
+        # to-do
+
+        return eval(args[0])
     
     def mul_expr(self, args):
         # Evaluate a multiplication expression within the Tree
@@ -55,12 +63,13 @@ class Evaluator(Transformer):
         # Right now this does not work for complex expressions
 
         operator = args[1]
-        a = args[0].children[-1]
-        b = args[2].children[-1]
+        a = self.transform(args[0]).children[-1]
+        b = self.transform(args[2]).children[-1]
         if operator == '*':
-            return a * b
+            result = a * b
         else:
-            return a / b
+            result = a / b
+        return Tree('number', [Decimal(result)])
 
     def unary_op(self, args):
         # Evaluate a unary operation within the Tree
@@ -69,4 +78,5 @@ class Evaluator(Transformer):
 
         operator = args[0]
         a = args[1].children[-1]
-        return -1 * a if operator == '-' else a
+        result = -1 * a if operator == '-' else a
+        return Tree('number', [Decimal(result)])
