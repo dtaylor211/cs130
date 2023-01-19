@@ -28,8 +28,8 @@ class Sheet:
             return (0, 0) # empty sheet
 
         coords = list(self.cells.keys())
-        rows = [coords[0] for x in coords]
-        cols = [coords[1] for y in coords]
+        rows = [coord[0] for coord in coords]
+        cols = [coord[1] for coord in coords]
         return max(rows), max(cols)
 
     def get_cell(self, location: str) -> Optional[Cell]:
@@ -44,7 +44,7 @@ class Sheet:
 
         # example: "D14" -> (4, 14)
         # splits into [characters, numbers, ""]
-        split_loc = re.split('(\d+)', location.upper())
+        split_loc = re.split(r'(\d+)', location.upper())
         (row, col) = split_loc[0], split_loc[1]
         col_num = int(col)
         row_num = 0
@@ -69,6 +69,7 @@ class Sheet:
         if contents is None or contents.strip() == "":
             self.cells[coords].empty()
             del self.cells[coords]
+            return
 
         self.cells[coords].set_contents(contents)
 
