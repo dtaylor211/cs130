@@ -154,6 +154,7 @@ class TestEvaluator:
         wb.set_cell_contents('Test', 'A3', '="Donnie Pinkston is a goat"')
         wb.set_cell_contents('Test', 'A4', '"string3"')
         wb.set_cell_contents('Test', 'A5', "'Anakin")
+        wb.set_cell_contents('Test', 'A6', None)
 
         tree = parser.parse('="this is "&"a string"')
         result = evaluator.transform(tree)
@@ -194,6 +195,10 @@ class TestEvaluator:
         tree = parser.parse('=7.1&9.2&"string"')
         result = evaluator.transform(tree)
         assert(result == Tree('string', ['7.19.2string']))
+
+        tree = parser.parse('=A1&A6')
+        result = evaluator.transform(tree)
+        assert(result == Tree('string', ['string1']))
     
 
     def test_unary_operations(self):
@@ -201,6 +206,7 @@ class TestEvaluator:
         wb.set_cell_contents('Test', 'A2', '2.2')
         wb.set_cell_contents('Test', 'A3', '-4')
         wb.set_cell_contents('Test', 'A4', '+25')
+        wb.set_cell_contents('Test', 'A5', None)
 
         tree = parser.parse('=-34')
         result = evaluator.transform(tree)
@@ -229,6 +235,14 @@ class TestEvaluator:
         tree = parser.parse('= - A4  ')
         result = evaluator.transform(tree)
         assert(result == Tree('number', [Decimal(-25)]))
+
+        tree = parser.parse('=+A5')
+        result = evaluator.transform(tree)
+        assert(result == Tree('number', [Decimal(0)]))
+
+        tree = parser.parse('=-A5')
+        result = evaluator.transform(tree)
+        assert(result == Tree('number', [Decimal(0)])) # should be 0?
     
 
     def test_addition_subtraction(self):
@@ -236,6 +250,7 @@ class TestEvaluator:
         wb.set_cell_contents('Test', 'A2', '=2')
         wb.set_cell_contents('Test', 'A3', '-3.25')
         wb.set_cell_contents('Test', 'A4', "'123")
+        wb.set_cell_contents('Test', 'A5', None)
 
         tree = parser.parse('=1+1')
         result = evaluator.transform(tree)
@@ -268,6 +283,14 @@ class TestEvaluator:
         tree = parser.parse('=A4-A2')
         result = evaluator.transform(tree)
         assert(result == Tree('number', [Decimal(121)]))
+        
+        tree = parser.parse('=A1+A5')
+        result = evaluator.transform(tree)
+        assert(result == Tree('number', [Decimal(1)]))
+
+        tree = parser.parse('=A1-A5')
+        result = evaluator.transform(tree)
+        assert(result == Tree('number', [Decimal(1)]))
 
 
     def test_multiplication_division(self):
@@ -276,6 +299,7 @@ class TestEvaluator:
         wb.set_cell_contents('Test', 'A3', '-3.25')
         wb.set_cell_contents('Test', 'A4', "'123")
         wb.set_cell_contents('Test', 'A5', '3')
+        wb.set_cell_contents('Test', 'A6', None)
 
         tree = parser.parse('=A1*A2')
         result = evaluator.transform(tree)
@@ -305,6 +329,10 @@ class TestEvaluator:
         result = evaluator.transform(tree)
         assert(result == Tree('number', 
                               [Decimal('0.3333333333333333333333333333')]))
+
+        tree = parser.parse('=A1*A6')
+        result = evaluator.transform(tree)
+        assert(result == Tree('number', [Decimal(0)]))
 
 
     def test_complex_formula(self):
@@ -350,3 +378,86 @@ class TestEvaluator:
         tree = parser.parse('=A3+A5*(A6/2)+((82-A3)+7*2.04+A6)')
         result = evaluator.transform(tree)
         assert(result == Tree('number', [Decimal('92.455')]))
+
+
+    def test_reference_same_sheet(self):
+        (index, name) = wb.new_sheet("Sheet1")
+        assert name == "Sheet1"
+        wb.set_cell_contents(name, "A1", "1")
+        wb.set_cell_contents(name, "B2", "=Sheet1!A1")
+        contents = wb.get_cell_contents(name, "A1")
+        assert contents == "1"
+        contents = wb.get_cell_contents(name, "B2")
+        assert contents == "=Sheet1!A1"
+        value = wb.get_cell_value(name, "A1")
+        assert value == Decimal(1)
+        value = wb.get_cell_value(name, "B2")
+        assert value == Decimal(1)
+
+        (index, name) = wb.new_sheet("Sheet1\\")
+        assert name == "Sheet1\\"
+        wb.set_cell_contents(name, "A1", "1")
+        wb.set_cell_contents(name, "B2", "='Sheet1\\'!A1")
+        contents = wb.get_cell_contents(name, "A1")
+        assert contents == "1"
+        contents = wb.get_cell_contents(name, "B2")
+        assert contents == "=Sheet1!A1"
+        value = wb.get_cell_value(name, "A1")
+        assert value == Decimal(1)
+        value = wb.get_cell_value(name, "B2")
+        assert value == Decimal(1)
+
+        (index, name) = wb.new_sheet("Sheet2")
+        assert name == "Sheet2"
+        wb.set_cell_contents(name, "A1", "1")
+        wb.set_cell_contents(name, "B2", "=shEet2!A1")
+        contents = wb.get_cell_contents(name, "A1")
+        assert contents == "1"
+        contents = wb.get_cell_contents(name, "B2")
+        assert contents == "=shEet2!A1"
+        value = wb.get_cell_value(name, "A1")
+        assert value == Decimal(1)
+        value = wb.get_cell_value(name, "B2")
+        assert value == Decimal(1)
+
+        (index, name) = wb.new_sheet("Other Totals")
+        assert name == "Other Totals"
+        wb.set_cell_contents(name, "A1", "1")
+        wb.set_cell_contents(name, "B2", "='Other Totals'!A1")
+        contents = wb.get_cell_contents(name, "A1")
+        assert contents == "1"
+        contents = wb.get_cell_contents(name, "B2")
+        assert contents == "='Other Totals'!A1"
+        value = wb.get_cell_value(name, "A1")
+        assert value == Decimal(1)
+        value = wb.get_cell_value(name, "B2")
+        assert value == Decimal(1)
+
+    def test_reference_other_sheet(self):
+        (index, name) = wb.new_sheet("June Totals")
+        assert name == "June Totals"
+        (index, name) = wb.new_sheet("July Totals")
+        assert name == "July Totals"
+
+        wb.set_cell_contents("June Totals", "A1", "1")
+        wb.set_cell_contents("June Totals", "A2", "2")
+        wb.set_cell_contents("July Totals", "B2", "='June Totals'!A1")
+        contents = wb.get_cell_contents("June Totals", "A1")
+        assert contents == "1"
+        contents = wb.get_cell_contents("June Totals", "A2")
+        assert contents == "2"
+        contents = wb.get_cell_contents("July Totals", "B2")
+        assert contents == "='June Totals'!A1"
+        value = wb.get_cell_value("June Totals", "A1")
+        assert value == Decimal(1)
+        value = wb.get_cell_value("June Totals", "A2")
+        assert value == Decimal(2)
+        value = wb.get_cell_value("July Totals", "B2")
+        assert value == Decimal(1)
+
+        # is the user expected to put 'June Totals'! after accessing other sheet?
+        wb.set_cell_contents("June Totals", "B2", "=A2")
+        contents = wb.get_cell_contents("June Totals", "B2")
+        assert contents == "=A2"
+        value = wb.get_cell_value(name, "B2")
+        assert value == Decimal(2)

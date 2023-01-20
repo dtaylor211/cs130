@@ -42,7 +42,7 @@ D1.  [3pts] Describe the high-level design abstractions (e.g. classes and/or
      abstractions fulfill.
 
      Workbook -> Sheet -> Cell
-     TODO: Separation of CellGraph, Evaluator, etc.
+     TODO: Evaluator, etc.
 
      Workbook: A Workbook contains zero or more spreadsheets (Sheets).  Each 
                Workbook holds a list of Sheet names (case sensitive), a 
@@ -50,7 +50,8 @@ D1.  [3pts] Describe the high-level design abstractions (e.g. classes and/or
                Sheets, and an Evaluator.  Workbook holds the logic for 
                listing/adding/deleting/counting Sheets and also contains many of 
                the abstractions for handling Cell actions (setting contents & 
-               getting contents/values)
+               getting contents/values).  Workbook handles the cycle detection
+               and automatic updating of cells.
 
      Sheet:    A Sheet contains Cells.  Each Sheet holds the string (Sheet) name
                that it belongs to, a dictionary mapping (col, row) int 
@@ -60,9 +61,16 @@ D1.  [3pts] Describe the high-level design abstractions (e.g. classes and/or
                the abstraction for handling Cell actions.
 
      Cell:     A Cell represents an individual spreadsheet cell.  Each Cell 
-               holds a location, contents, value, type, Evaluator, and parser.
-               Cell holds the logic for parsing contents and initiating the 
-               parser/evaluator process.
+               holds a location, contents, value, children, Evaluator, and 
+               parser. Cell holds the logic for parsing contents, initiating the 
+               parser/evaluator process, and calculating its children.
+
+     Graph:    A Graph is a generic graph class.  Each Graph holds its adjacency 
+               list. Graph holds the logic for calculating its transpose, 
+               getting its strongly connected components, getting a topological
+               sort, getting a set of reachable nodes, and creating a subgraph
+               from a set of nodes.  The Graph class is used for cycle detection
+               and Cell dependency calculations.
 
 
 D2.  [4pts] Why did you choose the design you chose?  Describe other designs
@@ -75,6 +83,14 @@ D2.  [4pts] Why did you choose the design you chose?  Describe other designs
      straightforward approach and would best allow for further improvements in 
      later projects.  We initially had too much logic handled in Workbook which 
      led us to eventually put more of the logic behind the scenes in Sheet/Cell.
+     While we only use the Graph class for cells, it made sense to make it a
+     generic graph class since not of its functionality depends on the types of
+     nodes.  We initially created a CellGraph class but ended up having to 
+     switch the type of the nodes multiple times so changed to the generic 
+     version.  The Graph function currently edits the graph in place as opposed
+     to returning a new graph.  We were considering changing the function to 
+     return a new graph, but there is currently no need for this so will make
+     the switch if/when necessary.
 
 
 D3.  [4pts] At a high level (e.g. pseudocode or higher), enumerate the steps
@@ -91,20 +107,32 @@ D3.  [4pts] At a high level (e.g. pseudocode or higher), enumerate the steps
      8) Cell parses contents and determines formula/string/literal value
      9) (If formula) Cell value set after formula is parsed/evaluated
      10) (If literal) Cell value set as string if cannot be parsed as Decimal
-     11) TODO - cell updating, error handling, graph, etc.
+     11) TODO - error handling, etc.
+     12) Workbook checks for cycles introduced by the cell
+     13) Workbook updates all cells dependent on the cell
+
 
 
 D4.  [3pts] How does your spreadsheet engine identify what other cells need
      updating when a cell's contents are changed, and what order to update them?
 
-     TODO
+     To identify the cells that need to be changed and the order to update them,
+     our spreadsheet engine first creates a graph of all cells in the workbook.
+     Because cells keep track of their children, we take the transpose to get
+     the graph of parents and get the subgraph of cells dependent on the changed
+     cell.  We then compute the strongly connected components of this new graph
+     and use these to get the subgraph of nodes not in a cycle.  Finally, we 
+     find a topological sort for this graph and update the cells in this order.
 
 
 D5.  [3pts] How does your spreadsheet engine identify cycles between cells when
      a cell update is performed?  Are cells in a cycle processed any differently
      from other cells outside of the cycle?
 
-     TODO
+     In the updating of cell values described in D4, we generate the strongly 
+     connected components of a graph.  While the single nodes are used for the
+     updating of cells, the nodes in larger components are set to the circular
+     reference error.
 
 
 D6.  [3pts] What steps does your spreadsheet engine go through when a sheet is
@@ -112,8 +140,9 @@ D6.  [3pts] What steps does your spreadsheet engine go through when a sheet is
      recomputed after a sheet-deletion operation?
 
      1) Workbook checks if Sheet exists (raises KeyError if not)
+     2) Workbook gets all cells in Sheet
      2) Workbook removes Sheet object from dictionary and sheet name from list.
-     2) TODO - cycle detection, etc.
+     2) Workbook updates all cells dependent on the cells in Sheet
 
 
 Implementation Process (23 pts)
