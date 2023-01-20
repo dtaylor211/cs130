@@ -70,6 +70,7 @@ class Cell:
 
         '''
 
+        print(input_str)
         try:
             # Check if current page is desired page
 
@@ -89,7 +90,9 @@ class Cell:
                 visitor = _CellTreeVisitor(str(self.evaluator.working_sheet))
                 visitor.visit(tree)
                 self.children = list(visitor.children)
+                print('s',self.evaluator.transform(tree))
                 eval = self.evaluator.transform(tree).children[0]
+                print(eval)
 
                 if isinstance(eval, CellError):
                     if eval.get_type() is None:
@@ -103,6 +106,8 @@ class Cell:
             # Otherwise set to NUMBER type - works for now, will need to change
             # if we can have other cell types
             else:
+                print('wh')
+                print(inp)
                 temp_value = Decimal(inp) 
                 if temp_value in RESTRICTED_VALUES:
                     self.value = inp

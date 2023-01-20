@@ -125,14 +125,14 @@ class Evaluator(Transformer):
                 return Tree('cell_error', [y])
             
             # Check for literal error values
-            if isinstance(x, str) and x.upper() in list(cell_errors.values()):
-                e_type = [i for i in cell_errors if cell_errors[i]==x.upper()]
-                c = CellErrorType(e_type[0])
-                return Tree('cell_error', [CellError(c, '', None)])
-            if isinstance(y, str) and y.upper() in list(cell_errors.values()):
-                e_type = [i for i in cell_errors if cell_errors[i]==y.upper()]
-                c = CellErrorType(e_type[0])
-                return Tree('cell_error', [CellError(c, '', None)])
+            # if isinstance(x, str) and x.upper() in list(cell_errors.values()):
+            #     e_type = [i for i in cell_errors if cell_errors[i]==x.upper()]
+            #     c = CellErrorType(e_type[0])
+            #     return Tree('cell_error', [CellError(c, '', None)])
+            # if isinstance(y, str) and y.upper() in list(cell_errors.values()):
+            #     e_type = [i for i in cell_errors if cell_errors[i]==y.upper()]
+            #     c = CellErrorType(e_type[0])
+            #     return Tree('cell_error', [CellError(c, '', None)])
 
             # Check for compatible types, deal with empty case
             x = Decimal(0) if x is None else Decimal(x)
@@ -169,14 +169,14 @@ class Evaluator(Transformer):
                 return Tree('cell_error', [y])
             
             # Check for literal error values
-            if isinstance(x, str) and x.upper() in list(cell_errors.values()):
-                e_type = [i for i in cell_errors if cell_errors[i]==x.upper()]
-                c = CellErrorType(e_type[0])
-                return Tree('cell_error', [CellError(c, '', None)])
-            if isinstance(y, str) and y.upper() in list(cell_errors.values()):
-                e_type = [i for i in cell_errors if cell_errors[i]==y.upper()]
-                c = CellErrorType(e_type[0])
-                return Tree('cell_error', [CellError(c, '', None)])
+            # if isinstance(x, str) and x.upper() in list(cell_errors.values()):
+            #     e_type = [i for i in cell_errors if cell_errors[i]==x.upper()]
+            #     c = CellErrorType(e_type[0])
+            #     return Tree('cell_error', [CellError(c, '', None)])
+            # if isinstance(y, str) and y.upper() in list(cell_errors.values()):
+            #     e_type = [i for i in cell_errors if cell_errors[i]==y.upper()]
+            #     c = CellErrorType(e_type[0])
+            #     return Tree('cell_error', [CellError(c, '', None)])
 
             # Check for compatible types, deal with empty case
             x = Decimal(0) if x is None else Decimal(x)
@@ -208,14 +208,17 @@ class Evaluator(Transformer):
         try:
             operator = args[0]
             x = args[1].children[-1]
+            print(x)
 
-            # Do i need to check for errors?
+            # Check for propogating errors
+            if isinstance(x, CellError):
+                return Tree('cell_error', [x])
 
             # Check for literal error values
-            if isinstance(x, str) and x.upper() in list(cell_errors.values()):
-                e_type = [i for i in cell_errors if cell_errors[i]==x.upper()]
-                c = CellErrorType(e_type[0])
-                return Tree('cell_error', [CellError(c, '', None)])
+            # if isinstance(x, str) and x.upper() in list(cell_errors.values()):
+            #     e_type = [i for i in cell_errors if cell_errors[i]==x.upper()]
+            #     c = CellErrorType(e_type[0])
+            #     return Tree('cell_error', [CellError(c, '', None)])
 
             # Check for compatible types, deal with empty case
             x = Decimal(0) if x is None else Decimal(x)
@@ -254,14 +257,14 @@ class Evaluator(Transformer):
             s2 = '' if s2 is None else str(s2)
 
             # Check for literal error values - might not work in this order
-            if s1.upper() in list(cell_errors.values()):
-                e_type = [i for i in cell_errors if cell_errors[i]==s1.upper()]
-                c = CellErrorType(e_type[0])
-                return Tree('cell_error', [CellError(c, '', None)])
-            if s2.upper() in list(cell_errors.values()):
-                e_type = [i for i in cell_errors if cell_errors[i]==s2.upper()]
-                c = CellErrorType(e_type[0])
-                return Tree('cell_error', [CellError(c, '', None)])
+            # if s1.upper() in list(cell_errors.values()):
+            #     e_type = [i for i in cell_errors if cell_errors[i]==s1.upper()]
+            #     c = CellErrorType(e_type[0])
+            #     return Tree('cell_error', [CellError(c, '', None)])
+            # if s2.upper() in list(cell_errors.values()):
+            #     e_type = [i for i in cell_errors if cell_errors[i]==s2.upper()]
+            #     c = CellErrorType(e_type[0])
+            #     return Tree('cell_error', [CellError(c, '', None)])
 
             return Tree('string', [s1+s2])
 
@@ -284,19 +287,23 @@ class Evaluator(Transformer):
         '''
         try:
             if len(args) == 2:
-                self.working_sheet = args[0]
+                working_sheet = args[0]
                 cell_name = args[1]
             else:
+                working_sheet = self.working_sheet
                 cell_name = args[0]
 
             # Check that cell location is within bounds
             if not re.match(r"^[A-Z]{1,4}[1-9][0-9]{0,3}$", cell_name.upper()):
                 raise KeyError('Cell location out of bounds')
             
-            result = self.workbook.get_cell_value(self.working_sheet, cell_name)
+            result = self.workbook.get_cell_value(working_sheet, cell_name)
+            print(result)
 
             # Check for propogating errors
             if isinstance(result, CellError):
+                print('ayo')
+                print('whats da error', result)
                 return Tree('cell_error', [result])
 
             # Deal with empty cases
