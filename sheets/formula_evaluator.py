@@ -1,7 +1,8 @@
 from lark import Tree, Transformer, Lark, Token
 from decimal import Decimal, DecimalException
-from .cell_error import CellError, CellErrorType
+from .cell_error import CellError, CellErrorType, cell_error_dict
 from typing import *
+import re
 # from workbook import Workbook
 import sys # remove
 
@@ -119,6 +120,15 @@ class Evaluator(Transformer):
                 return Tree('cell_error', [x])
             if isinstance(y, CellError):
                 return Tree('cell_error', [y])
+            
+            if x in cell_error_dict.values():
+                e_type = [i for i in cell_error_dict if cell_error_dict[i]==x]
+                c = CellErrorType(e_type[0])
+                return Tree('cell_error', [CellError(c, '', None)])
+            if y in cell_error_dict.values():
+                e_type = [i for i in cell_error_dict if cell_error_dict[i]==y]
+                c = CellErrorType(e_type[0])
+                return Tree('cell_error', [CellError(c, '', None)])
 
             # Check for compatible types, deal with empty case
             x = Decimal(0) if x is None else Decimal(x)
@@ -128,7 +138,6 @@ class Evaluator(Transformer):
             return Tree('number', [self.normalize_number(Decimal(result))])
 
         except Exception as e:
-            print(e.with_traceback)
             return self.process_exceptions(e, detail='adding/subtracting')
     
 
@@ -250,6 +259,10 @@ class Evaluator(Transformer):
             else:
                 cell_name = args[0]
 
+            # Check that cell location is within bounds
+            if not re.match(r"^[A-Z]{1,4}[1-9][0-9]{0,3}$", cell_name.upper()):
+                raise KeyError('Cell location out of bounds')
+            
             result = self.workbook.get_cell_value(self.working_sheet, cell_name)
 
             # Check for propogating errors
@@ -261,7 +274,6 @@ class Evaluator(Transformer):
             return Tree('cell_ref', result)
         
         except KeyError as k:
-            print('huh')
             return self.process_exceptions(k)
 
         except Exception as e:

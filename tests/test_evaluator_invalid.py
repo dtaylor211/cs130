@@ -72,13 +72,21 @@ class TestEvaluatorInvalid:
         assert(result_contents == '#REF!')
         assert(isinstance(result_value, CellError))
 
-        wb.set_cell_contents('Test', 'A1', '=AAAA1')
+        wb.set_cell_contents('Test', 'A1', '=AAAAA1')
         result_contents = wb.get_cell_contents('Test','A1')
         result_value = wb.get_cell_value('Test', 'A1')
         assert(result_contents == '#REF!')
         assert(isinstance(result_value, CellError))
 
-        wb.set_cell_contents('Test', 'A1', '=AAA10000')
+        wb.set_cell_contents('Test', 'A1', '=AAAA10000')
+        result_contents = wb.get_cell_contents('Test','A1')
+        result_value = wb.get_cell_value('Test', 'A1')
+        assert(result_contents == '#REF!')
+        assert(isinstance(result_value, CellError))
+
+        wb.new_sheet('Test 2')
+        wb.set_cell_contents('Test 2', 'A1', '=1')
+        wb.set_cell_contents('Test 2', 'A2', '=Test 2!1')
         result_contents = wb.get_cell_contents('Test','A1')
         result_value = wb.get_cell_value('Test', 'A1')
         assert(result_contents == '#REF!')
@@ -118,11 +126,8 @@ class TestEvaluatorInvalid:
         wb.set_cell_contents('Test', 'A2', '2')
         wb.set_cell_contents('Test', 'A3', '=A1-A2')
         tree = parser.parse('=A1-A2')
-        print(evaluator.transform(tree))
         result_contents = wb.get_cell_contents('Test','A3')
-        print(result_contents)
         result_value = wb.get_cell_value('Test', 'A3')
-        print(result_value)
         assert(result_contents == '#VALUE!')
         assert(isinstance(result_value, CellError))
 
@@ -141,12 +146,34 @@ class TestEvaluatorInvalid:
         assert(result_contents == '#DIV/0!')
         assert(isinstance(result_value, CellError))
 
-        wb.set_cell_contents('Test', 'A1', '=12/0')
-        result_contents = wb.get_cell_contents('Test','A1')
-        result_value = wb.get_cell_value('Test', 'A1')
+        wb.set_cell_contents('Test', 'A1', '=12')
+        wb.set_cell_contents('Test', 'A2', '0')
+        wb.set_cell_contents('Test', 'A4', '=A1/A2')
+        result_contents = wb.get_cell_contents('Test','A4')
+        result_value = wb.get_cell_value('Test', 'A4')
         assert(result_contents == '#DIV/0!')
         assert(isinstance(result_value, CellError))
 
+        wb.set_cell_contents('Test', 'A3', None)
+        wb.set_cell_contents('Test', 'A4', '=A1/A3')
+        result_contents = wb.get_cell_contents('Test','A4')
+        result_value = wb.get_cell_value('Test', 'A4')
+        assert(result_contents == '#DIV/0!')
+        assert(isinstance(result_value, CellError))
+
+        # add tests of these to valid
+        # add tests with sheet name with space
+        # test asking for other sheet cell
+        # add test for checking same sheet
+
     
     def test_errors_as_literals(self):
+        wb.set_cell_contents('Test', 'A1', '=#REF!+5')
+        result_contents = wb.get_cell_contents('Test','A1')
+        result_value = wb.get_cell_value('Test', 'A1')
+        assert(result_contents == '#REF!')
+        assert(isinstance(result_value, CellError))
+
+
+    def test_error_ordering(self):
         pass

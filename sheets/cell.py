@@ -5,6 +5,12 @@ from .formula_evaluator import Evaluator
 import lark
 from .cell_error import CellError, CellErrorType, cell_error_dict
 
+RESTRICTED_VALUES = [
+    Decimal('Infinity'),
+    Decimal('-Infinity'), 
+    Decimal('NaN'),
+    Decimal('-NaN')
+]
 
 class Cell:
     '''
@@ -45,6 +51,9 @@ class Cell:
         '''
 
         try:
+            # Check if current page is desired page
+
+
             # Remove leading and trailing whitespace
             inp = input_str.strip()
             self.contents = inp
@@ -68,7 +77,10 @@ class Cell:
             # Otherwise set to NUMBER type - works for now, will need to change
             # if we can have other cell types
             else:
-                self.value = Decimal(inp) 
+                temp_value = Decimal(inp) 
+                if temp_value in RESTRICTED_VALUES:
+                    self.value = inp
+                else: self.value = temp_value
 
         except DecimalException as d:
             # needs to be checked

@@ -145,12 +145,16 @@ class Workbook:
         # rather, the cell's value will be a CellError object indicating the
         # naure of the issue.
 
+        if self.evaluator.working_sheet != sheet_name:
+            self.evaluator.working_sheet = sheet_name
+
         sheet_name = sheet_name.lower()
 
         if sheet_name not in self.sheet_objects.keys():
             raise KeyError("Specified sheet name is not found")
         
-        return self.sheet_objects[sheet_name].set_cell_contents(location, contents)
+        return self.sheet_objects[sheet_name].set_cell_contents(
+            location, contents)
 
     def get_cell_contents(self, sheet_name: str, location: str) -> Optional[str]:
         # Return the contents of the specified cell on the specified sheet.
