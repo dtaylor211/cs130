@@ -1,1 +1,0 @@
-# test script for xxxx (to be determined)
