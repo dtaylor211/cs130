@@ -10,6 +10,9 @@ test-workbook:
 test-evaluator:
 	pytest -q ./tests/test_evaluator.py
 
+test-evaluator-invalid:
+	pytest -q ./tests/test_evaluator_invalid.py
+
 test:
 	pytest -q ./tests/test_workbook.py
 	pytest -q ./tests/test_sheet.py

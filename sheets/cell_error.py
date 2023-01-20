@@ -1,6 +1,15 @@
 import enum
 from typing import Optional
 
+cell_error_dict = {
+    1: '#ERROR!',
+    2: '#CIRCREF!',
+    3: '#REF!',
+    4: '#NAME?',
+    5: '#VALUE!',
+    6: '#DIV/0!'
+}
+
 class CellErrorType(enum.Enum):
     '''
     This enum specifies the kinds of errors that spreadsheet cells can hold.
