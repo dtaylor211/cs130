@@ -7,6 +7,10 @@ clean:
 test-workbook: 
 	pytest -q ./tests/test_workbook.py
 
+test-evaluator:
+	pytest -q ./tests/test_evaluator.py
+
 test:
 	pytest -q ./tests/test_workbook.py
 	pytest -q ./tests/test_sheet.py
+	pytest -q ./tests/test_evaluator.py
