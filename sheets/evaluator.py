@@ -1,6 +1,6 @@
 from lark import Tree, Transformer, Lark, Token
-from decimal import Decimal, DecimalException
-from .cell_error import CellError, CellErrorType, cell_error_dict
+from decimal import Decimal, DecimalException, InvalidOperation
+from .cell_error import CellError, CellErrorType, cell_errors
 from typing import *
 import re
 # from workbook import Workbook
@@ -18,6 +18,9 @@ class Evaluator(Transformer):
     def __init__(self, workbook, sheet_name: str):
         '''
         Initialize an evaluator, as well as the Transformer
+
+        Store the current workbook object as well as the current working
+        sheet name
 
         '''
 
@@ -109,7 +112,7 @@ class Evaluator(Transformer):
         - Tree holding the result as a Decimal object
 
         '''
-
+      
         try:
             operator = args[1]
             x = args[0].children[-1]
@@ -121,12 +124,13 @@ class Evaluator(Transformer):
             if isinstance(y, CellError):
                 return Tree('cell_error', [y])
             
-            if x in cell_error_dict.values():
-                e_type = [i for i in cell_error_dict if cell_error_dict[i]==x]
+            # Check for literal error values
+            if isinstance(x, str) and x.upper() in list(cell_errors.values()):
+                e_type = [i for i in cell_errors if cell_errors[i]==x.upper()]
                 c = CellErrorType(e_type[0])
                 return Tree('cell_error', [CellError(c, '', None)])
-            if y in cell_error_dict.values():
-                e_type = [i for i in cell_error_dict if cell_error_dict[i]==y]
+            if isinstance(y, str) and y.upper() in list(cell_errors.values()):
+                e_type = [i for i in cell_errors if cell_errors[i]==y.upper()]
                 c = CellErrorType(e_type[0])
                 return Tree('cell_error', [CellError(c, '', None)])
 
@@ -138,7 +142,7 @@ class Evaluator(Transformer):
             return Tree('number', [self.normalize_number(Decimal(result))])
 
         except Exception as e:
-            return self.process_exceptions(e, detail='adding/subtracting')
+            return self.process_exceptions(e, detail='addition/subtraction')
     
 
     def mul_expr(self, args: List) -> Tree:
@@ -163,6 +167,16 @@ class Evaluator(Transformer):
                 return Tree('cell_error', [x])
             if isinstance(y, CellError):
                 return Tree('cell_error', [y])
+            
+            # Check for literal error values
+            if isinstance(x, str) and x.upper() in list(cell_errors.values()):
+                e_type = [i for i in cell_errors if cell_errors[i]==x.upper()]
+                c = CellErrorType(e_type[0])
+                return Tree('cell_error', [CellError(c, '', None)])
+            if isinstance(y, str) and y.upper() in list(cell_errors.values()):
+                e_type = [i for i in cell_errors if cell_errors[i]==y.upper()]
+                c = CellErrorType(e_type[0])
+                return Tree('cell_error', [CellError(c, '', None)])
 
             # Check for compatible types, deal with empty case
             x = Decimal(0) if x is None else Decimal(x)
@@ -196,6 +210,12 @@ class Evaluator(Transformer):
             x = args[1].children[-1]
 
             # Do i need to check for errors?
+
+            # Check for literal error values
+            if isinstance(x, str) and x.upper() in list(cell_errors.values()):
+                e_type = [i for i in cell_errors if cell_errors[i]==x.upper()]
+                c = CellErrorType(e_type[0])
+                return Tree('cell_error', [CellError(c, '', None)])
 
             # Check for compatible types, deal with empty case
             x = Decimal(0) if x is None else Decimal(x)
@@ -232,6 +252,16 @@ class Evaluator(Transformer):
             # Check for compatible types, deal with empty case
             s1 = '' if s1 is None else str(s1)
             s2 = '' if s2 is None else str(s2)
+
+            # Check for literal error values - might not work in this order
+            if s1.upper() in list(cell_errors.values()):
+                e_type = [i for i in cell_errors if cell_errors[i]==s1.upper()]
+                c = CellErrorType(e_type[0])
+                return Tree('cell_error', [CellError(c, '', None)])
+            if s2.upper() in list(cell_errors.values()):
+                e_type = [i for i in cell_errors if cell_errors[i]==s2.upper()]
+                c = CellErrorType(e_type[0])
+                return Tree('cell_error', [CellError(c, '', None)])
 
             return Tree('string', [s1+s2])
 
@@ -292,6 +322,15 @@ class Evaluator(Transformer):
         '''
 
         return args[0] # removes the outer brackets
+    
+    def error(self, args):
+        '''
+        to-do
+        '''
+        x = args[0]
+        e_type = [i for i in cell_errors if cell_errors[i]==x.upper()]
+        c = CellErrorType(e_type[0])
+        return Tree('cell_error', [CellError(c, '', None)])
 
 
     ########################################################################
@@ -314,7 +353,7 @@ class Evaluator(Transformer):
         '''
 
         error_type = None
-        if isinstance(ex, DecimalException):
+        if isinstance(ex, DecimalException) or isinstance(ex, InvalidOperation):
             detail = f'Attempting to perform {detail} on incompatible or '\
                 'incorrect types'
             error_type = CellErrorType.TYPE_ERROR

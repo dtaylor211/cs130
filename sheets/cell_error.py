@@ -1,7 +1,7 @@
 import enum
 from typing import Optional
 
-cell_error_dict = {
+cell_errors = {
     1: '#ERROR!',
     2: '#CIRCREF!',
     3: '#REF!',
