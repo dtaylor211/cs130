@@ -127,4 +127,4 @@ class Graph:
         for k in self.adjacency_list:
             if k in nodes:
                 sub_adjacency_list[k] = [v for v in self.adjacency_list[k] if v in nodes]
-        return Graph(sub_adjacency_list)
+        self.adjacency_list = sub_adjacency_list
