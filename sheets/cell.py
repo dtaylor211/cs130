@@ -20,7 +20,7 @@ class _CellType(enum.Enum):
 
     # ERROR: int = 5 ?
 
-class CellTreeVisitor(Visitor):
+class _CellTreeVisitor(Visitor):
     '''
     This visitor gets all children cells from the tree of a cell.
     '''
@@ -140,3 +140,7 @@ class Cell:
         '''
         
         return cell_error_dict[cell_error_type]
+
+    def set_circular_error(self):
+        self.value = CellError(CellErrorType.CIRCULAR_REFERENCE, 
+                                "Cell is in a circular reference.")

@@ -3,8 +3,6 @@ from typing import Optional, List, Tuple, Any, Dict
 from .sheet import Sheet
 from .formula_evaluator import Evaluator
 from .graph import Graph
-# get rid I think
-from .cell_error import CellError, CellErrorType
 
 class Workbook:
     # A workbook containing zero or more named spreadsheets.
@@ -241,9 +239,7 @@ class Workbook:
                 dag_nodes.add(component[0])
             else:
                 for sheet, cell in component:
-                    self.sheet_objects[sheet].get_cell(cell).value = CellError(
-                        CellErrorType.CIRCULAR_REFERENCE, 
-                        "A cell is part of a circular reference.")
+                    self.sheet_objects[sheet].get_cell(cell).set_circular_error()
         dag = update_graph.subgraph_from_nodes(dag_nodes)
         # get the topological sort of non-circular nodes needing to be updated
         cell_topological = dag.topological_sort()
