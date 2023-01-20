@@ -9,15 +9,13 @@ class Graph:
     Stores the adjacency list representing the graph
     '''
 
-    def __init__(self, adjacency_list: Dict[T,List[T]], transpose = None):
+    def __init__(self, adjacency_list: Dict[T,List[T]]):
         '''
         Initialize a new Graph
 
         Arguments:
         - adjacency_list: Dict[T,List[T]] - dictionary representing the directed
         edges of the graph
-        - transpose = None - optional input of transpose graph
-        so we calculate the transpose on creation without infinite recursion
 
         '''
 
@@ -27,18 +25,19 @@ class Graph:
             adjacency_list[v] = []
         self.adjacency_list = adjacency_list
 
-        if transpose is None:
-            transpose_adjacency_list = {}
-            for k in adjacency_list:
-                transpose_adjacency_list[k] = []
+    def transpose(self):
+        '''
+        Transposes the graph.
 
-            for k, l in adjacency_list.items():
-                for v in l:
-                    transpose_adjacency_list[v].append(k)
-            self.transpose = Graph(transpose_adjacency_list, self)
-        else:
-            self.transpose = transpose
+        '''
+        transpose_adjacency_list = {}
+        for k in self.adjacency_list:
+            transpose_adjacency_list[k] = []
 
+        for k, l in self.adjacency_list.items():
+            for v in l:
+                transpose_adjacency_list[v].append(k)
+        self.adjacency_list = transpose_adjacency_list
     
     def get_strongly_connected_components(self) -> List[List[T]]:
         '''
