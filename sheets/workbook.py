@@ -225,7 +225,8 @@ class Workbook:
         for sheet in self.sheet_objects.values():
             adjacency_list.update(sheet.get_cell_adjacency_list())
         # make a graph of cell children, transpose to get graph of cell parents
-        parent_graph = Graph(adjacency_list).transpose
+        parent_graph = Graph(adjacency_list)
+        parent_graph.transpose()
         # get the graph of only cells needing to be updated
         reachable = parent_graph.get_reachable_nodes(updatedCells)
         update_graph = parent_graph.subgraph_from_nodes(reachable)
