@@ -2,7 +2,7 @@ import pytest
 import context
 from sheets.sheet import Sheet
 from decimal import Decimal
-from sheets.formula_evaluator import Evaluator
+from sheets.evaluator import Evaluator
 from sheets.workbook import Workbook # marked for removal
 
 workbook = Workbook()

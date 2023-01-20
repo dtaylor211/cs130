@@ -1,7 +1,7 @@
 import pytest
 import context
 from lark import Lark, Tree
-from sheets.formula_evaluator import Evaluator
+from sheets.evaluator import Evaluator
 from sheets.workbook import Workbook
 from decimal import Decimal
 from sheets.cell_error import CellError, CellErrorType
@@ -168,12 +168,40 @@ class TestEvaluatorInvalid:
 
     
     def test_errors_as_literals(self):
+        wb.set_cell_contents('Test', 'A1', '=#REF!')
+        tree = parser.parse('=#REF!')
+        print('t', tree)
+        final = evaluator.transform(tree)
+        print('f', final)
+        result_contents = wb.get_cell_contents('Test','A1')
+        result_value = wb.get_cell_value('Test', 'A1')
+        assert(result_contents == '#REF!')
+        assert(isinstance(result_value, CellError))
+
         wb.set_cell_contents('Test', 'A1', '=#REF!+5')
         result_contents = wb.get_cell_contents('Test','A1')
         result_value = wb.get_cell_value('Test', 'A1')
         assert(result_contents == '#REF!')
         assert(isinstance(result_value, CellError))
 
+        wb.set_cell_contents('Test', 'A1', '=#REF!+5')
+        result_contents = wb.get_cell_contents('Test','A1')
+        result_value = wb.get_cell_value('Test', 'A1')
+        assert(result_contents == '#REF!')
+        assert(isinstance(result_value, CellError))
+
+    
+    def test_reference_cells_with_errors(self):
+        pass
+
 
     def test_error_ordering(self):
+        # name = 'Test'
+        # wb.set_cell_contents(name, 'e1', '#div/0!')
+        # wb.set_cell_contents(name, 'e2', '=e1+5')
+        # tree = parser.parse('=#div/0!')
+        # print(tree)
+        # value = wb.get_cell_value(name, 'e2')
+        # assert isinstance(value, CellError)
+        # assert value.get_type() == CellErrorType.DIVIDE_BY_ZERO
         pass

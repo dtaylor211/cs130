@@ -1,7 +1,7 @@
 import re
 from typing import Optional, List, Tuple, Any, Dict
 from .sheet import Sheet
-from .formula_evaluator import Evaluator
+from .evaluator import Evaluator
 from .graph import Graph
 
 class Workbook:
