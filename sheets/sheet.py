@@ -1,6 +1,6 @@
 import re
 
-from typing import Dict, Tuple, Optional, Any
+from typing import Dict, List, Tuple, Optional, Any
 from.cell import Cell
 
 class Sheet:
@@ -79,3 +79,13 @@ class Sheet:
             return None
 
         return self.cells[coords].value # I think we need a get_value()
+
+    def get_cell_adjacency_list(self) -> Dict[Tuple[str, str], List[Tuple[str, str]]]:
+        '''
+        Gets the adjacency list of cells in the sheet.
+
+        '''
+        adjacency_list = {}
+        for cell in self.cells.values():
+            adjacency_list[(self.name.lower(), cell.loc)] = cell.get_children()
+        return adjacency_list
