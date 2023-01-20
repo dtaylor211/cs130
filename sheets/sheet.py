@@ -86,6 +86,6 @@ class Sheet:
 
         '''
         adjacency_list = {}
-        for loc, cell in self.cells:
-            adjacency_list[(self.name, loc)] = cell.get_children()
+        for cell in self.cells.values():
+            adjacency_list[(self.name.lower(), cell.loc)] = cell.get_children()
         return adjacency_list

@@ -61,7 +61,7 @@ class Graph:
                     strongconnect(v)
                 lowlink[k] = min(lowlink[k], lowlink[v])
             if lowlink[k] == idx:
-                component = [stack[stack_pos:]]
+                component = stack[stack_pos:]
                 del stack[stack_pos:]
                 scc.append(component)
                 for item in component:
@@ -94,6 +94,7 @@ class Graph:
                             stack.append((v, True))
                 else: # Leaving the node
                     result.append(k)
+        return result
 
     def get_reachable_nodes(self, initial: Set[T]):
         '''
