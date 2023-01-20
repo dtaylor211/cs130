@@ -43,9 +43,6 @@ class Evaluator(Transformer):
 
         '''
 
-        # norm = Decimal(token).normalize()
-        # _, _, exp = norm.as_tuple()
-        # return norm if exp <= 0 else norm.quantize(1)
         return self.normalize_number(Decimal(token))
 
 
@@ -131,6 +128,7 @@ class Evaluator(Transformer):
             return Tree('number', [self.normalize_number(Decimal(result))])
 
         except Exception as e:
+            print(e.with_traceback)
             return self.process_exceptions(e, detail='adding/subtracting')
     
 
@@ -261,6 +259,10 @@ class Evaluator(Transformer):
             # Deal with empty cases
             result = [Decimal(0)] if result is None else [result]
             return Tree('cell_ref', result)
+        
+        except KeyError as k:
+            print('huh')
+            return self.process_exceptions(k)
 
         except Exception as e:
             return self.process_exceptions(e, 'cell operations')
@@ -306,7 +308,10 @@ class Evaluator(Transformer):
             error_type = CellErrorType.TYPE_ERROR
         elif isinstance(ex, ZeroDivisionError):
             detail = 'Attempting to perform division with 0'
-            error_type = CellErrorType.TYPE_ERROR
+            error_type = CellErrorType.DIVIDE_BY_ZERO
+        elif isinstance(ex, KeyError):
+            detail = f'Attempting to access unknown sheet'
+            error_type = CellErrorType.BAD_REFERENCE
         else:
             detail = f'Unknown error occurred while performing {detail}'
         return Tree('cell_error', 

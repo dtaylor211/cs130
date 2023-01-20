@@ -4,7 +4,6 @@ from lark import Lark, Tree
 from sheets.formula_evaluator import Evaluator
 from sheets.workbook import Workbook
 from decimal import Decimal
-from sheets.cell_error import CellError, CellErrorType
 
 wb = Workbook()
 wb.new_sheet('Test')
@@ -13,7 +12,7 @@ parser = Lark.open('../sheets/formulas.lark', start='formula', rel_to=__file__)
 
 class TestEvaluator:
     '''
-    Tests the formula parser and evaluator
+    Tests the formula parser and evaluator using valid inputs
 
     '''
 
@@ -101,6 +100,8 @@ class TestEvaluator:
         wb.set_cell_contents('Test', 'A3', 'string')
         wb.set_cell_contents('Test', 'A4', '12string')
         wb.set_cell_contents('Test', 'a5', 'DarthJarJar')
+        wb.set_cell_contents('Test', 'A6', '12.0000000')
+        wb.set_cell_contents('Test', 'A7', '\'    123')
 
         tree = parser.parse('=A1')
         result = evaluator.transform(tree)
@@ -138,19 +139,13 @@ class TestEvaluator:
         result = evaluator.transform(tree)
         assert(result == Tree('cell_ref', ["DarthJarJar"]))
 
+        tree = parser.parse('=A6')
+        result = evaluator.transform(tree)
+        assert(result == Tree('cell_ref', [Decimal(12)]))
 
-    def test_invalid_literals(self):
-        wb.set_cell_contents('Test', 'A1', '=1E+4')
-        result_contents = wb.get_cell_contents('Test','A1')
-        result_value = wb.get_cell_value('Test', 'A1')
-        assert(result_contents == '#ERROR!')
-        assert(isinstance(result_value, CellError))
-
-        wb.set_cell_contents('Test', 'A1', '=A1A2')
-        result = wb.get_cell_contents('Test','A1')
-        assert(result == '#ERROR!')
-
-        # add more
+        tree = parser.parse('=A7')
+        result = evaluator.transform(tree)
+        assert(result == Tree('cell_ref', ['123']))
 
     
     def test_string_concatenation(self):
@@ -187,6 +182,18 @@ class TestEvaluator:
         tree = parser.parse('= A1   &  A5    ')
         result = evaluator.transform(tree)
         assert(result == Tree('string', ['string1Anakin']))
+
+        tree = parser.parse('=7&9')
+        result = evaluator.transform(tree)
+        assert(result == Tree('string', ['79']))
+
+        tree = parser.parse('=7&9&"string"')
+        result = evaluator.transform(tree)
+        assert(result == Tree('string', ['79string']))
+
+        tree = parser.parse('=7.1&9.2&"string"')
+        result = evaluator.transform(tree)
+        assert(result == Tree('string', ['7.19.2string']))
     
 
     def test_unary_operations(self):
@@ -264,6 +271,7 @@ class TestEvaluator:
         wb.set_cell_contents('Test', 'A2', '2')
         wb.set_cell_contents('Test', 'A3', '-3.25')
         wb.set_cell_contents('Test', 'A4', "'123")
+        wb.set_cell_contents('Test', 'A5', '3')
 
         tree = parser.parse('=A1*A2')
         result = evaluator.transform(tree)
@@ -288,6 +296,11 @@ class TestEvaluator:
         tree = parser.parse('=A3*A4')
         result = evaluator.transform(tree)
         assert(result == Tree('number', [Decimal(-399.75)]))
+
+        tree = parser.parse('=A1/A5')
+        result = evaluator.transform(tree)
+        assert(result == Tree('number', 
+                              [Decimal('0.3333333333333333333333333333')]))
 
 
     def test_complex_formula(self):
@@ -317,8 +330,6 @@ class TestEvaluator:
         tree = parser.parse('=A1&A2&(A4*A3)')
         result = evaluator.transform(tree)
         assert(result == Tree('string', ['s1s2-399.75']))
-
-        # add sheet name tests for passing into cell field
 
         tree = parser.parse('=Test!A1&A2&(A4*A3)')
         result = evaluator.transform(tree)

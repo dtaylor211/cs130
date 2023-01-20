@@ -7,20 +7,7 @@ from decimal import Decimal, DecimalException
 from typing import Optional
 from .formula_evaluator import Evaluator
 import lark
-from .cell_error import CellError, CellErrorType
-
-class _CellType(enum.Enum):
-    '''
-    This enum specifies the kinds of values that spreadsheet cells can hold.
-    '''
-
-    NUMBER: int = 1
->>>>>>> 40d1757... DJJ-8: Fixed formatting
-    STRING: int = 2
-    FORMULA: int = 3 # May want to remove
-    EMPTY: int = 4
-
-    # ERROR: int = 5 ?
+from .cell_error import CellError, CellErrorType, cell_error_dict
 
 
 class Cell:
@@ -48,9 +35,9 @@ class Cell:
         # new Cell is treated as an empty cell, contents and values are None
         self.contents = None
         self.value = None
-        self.type: int = _CellType.EMPTY
         self.evaluator = evaluator
-        self.parser = lark.Lark.open('formulas.lark', start='formula', rel_to=__file__)
+        self.parser = lark.Lark.open(
+            'formulas.lark', start='formula', rel_to=__file__)
 
     def set_contents(self, input_str: Optional[str]):
         '''
@@ -68,31 +55,30 @@ class Cell:
 
             # Check if there is a leading single quote, set to STRING type
             if inp[0] == "'":
-                self.type = _CellType.STRING
-                self.value = inp[1:]
+                self.value = inp[1:].strip() # Remove whitespace again
 
             # Check if there is a leading equal sign, set to FORMULA type
             # and evaluate
             elif inp[0] == "=":
-                self.type = _CellType.FORMULA
                 tree = self.parser.parse(inp)
-                print(tree)
-                eval = self.evaluator.transform(tree)
-                print(eval)
-                self.value = eval.children[0]
+                eval = self.evaluator.transform(tree).children[0]
+
+                if isinstance(eval, CellError):
+                    self.contents = self.get_string_from_error(
+                        eval.get_type().value)
+                    
+                self.value = eval
 
             # Otherwise set to NUMBER type - works for now, will need to change
             # if we can have other cell types
             else:
-                self.type = _CellType.NUMBER 
                 self.value = Decimal(inp) 
 
         except DecimalException as d:
-            self.type = _CellType.STRING
+            # needs to be checked
             self.value = inp
         
         except lark.exceptions.LarkError as l:
-            self.type = _CellType.FORMULA
             self.value = CellError(CellErrorType.PARSE_ERROR, 
                             detail='Unable to parse entry', exception = l)
             self.contents = '#ERROR!'
@@ -106,4 +92,11 @@ class Cell:
 
         self.contents = None
         self.value = None
-        self.type: int = _CellType.EMPTY
+
+
+    def get_string_from_error(self, cell_error_type: CellErrorType) -> str:
+        '''
+        to-do
+        '''
+        
+        return cell_error_dict[cell_error_type]
