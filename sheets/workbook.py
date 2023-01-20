@@ -206,3 +206,29 @@ class Workbook:
 
         # calls get_cell_value from Sheet
         return self.sheet_objects[sheet_name].get_cell_value(location)
+
+    def updateCellValues(self, updatedCells) -> None:
+        '''
+        Updates the contents of all cells. If given a list of updated cells,
+        only updates cells effected.
+
+        Arguments:
+        - updatedCells - cells that have been updated
+
+        '''
+        # get all the cell children
+        adjacency_list = {}
+        # for sheet in self.sheet_objects.values():
+        #     adjacency_list.update(sheet.get_cell_adjacency_list())
+        # # make a graph of cell children, transpose to get graph of cell parents
+        # parent_graph = Graph(adjacency_list).transpose
+        # # get the graph of only cells needing to be updated
+        # update_graph = parent_graph.subgraph_from_nodes(parent_graph.get_reachable_nodes())
+        # # get the cycles from the scc
+        # components = update_graph.get_strongly_connected_components()
+        # acyclic = [ for component in components if ]
+        # dag = subgraph_from_nodes(acyclic)
+        # cell_topological = dag.topological_sort()
+        # for sheet, cell in cell_topological:
+        #     sheet.get_cell(cell).set_cell_contents(contents)
+
