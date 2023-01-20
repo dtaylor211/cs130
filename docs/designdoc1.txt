@@ -147,7 +147,7 @@ P3.  [4pts] How would you characterize the quality of your project testing?
      Make sure to touch on these items:  Is it automated?  Is it easy for
      teammates to run?  Is it fast?  Is it reasonably complete?
 
-     TODO - coverage, etc.
+     TODO - coverage, etc. (mention slight overlap between unit/integration?)
 
 
 P4.  [3pts] What mechanisms did your team use for communication during the

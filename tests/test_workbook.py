@@ -1,7 +1,7 @@
 import pytest
 import context
 from sheets.workbook import Workbook
-from sheets.sheet import Sheet
+# from sheets.sheet import Sheet
 from decimal import Decimal
 
 class TestWorkbook:
@@ -173,94 +173,79 @@ class TestWorkbook:
         value = wb.get_cell_value(name, "A1")
         assert value == Decimal(2)
 
-    def test_sheet_get_contents(self):
-        sheet = Sheet("Sheet1", None) 
-        sheet.set_cell_contents("A1")
-        contents = sheet.get_cell_contents("A1")
-        assert contents is None
+    # def test_sheet_get_contents(self):
+    #     sheet = Sheet("Sheet1", None) 
+    #     sheet.set_cell_contents("A1", None)
+    #     contents = sheet.get_cell_contents("A1")
+    #     assert contents is None
 
-        sheet.set_cell_contents("A1", "1")
-        contents = sheet.get_cell_contents("A1")
-        assert contents == "1"
+    #     sheet.set_cell_contents("A1", "1")
+    #     contents = sheet.get_cell_contents("A1")
+    #     assert contents == "1"
 
-    def test_sheet_get_value(self):
-        sheet = Sheet("Sheet1", None)
-        sheet.set_cell_contents("A1")
-        value = sheet.get_cell_value("A1")
-        assert value is None
+    # def test_sheet_get_value(self):
+    #     sheet = Sheet("Sheet1", None)
+    #     sheet.set_cell_contents("A1", None)
+    #     value = sheet.get_cell_value("A1")
+    #     assert value is None
         
-        sheet.set_cell_contents("A1", "1")
-        value = sheet.get_cell_value("A1")
-        assert value == Decimal(1)
+    #     sheet.set_cell_contents("A1", "1")
+    #     value = sheet.get_cell_value("A1")
+    #     assert value == Decimal(1)
 
-    def test_reference_same_sheet(self):
-        wb = Workbook()
-        (index, name) = wb.new_sheet()
-        assert name == "Sheet1"
-        wb.set_cell_contents(name, "A1", "1")
-        wb.set_cell_contents(name, "B2", "=A1")
+    # def test_reference_same_sheet(self):
+    #     wb = Workbook()
+    #     (index, name) = wb.new_sheet()
+    #     assert name == "Sheet1"
+    #     wb.set_cell_contents(name, "A1", "1")
+    #     wb.set_cell_contents(name, "B2", "=A1")
 
-        contents = wb.get_cell_contents(name, "A1")
-        assert contents == "1"
-        contents = wb.get_cell_contents(name, "B2")
-        assert contents == "=A1"
+    #     contents = wb.get_cell_contents(name, "A1")
+    #     assert contents == "1"
+    #     contents = wb.get_cell_contents(name, "B2")
+    #     assert contents == "=A1"
 
-        value = wb.get_cell_value(name, "A1")
-        assert value == Decimal(1)
-        value = wb.get_cell_value(name, "B2")
-        assert value == Decimal(1)
+    #     value = wb.get_cell_value(name, "A1")
+    #     assert value == Decimal(1)
+    #     value = wb.get_cell_value(name, "B2")
+    #     assert value == Decimal(1)
 
 
-    def test_reference_other_sheet(self):
-        wb = Workbook()
-        (index, name) = wb.new_sheet()
-        wb.set_cell_contents("Sheet1", "A1", "1")
-        (index, name) = wb.new_sheet()
-        wb.set_cell_contents("Sheet2", "B2", "=Sheet1!A1")
+    # def test_reference_other_sheet(self):
+    #     wb = Workbook()
+    #     (index, name) = wb.new_sheet()
+    #     wb.set_cell_contents("Sheet1", "A1", "1")
+    #     (index, name) = wb.new_sheet()
+    #     wb.set_cell_contents("Sheet2", "B2", "=Sheet1!A1")
         
-        contents = wb.get_cell_contents("Sheet1", "A1")
-        assert contents == "1"
-        contents = wb.get_cell_contents("Sheet2", "B2")
-        assert contents == "=Sheet1!A1"
+    #     contents = wb.get_cell_contents("Sheet1", "A1")
+    #     assert contents == "1"
+    #     contents = wb.get_cell_contents("Sheet2", "B2")
+    #     assert contents == "=Sheet1!A1"
 
-        value = wb.get_cell_value("Sheet1", "A1")
-        assert value == Decimal(1)
-        value = wb.get_cell_value("Sheet2", "B2")
-        assert value == Decimal(1)
+    #     value = wb.get_cell_value("Sheet1", "A1")
+    #     assert value == Decimal(1)
+    #     value = wb.get_cell_value("Sheet2", "B2")
+    #     assert value == Decimal(1)
 
-    def test_updating(self):
-        wb = Workbook()
-        (index, name) = wb.new_sheet()
+    # def test_updating(self):
+    #     wb = Workbook()
+    #     (index, name) = wb.new_sheet()
 
-        wb.set_cell_contents(name, "A1", "1")
-        wb.set_cell_contents(name, "B2", "=A1+1")
-        wb.set_cell_contents(name, "C3", "=B2+1")
-        value = wb.get_cell_value(name, "C3")
-        assert value == Decimal(3)
+    #     wb.set_cell_contents(name, "A1", "1")
+    #     wb.set_cell_contents(name, "B2", "=A1+1")
+    #     wb.set_cell_contents(name, "C3", "=B2+1")
+    #     value = wb.get_cell_value(name, "C3")
+    #     assert value == Decimal(3)
 
-        wb.set_cell_contents(name, "A1", "5")
-        value = wb.get_cell_value(name, "B2")
-        assert value == Decimal(6)
-        value = wb.get_cell_value(name, "C3")
-        assert value == Decimal(7)
+    #     wb.set_cell_contents(name, "A1", "5")
+    #     value = wb.get_cell_value(name, "B2")
+    #     assert value == Decimal(6)
+    #     value = wb.get_cell_value(name, "C3")
+    #     assert value == Decimal(7)
 
-        wb.set_cell_contents(name, "a1", "10")
-        value = wb.get_cell_value(name, "B2")
-        assert value == Decimal(11)
-        value = wb.get_cell_value(name, "C3")
-        assert value == Decimal(12)
-
-    def test_cell_names(self):
-        wb = Workbook()
-        (index, name) = wb.new_sheet()
-
-        with pytest.raises(ValueError):
-            wb.set_cell_contents(name, "A0")
-        with pytest.raises(ValueError):
-            wb.set_cell_contents(name, "A-1")
-        with pytest.raises(ValueError):
-            wb.set_cell_contents(name, "A 1")
-        with pytest.raises(ValueError):
-            wb.set_cell_contents(name, " A1")
-        with pytest.raises(ValueError):
-            wb.set_cell_contents(name, "A1 ")
+    #     wb.set_cell_contents(name, "a1", "10")
+    #     value = wb.get_cell_value(name, "B2")
+    #     assert value == Decimal(11)
+    #     value = wb.get_cell_value(name, "C3")
+    #     assert value == Decimal(12)  
