@@ -23,8 +23,6 @@ class Evaluator(Transformer):
         Transformer.__init__(self)
         self.workbook = workbook
         self.working_sheet = sheet_name
-        # If things break, it might be because I removed the parser 
-        # from this file
 
 
     ########################################################################
@@ -45,9 +43,10 @@ class Evaluator(Transformer):
 
         '''
 
-        norm = Decimal(token).normalize()
-        _, _, exp = norm.as_tuple()
-        return norm if exp <= 0 else norm.quantize(1)
+        # norm = Decimal(token).normalize()
+        # _, _, exp = norm.as_tuple()
+        # return norm if exp <= 0 else norm.quantize(1)
+        return self.normalize_number(Decimal(token))
 
 
     def STRING(self, token: Token):
@@ -62,22 +61,23 @@ class Evaluator(Transformer):
         
         '''
 
-        return str(token)[0][1:-1]
+        return (str(token)[1:-1])
+    
 
-    # def CELLREF(self, token: Token):
-    #     '''
-    #     Evaluate a CELLREF type
+    def CELLREF(self, token: Token):
+        '''
+        Evaluate a CELLREF type
 
-    #     Arguments:
-    #     - token: Token - contains data about the cell reference
+        Arguments:
+        - token: Token - contains data about the cell reference
 
-    #     Returns:
-    #     - the original token passed in
-    #     I think unneeded
+        Returns:
+        - the original token passed in
+        I think unneeded
 
-    #     '''
+        '''
 
-    #     return token
+        return token
 
 
     ########################################################################
@@ -128,7 +128,7 @@ class Evaluator(Transformer):
             y = Decimal(0) if y is None else Decimal(y)
 
             result = x + y if operator == '+' else x - y
-            return Tree('number', [Decimal(result)])
+            return Tree('number', [self.normalize_number(Decimal(result))])
 
         except Exception as e:
             return self.process_exceptions(e, detail='adding/subtracting')
@@ -166,7 +166,7 @@ class Evaluator(Transformer):
                 raise ZeroDivisionError
                 
             result = x * y if operator == '*' else x / y
-            return Tree('number', [Decimal(result)])
+            return Tree('number', [self.normalize_number(Decimal(result))])
 
         except Exception as e:
             return self.process_exceptions(e, detail='multiplication/division')    
@@ -260,10 +260,24 @@ class Evaluator(Transformer):
 
             # Deal with empty cases
             result = [Decimal(0)] if result is None else [result]
-            return Tree('value', result)
+            return Tree('cell_ref', result)
 
         except Exception as e:
             return self.process_exceptions(e, 'cell operations')
+        
+    def parens(self, args: List):
+        '''
+        Evaluate an expression enclosed in parenthesis
+
+        Arguments:
+        - args: List - list of Tree and/or Token objects of format
+
+        Returns:
+        - Tree holding the expression inside the parenthesis
+
+        '''
+
+        return args[0] # removes the outer brackets
 
 
     ########################################################################
@@ -271,7 +285,7 @@ class Evaluator(Transformer):
     ########################################################################       
 
 
-    def process_exceptions(self, exception: Exception, detail: str = '') -> Tree:
+    def process_exceptions(self, ex: Exception, detail: str = '') -> Tree:
         '''
         Process the occurrence of an exception
 
@@ -286,14 +300,36 @@ class Evaluator(Transformer):
         '''
 
         error_type = None
-        if isinstance(exception, DecimalException):
+        if isinstance(ex, DecimalException):
             detail = f'Attempting to perform {detail} on incompatible or '\
                 'incorrect types'
             error_type = CellErrorType.TYPE_ERROR
-        elif isinstance(exception, ZeroDivisionError):
+        elif isinstance(ex, ZeroDivisionError):
             detail = 'Attempting to perform division with 0'
             error_type = CellErrorType.TYPE_ERROR
         else:
-            detail = 'Unknown error'
+            detail = f'Unknown error occurred while performing {detail}'
         return Tree('cell_error', 
-            [CellError(error_type, detail=detail, exception = exception)])
+            [CellError(error_type, detail=detail, exception = ex)])
+    
+
+    ########################################################################
+    # Helper Functions
+    ######################################################################## 
+
+    def normalize_number(self, num: Decimal) -> Decimal:
+        '''
+        Normalize a Decimal object such that we remove all leading and 
+        trailing zeros, while not simplifying using exponent notation
+
+        Arguments:
+        - num: Decimal - decimal to be normalized
+
+        Returns:
+        - normalized Decimal
+
+        '''
+
+        norm = num.normalize()
+        _, _, exp = norm.as_tuple()
+        return norm if exp <= 0 else norm.quantize(1)
