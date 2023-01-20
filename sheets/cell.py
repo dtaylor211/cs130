@@ -36,7 +36,7 @@ class CellTreeVisitor(Visitor):
         else:
             cell_sheet = self.sheet
             cell = str(tree.children[0])
-        self.children.add((cell_sheet, cell))
+        self.children.add((cell_sheet.lower(), cell))
 
 class Cell:
     '''
@@ -97,11 +97,7 @@ class Cell:
                 visitor = CellTreeVisitor(str(self.evaluator.working_sheet))
                 visitor.visit(tree)
                 self.children = list(visitor.children)
-                print(tree)
-                for child in self.children:
-                    print(child)
                 eval = self.evaluator.transform(tree)
-                print(eval)
                 self.value = eval.children[0]
 
             # Otherwise set to NUMBER type - works for now, will need to change
