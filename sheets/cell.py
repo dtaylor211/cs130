@@ -6,7 +6,8 @@ import enum
 from decimal import Decimal, DecimalException
 from typing import Optional
 from .formula_evaluator import Evaluator
-from lark import Lark
+import lark
+from .cell_error import CellError, CellErrorType
 
 class _CellType(enum.Enum):
     '''
@@ -49,7 +50,7 @@ class Cell:
         self.value = None
         self.type: int = _CellType.EMPTY
         self.evaluator = evaluator
-        self.parser = Lark.open('formulas.lark', start='formula', rel_to=__file__)
+        self.parser = lark.Lark.open('formulas.lark', start='formula', rel_to=__file__)
 
     def set_contents(self, input_str: Optional[str]):
         '''
@@ -89,6 +90,12 @@ class Cell:
         except DecimalException as d:
             self.type = _CellType.STRING
             self.value = inp
+        
+        except lark.exceptions.LarkError as l:
+            self.type = _CellType.FORMULA
+            self.value = CellError(CellErrorType.PARSE_ERROR, 
+                            detail='Unable to parse entry', exception = l)
+            self.contents = '#ERROR!'
 
 
     def empty(self):
