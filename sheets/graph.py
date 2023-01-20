@@ -109,10 +109,11 @@ class Graph:
             stack = [v]
             while stack:
                 u = stack.pop()
-                for w in self.adjacency_list[u]:
-                    if w not in reachable:
-                        stack.append(w)
-                        reachable.add(w)
+                if u in self.adjacency_list:
+                    for w in self.adjacency_list[u]:
+                        if w not in reachable:
+                            stack.append(w)
+                            reachable.add(w)
         return reachable
 
     def subgraph_from_nodes(self, nodes: Set[T]):
@@ -125,5 +126,6 @@ class Graph:
         '''
         sub_adjacency_list = {}
         for k in nodes:
-            sub_adjacency_list[k] = [v for v in self.adjacency_list[k] if v in nodes]
+            if k in self.adjacency_list:
+                sub_adjacency_list[k] = [v for v in self.adjacency_list[k] if v in nodes]
         return Graph(sub_adjacency_list)
