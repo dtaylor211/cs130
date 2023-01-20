@@ -1,7 +1,7 @@
 import pytest
 import context
 from lark import Lark, Tree
-from sheets.formula_evaluator import Evaluator
+from sheets.evaluator import Evaluator
 from sheets.workbook import Workbook
 from decimal import Decimal
 
@@ -236,6 +236,10 @@ class TestEvaluator:
         wb.set_cell_contents('Test', 'A2', '=2')
         wb.set_cell_contents('Test', 'A3', '-3.25')
         wb.set_cell_contents('Test', 'A4', "'123")
+
+        tree = parser.parse('=1+1')
+        result = evaluator.transform(tree)
+        assert(result == Tree('number', [Decimal(2)]))
 
         tree = parser.parse('=A1+A2')
         result = evaluator.transform(tree)

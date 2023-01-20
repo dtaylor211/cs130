@@ -5,18 +5,10 @@ class CellType:
 import enum
 from decimal import Decimal, DecimalException
 from typing import Optional
-from .formula_evaluator import Evaluator
-from lark import Lark, Visitor
-
-class _CellType(enum.Enum):
-    '''
-    This enum specifies the kinds of values that spreadsheet cells can hold.
-    '''
-
-    NUMBER: int = 1
-    STRING: int = 2
-    FORMULA: int = 3 # May want to remove
-    EMPTY: int = 4
+from .evaluator import Evaluator
+import lark
+from lark import Visitor
+from .cell_error import CellError, CellErrorType, cell_errors
 
     # ERROR: int = 5 ?
 
@@ -97,8 +89,16 @@ class Cell:
                 visitor = _CellTreeVisitor(str(self.evaluator.working_sheet))
                 visitor.visit(tree)
                 self.children = list(visitor.children)
-                eval = self.evaluator.transform(tree)
-                self.value = eval.children[0]
+                eval = self.evaluator.transform(tree).children[0]
+
+                if isinstance(eval, CellError):
+                    if eval.get_type() is None:
+                        self.contents = '#ERROR!!'
+                    else:
+                        self.contents = self.get_string_from_error(
+                            eval.get_type().value)
+                    
+                self.value = eval
 
             # Otherwise set to NUMBER type - works for now, will need to change
             # if we can have other cell types
@@ -139,7 +139,7 @@ class Cell:
         to-do
         '''
         
-        return cell_error_dict[cell_error_type]
+        return cell_errors[cell_error_type]
 
     def set_circular_error(self):
         self.value = CellError(CellErrorType.CIRCULAR_REFERENCE, 
