@@ -454,5 +454,5 @@ class TestEvaluator:
         WB.set_cell_contents("June Totals", "B2", "=A2")
         contents = WB.get_cell_contents("June Totals", "B2")
         assert contents == "=A2"
-        value = WB.get_cell_value("June Totals", "B2")
+        value = wb.get_cell_value("June Totals", "B2")
         assert value == Decimal(2)
