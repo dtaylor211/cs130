@@ -3,6 +3,7 @@ from decimal import Decimal, DecimalException
 from typing import Optional
 from .formula_evaluator import Evaluator
 import lark
+from lark import Visitor
 from .cell_error import CellError, CellErrorType, cell_error_dict
 
 RESTRICTED_VALUES = [
@@ -11,6 +12,24 @@ RESTRICTED_VALUES = [
     Decimal('NaN'),
     Decimal('-NaN')
 ]
+
+class _CellTreeVisitor(Visitor):
+    '''
+    This visitor gets all children cells from the tree of a cell.
+    '''
+
+    def __init__(self, sheet):
+        self.children = set()
+        self.sheet = sheet
+
+    def cell(self, tree):
+        if len(tree.children) == 2:
+            cell_sheet = str(tree.children[0])
+            cell = str(tree.children[1])
+        else:
+            cell_sheet = self.sheet
+            cell = str(tree.children[0])
+        self.children.add((cell_sheet.lower(), cell))
 
 class Cell:
     '''
@@ -37,6 +56,7 @@ class Cell:
         # new Cell is treated as an empty cell, contents and values are None
         self.contents = None
         self.value = None
+        self.children = []
         self.evaluator = evaluator
         self.parser = lark.Lark.open(
             'formulas.lark', start='formula', rel_to=__file__)
@@ -66,6 +86,9 @@ class Cell:
             # and evaluate
             elif inp[0] == "=":
                 tree = self.parser.parse(inp)
+                visitor = CellTreeVisitor(str(self.evaluator.working_sheet))
+                visitor.visit(tree)
+                self.children = list(visitor.children)
                 eval = self.evaluator.transform(tree).children[0]
 
                 if isinstance(eval, CellError):
@@ -91,6 +114,12 @@ class Cell:
                             detail='Unable to parse entry', exception = l)
             self.contents = '#ERROR!'
 
+    def get_children(self):
+        '''
+        Gets the children of the cell
+
+        '''
+        return self.children
 
     def empty(self):
         '''
@@ -108,3 +137,7 @@ class Cell:
         '''
         
         return cell_error_dict[cell_error_type]
+
+    def set_circular_error(self):
+        self.value = CellError(CellErrorType.CIRCULAR_REFERENCE, 
+                                "Cell is in a circular reference.")

@@ -17,11 +17,21 @@ Logistics (7 pts)
 
 L1.  [2pts] Enumerate all teammates here.
 
+     Benjamin (Ben) Juarez, Kyle McGraw, Dallas Taylor
+
 
 L2.  [2pts] What did each teammate focus on during this project?
 
+     Ben:      General structure, Testing
+     Kyle:     General structure, Graph algorithms
+     Dallas:   General structure, Parser/Formula Evaluation
+
 
 L3.  [3pts] Approximately how many hours did each teammate spend on the project?
+
+     Ben:      16
+     Kyle:     16
+     Dallas:   19
 
 
 Spreadsheet Engine Design (20 pts)
@@ -31,29 +41,79 @@ D1.  [3pts] Describe the high-level design abstractions (e.g. classes and/or
      submodules) in your spreadsheet engine, and what purposes these various
      abstractions fulfill.
 
+     Workbook -> Sheet -> Cell
+     TODO: Separation of CellGraph, Evaluator, etc.
+
+     Workbook: A Workbook contains zero or more spreadsheets (Sheets).  Each 
+               Workbook holds a list of Sheet names (case sensitive), a 
+               dictionary mapping string (Sheet) names (case insensitive) to 
+               Sheets, and an Evaluator.  Workbook holds the logic for 
+               listing/adding/deleting/counting Sheets and also contains many of 
+               the abstractions for handling Cell actions (setting contents & 
+               getting contents/values)
+
+     Sheet:    A Sheet contains Cells.  Each Sheet holds the string (Sheet) name
+               that it belongs to, a dictionary mapping (col, row) int 
+               coordinates to Cells, and an Evaluator.  Sheet holds the logic 
+               for calculating extent, converting location (string) to 
+               (col, row) coordinates, and adding Cells.  Sheet also furthers 
+               the abstraction for handling Cell actions.
+
+     Cell:     A Cell represents an individual spreadsheet cell.  Each Cell 
+               holds a location, contents, value, type, Evaluator, and parser.
+               Cell holds the logic for parsing contents and initiating the 
+               parser/evaluator process.
+
 
 D2.  [4pts] Why did you choose the design you chose?  Describe other designs
      (or perhaps earlier versions of the above design) that you considered,
      and why you ended up not using them.
 
+     Given the overview of functionality in the project specs, it made the most
+     sense to us to separate our design into Workbook, Sheet, and Cell such that 
+     each component was abstracted appropriately.  We believed this was the most 
+     straightforward approach and would best allow for further improvements in 
+     later projects.  We initially had too much logic handled in Workbook which 
+     led us to eventually put more of the logic behind the scenes in Sheet/Cell.
+
 
 D3.  [4pts] At a high level (e.g. pseudocode or higher), enumerate the steps
      that your spreadsheet engine goes through when a caller sets a cell's
      contents.
+     
+     1) Workbook checks if Sheet exists (raises KeyError if not)
+     2) Workbook passes provided location/contents to Sheet 
+     3) Sheet checks if location is valid (raises ValueError if not)
+     4) Sheet converts location to (column, row) coordinates
+     5) Sheet checks if Cell already exists (creates new Cell if not)
+     6) Sheet checks if contents are empty/None (deletes Cell if so)
+     7) Sheet passes contents to Cell
+     8) Cell parses contents and determines formula/string/literal value
+     9) (If formula) Cell value set after formula is parsed/evaluated
+     10) (If literal) Cell value set as string if cannot be parsed as Decimal
+     11) TODO - cell updating, error handling, graph, etc.
 
 
 D4.  [3pts] How does your spreadsheet engine identify what other cells need
      updating when a cell's contents are changed, and what order to update them?
+
+     TODO
 
 
 D5.  [3pts] How does your spreadsheet engine identify cycles between cells when
      a cell update is performed?  Are cells in a cycle processed any differently
      from other cells outside of the cycle?
 
+     TODO
+
 
 D6.  [3pts] What steps does your spreadsheet engine go through when a sheet is
      deleted from a workbook?  How does it identify cells that may need to be
      recomputed after a sheet-deletion operation?
+
+     1) Workbook checks if Sheet exists (raises KeyError if not)
+     2) Workbook removes Sheet object from dictionary and sheet name from list.
+     2) TODO - cycle detection, etc.
 
 
 Implementation Process (23 pts)
@@ -63,29 +123,64 @@ P1.  [4pts] How did your team break down and keep track of the various tasks to
      complete for this project?  Did you use the GitHub issue tracker, or some
      other system like Trello, or some other tool?
 
+     Our team used a custom task manager in Notion to track tickets.  This tool 
+     allowed us to clearly organize and track the implementation of features 
+     (behaves very similarly to typical issue tracker).
+
 
 P2.  [4pts] How did you assign tasks to teammates?  Did you stick with your
      task-assignments through the project, or did you shift around tasks as the
      project progressed?  Why?
+
+     Tasks were assigned to teammates in Notion through tickets.  These tickets
+     could easily be assigned to individuals and the ticket names were useful 
+     for tracking feature branches / commit messages.  Generally, we stuck with
+     our task-assignments throughout the project, but we also created/assigned
+     tasks throughout the whole project workflow as we developed an 
+     understanding of our implementation direction.  Tasks weren't necessarily 
+     shifted around because tasks were not explicitly assigned to individuals 
+     when created.  Rather, tasks were unassigned when created and teammates 
+     would pick up these tickets depending on their progress.
 
 
 P3.  [4pts] How would you characterize the quality of your project testing?
      Make sure to touch on these items:  Is it automated?  Is it easy for
      teammates to run?  Is it fast?  Is it reasonably complete?
 
+     TODO - coverage, etc.
+
 
 P4.  [3pts] What mechanisms did your team use for communication during the
      project?  Did you find them to be effective?  What issues did you
      encounter, if any?
+
+     We used Messenger for group communication, but we mainly used in-person 
+     communication.  We typically were able to meet at least once a day for the 
+     week leading up to the due date.  Our methods of communication felt very
+     effective.  Because of our consistent communication and task-tracking, we
+     did not encounter issues related to miscommunication.
 
 
 P5.  [3pts] Did you use any kind of collaborative construction techniques, e.g.
      code reviews or pair-programming, during the project?  If so, what are your
      observations about its usefulness?  Did you find it to have any downsides?
 
+     Our general workflow mainly consisted of group programming / code review
+     sessions in which one of us would screenshare our code editor onto a TV with all 3 of 
+     us in a room.  We found that these group sessions were incredibly useful
+     for getting everyone on the same page and ensuring that each teammate had 
+     a solid understanding of our implementation as a whole.  Only downsides 
+     would be related to slower implementations at times (1 person coding vs.
+     3 people coding), but code quality was better when all 3 of us were 
+     together.
+
 
 P6.  [5pts] What would you like to improve about your team's development
      process, going forward?
+
+     Our team had a slow (and perhaps late) start to this project.  But our pace
+     was able to increase efficiently because of our organization.  In the 
+     future, we can do a better job at being more productive early on.
 
 
 Section F:  CS130 Project 1 Feedback [OPTIONAL]
