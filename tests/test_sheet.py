@@ -30,6 +30,9 @@ class TestSheet:
         sheet.set_cell_contents("D5", "   ")
         assert sheet.get_extent() == (1, 1)
 
+        sheet.set_cell_contents("A1", "")
+        assert sheet.get_extent() == (0, 0)
+
     def test_get_coords_from_loc(self):
         sheet = Sheet("Sheet1", None)
         with pytest.raises(ValueError):
@@ -42,6 +45,12 @@ class TestSheet:
             sheet.get_coords_from_loc(" A1")
         with pytest.raises(ValueError):
             sheet.get_coords_from_loc("A1 ")
+        with pytest.raises(ValueError):
+            sheet.get_coords_from_loc("AAAAA1")
+        with pytest.raises(ValueError):
+            sheet.get_coords_from_loc("A11111")
+        with pytest.raises(ValueError):
+            sheet.get_coords_from_loc("A0001")
 
         (col, row) = sheet.get_coords_from_loc("A1")
         assert (col, row) == (1, 1)
