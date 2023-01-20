@@ -36,7 +36,7 @@ class _CellTreeVisitor(Visitor):
         else:
             cell_sheet = self.sheet
             cell = str(tree.children[0])
-        self.children.add((cell_sheet.lower(), cell))
+        self.children.add((cell_sheet.lower(), cell.lower()))
 
 class Cell:
     '''
@@ -94,7 +94,7 @@ class Cell:
             # and evaluate
             elif inp[0] == "=":
                 tree = self.parser.parse(inp)
-                visitor = CellTreeVisitor(str(self.evaluator.working_sheet))
+                visitor = _CellTreeVisitor(str(self.evaluator.working_sheet))
                 visitor.visit(tree)
                 self.children = list(visitor.children)
                 eval = self.evaluator.transform(tree)

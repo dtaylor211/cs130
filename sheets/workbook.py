@@ -157,7 +157,7 @@ class Workbook:
         # set cell contents
         cell = self.sheet_objects[sheet_name].set_cell_contents(location, contents)
         # update other cells
-        self.updateCellValues([(sheet_name, location)])
+        self.updateCellValues([(sheet_name, location.lower())])
 
 
     def get_cell_contents(self, sheet_name: str, location: str) -> Optional[str]:
