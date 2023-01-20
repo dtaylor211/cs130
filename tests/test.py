@@ -27,6 +27,17 @@ wb.set_cell_contents('Test1','A4','=Test!A1')
 print(wb.get_cell_value('Test1','A4'))
 wb.del_sheet('Test')
 print(wb.get_cell_value('Test1','A4'))
+wb.set_cell_contents('Test1','A4','1')
+print(wb.get_cell_value('Test1','A4'))
+wb.set_cell_contents('Test1','A5','=1')
+wb.set_cell_contents('Test1','A4','=A4+A5')
+print(wb.get_cell_value('Test1','A4'))
+wb.set_cell_contents('Test1','A5','=1')
+print(wb.get_cell_value('Test1','A4'))
+wb.set_cell_contents('Test1','A5','=1')
+print(wb.get_cell_value('Test1','A4'))
+wb.set_cell_contents('Test1','A5','=1')
+print(wb.get_cell_value('Test1','A4'))
 
 # adj = {
 #     1: [2, 3],

@@ -234,25 +234,25 @@ class Workbook:
         for sheet in self.sheet_objects.values():
             adjacency_list.update(sheet.get_cell_adjacency_list())
         # make a graph of cell children, transpose to get graph of cell parents
-        parent_graph = Graph(adjacency_list)
-        parent_graph.transpose()
+        cell_graph = Graph(adjacency_list)
+        cell_graph.transpose()
         # get the graph of only cells needing to be updated
-        reachable = parent_graph.get_reachable_nodes(updatedCells)
-        update_graph = parent_graph.subgraph_from_nodes(reachable)
+        reachable = cell_graph.get_reachable_nodes(updatedCells)
+        cell_graph.subgraph_from_nodes(reachable)
         # get the acyclic components from the scc
-        components = update_graph.get_strongly_connected_components()
+        components = cell_graph.get_strongly_connected_components()
         dag_nodes = set()
         # if nodes are part of cycle make them a circlular reference
         # else add them to dag graph
         for component in components:
-            if len(component) == 1:
+            if len(component) == 1 and component[0] not in adjacency_list[component[0]]:
                 dag_nodes.add(component[0])
             else:
                 for sheet, cell in component:
                     self.sheet_objects[sheet].get_cell(cell).set_circular_error()
-        dag = update_graph.subgraph_from_nodes(dag_nodes)
+        cell_graph.subgraph_from_nodes(dag_nodes)
         # get the topological sort of non-circular nodes needing to be updated
-        cell_topological = dag.topological_sort()
+        cell_topological = cell_graph.topological_sort()
         # update cells
         for sheet, cell in cell_topological:
             if (sheet, cell) not in updatedCells:
