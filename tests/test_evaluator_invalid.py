@@ -100,6 +100,7 @@ class TestEvaluatorInvalid:
 
 
     def test_bad_name(self):
+        # to be implemented in later projects
         pass
 
 
@@ -175,13 +176,39 @@ class TestEvaluatorInvalid:
     
     def test_errors_as_literals(self):
         wb.set_cell_contents('Test', 'A1', '=#REF!')
-        tree = parser.parse('=#REF!')
-        # print('t', tree)
-        final = evaluator.transform(tree)
-        # print('f', final)
         result_contents = wb.get_cell_contents('Test','A1')
         result_value = wb.get_cell_value('Test', 'A1')
         assert(result_contents == '#REF!')
+        assert(isinstance(result_value, CellError))
+
+        wb.set_cell_contents('Test', 'A1', '=#ERROR!')
+        result_contents = wb.get_cell_contents('Test','A1')
+        result_value = wb.get_cell_value('Test', 'A1')
+        assert(result_contents == '#ERROR!')
+        assert(isinstance(result_value, CellError))
+
+        wb.set_cell_contents('Test', 'A1', '=#VALUE!')
+        result_contents = wb.get_cell_contents('Test','A1')
+        result_value = wb.get_cell_value('Test', 'A1')
+        assert(result_contents == '#VALUE!')
+        assert(isinstance(result_value, CellError))
+
+        wb.set_cell_contents('Test', 'A1', '=#CIRCREF!')
+        result_contents = wb.get_cell_contents('Test','A1')
+        result_value = wb.get_cell_value('Test', 'A1')
+        assert(result_contents == '#CIRCREF!')
+        assert(isinstance(result_value, CellError))
+
+        wb.set_cell_contents('Test', 'A1', '=#DIV/0!')
+        result_contents = wb.get_cell_contents('Test','A1')
+        result_value = wb.get_cell_value('Test', 'A1')
+        assert(result_contents == '#DIV/0!')
+        assert(isinstance(result_value, CellError))
+
+        wb.set_cell_contents('Test', 'A1', '=#NAME?')
+        result_contents = wb.get_cell_contents('Test','A1')
+        result_value = wb.get_cell_value('Test', 'A1')
+        assert(result_contents == '#NAME?')
         assert(isinstance(result_value, CellError))
 
         wb.set_cell_contents('Test', 'A1', '=#REF!+5')
@@ -190,15 +217,53 @@ class TestEvaluatorInvalid:
         assert(result_contents == '#REF!')
         assert(isinstance(result_value, CellError))
 
-        wb.set_cell_contents('Test', 'A1', '=#REF!+5')
+        wb.set_cell_contents('Test', 'A1', '=#NAME?*5')
         result_contents = wb.get_cell_contents('Test','A1')
         result_value = wb.get_cell_value('Test', 'A1')
-        assert(result_contents == '#REF!')
+        assert(result_contents == '#NAME?')
+        assert(isinstance(result_value, CellError))
+
+        wb.set_cell_contents('Test', 'A1', '=  5 *   #NAME?')
+        result_contents = wb.get_cell_contents('Test','A1')
+        result_value = wb.get_cell_value('Test', 'A1')
+        assert(result_contents == '#NAME?')
+        assert(isinstance(result_value, CellError))
+
+        wb.set_cell_contents('Test', 'A1', '=-#CIRCREF!')
+        result_contents = wb.get_cell_contents('Test','A1')
+        result_value = wb.get_cell_value('Test', 'A1')
+        assert(result_contents == '#CIRCREF!')
+        assert(isinstance(result_value, CellError))
+
+        wb.set_cell_contents('Test', 'A1', '="string"&#CIRCREF!')
+        result_contents = wb.get_cell_contents('Test','A1')
+        result_value = wb.get_cell_value('Test', 'A1')
+        assert(result_contents == '#CIRCREF!')
         assert(isinstance(result_value, CellError))
 
     
     def test_reference_cells_with_errors(self):
-        pass
+        wb.new_sheet('Test3')
+        wb.set_cell_contents('Test3', 'A1', '=#REF!')
+        wb.set_cell_contents('Test3', 'A2', '=A1')
+        result_contents = wb.get_cell_contents('Test3','A2')
+        result_value = wb.get_cell_value('Test3', 'A2')
+        assert(result_contents == '#REF!')
+        assert(isinstance(result_value, CellError))
+
+        wb.set_cell_contents('Test3', 'A1', '=#VALUE!')
+        wb.set_cell_contents('Test3', 'A2', '=A1')
+        result_contents = wb.get_cell_contents('Test3','A2')
+        result_value = wb.get_cell_value('Test3', 'A2')
+        assert(result_contents == '#VALUE!')
+        assert(isinstance(result_value, CellError))
+
+        wb.set_cell_contents('Test3', 'A1', '=#VALUE!')
+        wb.set_cell_contents('Test3', 'A2', '=A1')
+        result_contents = wb.get_cell_contents('Test3','A2')
+        result_value = wb.get_cell_value('Test3', 'A2')
+        assert(result_contents == '#VALUE!')
+        assert(isinstance(result_value, CellError))
 
 
     def test_error_ordering(self):
