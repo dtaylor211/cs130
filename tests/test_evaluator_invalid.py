@@ -78,6 +78,12 @@ class TestEvaluatorInvalid:
         assert(result_contents == '#REF!')
         assert(isinstance(result_value, CellError))
 
+        wb.set_cell_contents('Test', 'A1', '=A 1')
+        result_contents = wb.get_cell_contents('Test','A1')
+        result_value = wb.get_cell_value('Test', 'A1')
+        assert(result_contents == '#REF!')
+        assert(isinstance(result_value, CellError))
+
         wb.set_cell_contents('Test', 'A1', '=AAAA10000')
         result_contents = wb.get_cell_contents('Test','A1')
         result_value = wb.get_cell_value('Test', 'A1')
@@ -170,6 +176,10 @@ class TestEvaluatorInvalid:
     
     def test_errors_as_literals(self):
         wb.set_cell_contents('Test', 'A1', '=#REF!')
+        tree = parser.parse('=#REF!')
+        # print('t', tree)
+        final = evaluator.transform(tree)
+        # print('f', final)
         result_contents = wb.get_cell_contents('Test','A1')
         result_value = wb.get_cell_value('Test', 'A1')
         assert(result_contents == '#REF!')
