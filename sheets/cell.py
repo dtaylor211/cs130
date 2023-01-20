@@ -1,6 +1,6 @@
 import enum
 from decimal import Decimal, DecimalException
-from typing import Optional, Tuple
+from typing import Optional
 from .formula_evaluator import Evaluator
 from lark import Lark, Visitor
 
@@ -32,7 +32,7 @@ class CellTreeVisitor(Visitor):
         else:
             cell_sheet = self.sheet
             cell = str(tree.children[0])
-        self.children.add(Tuple[cell_sheet, cell])
+        self.children.add((cell_sheet, cell))
 
 class Cell:
     '''
@@ -59,7 +59,7 @@ class Cell:
         # new Cell is treated as an empty cell, contents and values are None
         self.contents = None
         self.value = None
-        self.children = None
+        self.children = []
         self.type: int = _CellType.EMPTY
         self.evaluator = evaluator
         self.parser = Lark.open('formulas.lark', start='formula', rel_to=__file__)
@@ -92,7 +92,8 @@ class Cell:
                 visitor.visit(tree)
                 self.children = list(visitor.children)
                 print(tree)
-                print(self.children)
+                for child in self.children:
+                    print(child)
                 eval = self.evaluator.transform(tree)
                 print(eval)
                 self.value = eval.children[0]
@@ -107,6 +108,12 @@ class Cell:
             self.type = _CellType.STRING
             self.value = inp
 
+    def get_children(self):
+        '''
+        Gets the children of the cell
+
+        '''
+        return self.children
 
     def empty(self):
         '''
