@@ -1,10 +1,11 @@
 import enum
-from decimal import Decimal, DecimalException
-from typing import Optional
-from .evaluator import Evaluator
 import lark
-from lark import Visitor
-from .cell_error import CellError, CellErrorType, cell_errors
+from lark import Visitor, Tree
+from decimal import Decimal, DecimalException
+from typing import Optional, List
+
+from .evaluator import Evaluator
+from .cell_error import CellError, CellErrorType, CELL_ERRORS
 
 RESTRICTED_VALUES = [
     Decimal('Infinity'),
@@ -16,13 +17,14 @@ RESTRICTED_VALUES = [
 class _CellTreeVisitor(Visitor):
     '''
     This visitor gets all children cells from the tree of a cell.
+
     '''
 
-    def __init__(self, sheet):
+    def __init__(self, sheet: str):
         self.children = set()
         self.sheet = sheet
 
-    def cell(self, tree):
+    def cell(self, tree: Tree):
         if len(tree.children) == 2:
             cell_sheet = str(tree.children[0])
             cell = str(tree.children[1])
@@ -30,6 +32,7 @@ class _CellTreeVisitor(Visitor):
             cell_sheet = self.sheet
             cell = str(tree.children[0])
         self.children.add((cell_sheet.lower(), cell.lower()))
+
 
 class Cell:
     '''
@@ -61,6 +64,7 @@ class Cell:
         self.parser = lark.Lark.open(
             'formulas.lark', start='formula', rel_to=__file__)
 
+
     def set_contents(self, input_str: Optional[str]):
         '''
         Set the contents of the cell.
@@ -70,14 +74,11 @@ class Cell:
 
         '''
 
-        print(input_str)
+        # Remove leading and trailing whitespace
+        inp = input_str.strip()
+        self.contents = inp
+
         try:
-            # Check if current page is desired page
-
-
-            # Remove leading and trailing whitespace
-            inp = input_str.strip()
-            self.contents = inp
 
             # Check if there is a leading single quote, set to STRING type
             if inp[0] == "'":
@@ -90,44 +91,41 @@ class Cell:
                 visitor = _CellTreeVisitor(str(self.evaluator.working_sheet))
                 visitor.visit(tree)
                 self.children = list(visitor.children)
-                print('s',self.evaluator.transform(tree))
                 eval = self.evaluator.transform(tree).children[0]
-                print(eval)
-
-                if isinstance(eval, CellError):
-                    if eval.get_type() is None:
-                        self.contents = '#ERROR!!'
-                    else:
-                        self.contents = self.get_string_from_error(
-                            eval.get_type().value)
-                    
                 self.value = eval
+
+            elif inp.upper() in list(CELL_ERRORS.values()):
+                e_type = [i for i in CELL_ERRORS if CELL_ERRORS[i]==inp.upper()]
+                c = CellErrorType(e_type[0])
+                self.value = CellError(c, '', None)
 
             # Otherwise set to NUMBER type - works for now, will need to change
             # if we can have other cell types
             else:
-                print('wh')
-                print(inp)
                 temp_value = Decimal(inp) 
                 if temp_value in RESTRICTED_VALUES:
                     self.value = inp
                 else: self.value = temp_value
 
         except DecimalException as d:
-            # needs to be checked
             self.value = inp
         
         except lark.exceptions.LarkError as l:
             self.value = CellError(CellErrorType.PARSE_ERROR, 
                             detail='Unable to parse entry', exception = l)
-            self.contents = '#ERROR!'
 
-    def get_children(self):
+
+    def get_children(self) -> List:
         '''
         Gets the children of the cell
 
+        Returns:
+        - List of the children
+
         '''
+
         return self.children
+
 
     def empty(self):
         '''
@@ -141,11 +139,24 @@ class Cell:
 
     def get_string_from_error(self, cell_error_type: CellErrorType) -> str:
         '''
-        to-do
+        Get the string representation of an error from its CellErrorType
+
+        Arguments:
+        - cell_error_type: CellErrorType - type of the error to get string of
+
+        Returns:
+        - string of error type
+
         '''
         
-        return cell_errors[cell_error_type]
+        return CELL_ERRORS[cell_error_type]
+
 
     def set_circular_error(self):
+        '''
+        Set the value of a cell to be a circular reference
+
+        '''
+
         self.value = CellError(CellErrorType.CIRCULAR_REFERENCE, 
                                 "Cell is in a circular reference.")

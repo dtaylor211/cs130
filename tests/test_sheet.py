@@ -11,7 +11,8 @@ evaluator = Evaluator(workbook,'')
 
 class TestSheet:
     '''
-    (Spread)Sheet tests (project 1)
+    (Spread)Sheet tests (Project 1)
+
     '''
 
     def test_extent(self):
