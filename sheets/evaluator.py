@@ -1,11 +1,12 @@
+import re
 from lark import Tree, Transformer, Lark, Token
 from decimal import Decimal, DecimalException, InvalidOperation
-from .cell_error import CellError, CellErrorType, cell_errors
 from typing import *
-import re
-# from workbook import Workbook
-import sys # remove
 
+from .cell_error import CellError, CellErrorType, CELL_ERRORS
+
+
+QUOTATIONS = ['"', '\"', "\"", "'" "\'", '\'']
 
 
 class Evaluator(Transformer):
@@ -30,7 +31,7 @@ class Evaluator(Transformer):
 
 
     ########################################################################
-    # Terminals and Bases?
+    # Bases
     ########################################################################
 
 
@@ -74,7 +75,6 @@ class Evaluator(Transformer):
 
         Returns:
         - the original token passed in
-        I think unneeded
 
         '''
 
@@ -123,16 +123,6 @@ class Evaluator(Transformer):
                 return Tree('cell_error', [x])
             if isinstance(y, CellError):
                 return Tree('cell_error', [y])
-            
-            # Check for literal error values
-            # if isinstance(x, str) and x.upper() in list(cell_errors.values()):
-            #     e_type = [i for i in cell_errors if cell_errors[i]==x.upper()]
-            #     c = CellErrorType(e_type[0])
-            #     return Tree('cell_error', [CellError(c, '', None)])
-            # if isinstance(y, str) and y.upper() in list(cell_errors.values()):
-            #     e_type = [i for i in cell_errors if cell_errors[i]==y.upper()]
-            #     c = CellErrorType(e_type[0])
-            #     return Tree('cell_error', [CellError(c, '', None)])
 
             # Check for compatible types, deal with empty case
             x = Decimal(0) if x is None else Decimal(x)
@@ -167,16 +157,6 @@ class Evaluator(Transformer):
                 return Tree('cell_error', [x])
             if isinstance(y, CellError):
                 return Tree('cell_error', [y])
-            
-            # Check for literal error values
-            # if isinstance(x, str) and x.upper() in list(cell_errors.values()):
-            #     e_type = [i for i in cell_errors if cell_errors[i]==x.upper()]
-            #     c = CellErrorType(e_type[0])
-            #     return Tree('cell_error', [CellError(c, '', None)])
-            # if isinstance(y, str) and y.upper() in list(cell_errors.values()):
-            #     e_type = [i for i in cell_errors if cell_errors[i]==y.upper()]
-            #     c = CellErrorType(e_type[0])
-            #     return Tree('cell_error', [CellError(c, '', None)])
 
             # Check for compatible types, deal with empty case
             x = Decimal(0) if x is None else Decimal(x)
@@ -208,17 +188,10 @@ class Evaluator(Transformer):
         try:
             operator = args[0]
             x = args[1].children[-1]
-            print(x)
 
             # Check for propogating errors
             if isinstance(x, CellError):
                 return Tree('cell_error', [x])
-
-            # Check for literal error values
-            # if isinstance(x, str) and x.upper() in list(cell_errors.values()):
-            #     e_type = [i for i in cell_errors if cell_errors[i]==x.upper()]
-            #     c = CellErrorType(e_type[0])
-            #     return Tree('cell_error', [CellError(c, '', None)])
 
             # Check for compatible types, deal with empty case
             x = Decimal(0) if x is None else Decimal(x)
@@ -256,16 +229,6 @@ class Evaluator(Transformer):
             s1 = '' if s1 is None else str(s1)
             s2 = '' if s2 is None else str(s2)
 
-            # Check for literal error values - might not work in this order
-            # if s1.upper() in list(cell_errors.values()):
-            #     e_type = [i for i in cell_errors if cell_errors[i]==s1.upper()]
-            #     c = CellErrorType(e_type[0])
-            #     return Tree('cell_error', [CellError(c, '', None)])
-            # if s2.upper() in list(cell_errors.values()):
-            #     e_type = [i for i in cell_errors if cell_errors[i]==s2.upper()]
-            #     c = CellErrorType(e_type[0])
-            #     return Tree('cell_error', [CellError(c, '', None)])
-
             return Tree('string', [s1+s2])
 
         except Exception as e:
@@ -282,12 +245,13 @@ class Evaluator(Transformer):
         Returns:
         - Tree holding the resulting cell as a
 
-        Might not need this
-
         '''
+
         try:
             if len(args) == 2:
                 working_sheet = args[0]
+                if working_sheet[0] in QUOTATIONS:
+                    working_sheet = working_sheet[1:-1]
                 cell_name = args[1]
             else:
                 working_sheet = self.working_sheet
@@ -298,30 +262,29 @@ class Evaluator(Transformer):
                 raise KeyError('Cell location out of bounds')
             
             result = self.workbook.get_cell_value(working_sheet, cell_name)
-            print(result)
 
             # Check for propogating errors
             if isinstance(result, CellError):
-                print('ayo')
-                print('whats da error', result)
                 return Tree('cell_error', [result])
 
             # Deal with empty cases
-            result = [Decimal(0)] if result is None else [result]
-            return Tree('cell_ref', result)
+            return Tree('cell_ref', [result])
         
         except KeyError as k:
-            return self.process_exceptions(k)
+            if k.args[0] == 'Cell location out of bounds':
+                detail = 'cell'
+            else: detail = 'sheet'
+            return self.process_exceptions(k, detail)
 
         except Exception as e:
             return self.process_exceptions(e, 'cell operations')
         
-    def parens(self, args: List):
+    def parens(self, args: List) -> Tree:
         '''
         Evaluate an expression enclosed in parenthesis
 
         Arguments:
-        - args: List - list of Tree and/or Token objects of format
+        - args: List - expression enclosed in brackets [expr]
 
         Returns:
         - Tree holding the expression inside the parenthesis
@@ -330,12 +293,21 @@ class Evaluator(Transformer):
 
         return args[0] # removes the outer brackets
     
-    def error(self, args):
+
+    def error(self, args: List) -> Tree:
         '''
-        to-do
+        Evaluate an error expression
+
+        Arguments:
+        - args: List - error Tree enclosed in brackets [err]
+
+        Returns:
+        - Tree holding the error, now converted to a CellError type
+
         '''
+
         x = args[0]
-        e_type = [i for i in cell_errors if cell_errors[i]==x.upper()]
+        e_type = [i for i in CELL_ERRORS if CELL_ERRORS[i]==x.upper()]
         c = CellErrorType(e_type[0])
         return Tree('cell_error', [CellError(c, '', None)])
 
@@ -360,18 +332,23 @@ class Evaluator(Transformer):
         '''
 
         error_type = None
+
         if isinstance(ex, DecimalException) or isinstance(ex, InvalidOperation):
             detail = f'Attempting to perform {detail} on incompatible or '\
                 'incorrect types'
             error_type = CellErrorType.TYPE_ERROR
+
         elif isinstance(ex, ZeroDivisionError):
             detail = 'Attempting to perform division with 0'
             error_type = CellErrorType.DIVIDE_BY_ZERO
+
         elif isinstance(ex, KeyError):
-            detail = f'Attempting to access unknown sheet'
+            detail = f'Attempting to access unknown {detail}'
             error_type = CellErrorType.BAD_REFERENCE
+
         else:
             detail = f'Unknown error occurred while performing {detail}'
+
         return Tree('cell_error', 
             [CellError(error_type, detail=detail, exception = ex)])
     

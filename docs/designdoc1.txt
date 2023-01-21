@@ -29,9 +29,9 @@ L2.  [2pts] What did each teammate focus on during this project?
 
 L3.  [3pts] Approximately how many hours did each teammate spend on the project?
 
-     Ben:      16
-     Kyle:     16
-     Dallas:   19
+     Ben:      22
+     Kyle:     22
+     Dallas:   30
 
 
 Spreadsheet Engine Design (20 pts)
@@ -42,7 +42,6 @@ D1.  [3pts] Describe the high-level design abstractions (e.g. classes and/or
      abstractions fulfill.
 
      Workbook -> Sheet -> Cell
-     TODO: Evaluator, etc.
 
      Workbook: A Workbook contains zero or more spreadsheets (Sheets).  Each 
                Workbook holds a list of Sheet names (case sensitive), a 
@@ -71,6 +70,13 @@ D1.  [3pts] Describe the high-level design abstractions (e.g. classes and/or
                sort, getting a set of reachable nodes, and creating a subgraph
                from a set of nodes.  The Graph class is used for cycle detection
                and Cell dependency calculations.
+     
+     Evaluator:
+               An Evaluator is a class that goes through the parse tree 
+               produced by Lark and returns the final cell value.  It holds all
+               of the methods for how to process the information at each
+               terminal and expression.  This class also handles calculating
+               cell references. This is also where error propogation occurs.
 
 
 D2.  [4pts] Why did you choose the design you chose?  Describe other designs
@@ -90,7 +96,10 @@ D2.  [4pts] Why did you choose the design you chose?  Describe other designs
      version.  The Graph function currently edits the graph in place as opposed
      to returning a new graph.  We were considering changing the function to 
      return a new graph, but there is currently no need for this so will make
-     the switch if/when necessary.
+     the switch if/when necessary.  The Evaluator class was implemented in the
+     way it was due to standardized formatting and modularization.  We wanted
+     all of the processing that occurred during cell evaluation to occur in the
+     same place.
 
 
 D3.  [4pts] At a high level (e.g. pseudocode or higher), enumerate the steps
@@ -106,8 +115,11 @@ D3.  [4pts] At a high level (e.g. pseudocode or higher), enumerate the steps
      7) Sheet passes contents to Cell
      8) Cell parses contents and determines formula/string/literal value
      9) (If formula) Cell value set after formula is parsed/evaluated
-     10) (If literal) Cell value set as string if cannot be parsed as Decimal
-     11) TODO - error handling, etc.
+          9a) The parsed formula is sent to the Evaluator for processing
+          9b) The Evaluator evaluates each expression as designed, if it finds
+               an error, it is propogated through until the result
+     10) (If literal) Cell value set as string if cannot be parsed as Decimal or
+          is not recognized as an error value.
      12) Workbook checks for cycles introduced by the cell
      13) Workbook updates all cells dependent on the cell
 
@@ -154,7 +166,10 @@ P1.  [4pts] How did your team break down and keep track of the various tasks to
 
      Our team used a custom task manager in Notion to track tickets.  This tool 
      allowed us to clearly organize and track the implementation of features 
-     (behaves very similarly to typical issue tracker).
+     (behaves very similarly to typical issue tracker).  We tracked each sprint,
+     each task within each sprint, and details of each task. Tasks were assigned
+     to various group members, and their status was tracked as `Not Started`, 
+     `In Progress`, `Ready for Review`, `Done`, and `Not Doing`.
 
 
 P2.  [4pts] How did you assign tasks to teammates?  Did you stick with your
@@ -176,18 +191,24 @@ P3.  [4pts] How would you characterize the quality of your project testing?
      Make sure to touch on these items:  Is it automated?  Is it easy for
      teammates to run?  Is it fast?  Is it reasonably complete?
 
-     TODO - coverage, etc. (mention slight overlap between unit/integration?)
+     We attempted to use unit and integration testing.  It was automated in the 
+     sense that you are able to hit the Make target for testing to run all 
+     tests. It is thus extremely easy for teammates to run.  The tests are all 
+     very fast and complete within a few seconds.  The tests are reasonably
+     complete and try to cover as many corner cases as possible.  We may have 
+     had some deviations from perfect "unit" tests, but they try to test 
+     specific implementations.
 
 
 P4.  [3pts] What mechanisms did your team use for communication during the
      project?  Did you find them to be effective?  What issues did you
      encounter, if any?
 
-     We used Messenger for group communication, but we mainly used in-person 
-     communication.  We typically were able to meet at least once a day for the 
-     week leading up to the due date.  Our methods of communication felt very
-     effective.  Because of our consistent communication and task-tracking, we
-     did not encounter issues related to miscommunication.
+     We used Messenger and Notion for group communication, but we mainly used 
+     in-person communication.  We typically were able to meet at least once a 
+     day for the week leading up to the due date.  Our methods of communication 
+     felt very effective.  Because of our consistent communication and 
+     task-tracking, we did not encounter issues related to miscommunication.
 
 
 P5.  [3pts] Did you use any kind of collaborative construction techniques, e.g.
@@ -195,13 +216,13 @@ P5.  [3pts] Did you use any kind of collaborative construction techniques, e.g.
      observations about its usefulness?  Did you find it to have any downsides?
 
      Our general workflow mainly consisted of group programming / code review
-     sessions in which one of us would screenshare our code editor onto a TV with all 3 of 
-     us in a room.  We found that these group sessions were incredibly useful
-     for getting everyone on the same page and ensuring that each teammate had 
-     a solid understanding of our implementation as a whole.  Only downsides 
-     would be related to slower implementations at times (1 person coding vs.
-     3 people coding), but code quality was better when all 3 of us were 
-     together.
+     sessions in which one of us would screenshare our code editor onto a TV 
+     with all 3 of us in a room.  We found that these group sessions were 
+     incredibly useful for getting everyone on the same page and ensuring that 
+     each teammate had a solid understanding of our implementation as a whole.  
+     Only downsides would be related to slower implementations at times (1 
+     person coding vs. 3 people coding), but code quality was better when all 
+     3 of us were together.
 
 
 P6.  [5pts] What would you like to improve about your team's development

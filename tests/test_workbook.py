@@ -1,13 +1,13 @@
-import pytest
 import context
-from sheets.workbook import Workbook
-# from sheets.sheet import Sheet
+
+import pytest
 from decimal import Decimal
 
+from sheets.workbook import Workbook
+
+
 class TestWorkbook:
-    '''
-    Workbook tests (project 1)
-    '''
+    ''' Workbook tests (Project 1) '''
 
     def test_empty_workbook(self):
         wb = Workbook()
