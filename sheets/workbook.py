@@ -141,7 +141,7 @@ class Workbook:
         for cell in self.sheet_objects[
             sheet_name.lower()].get_all_cells().values():
 
-            deleted_cells.append((sheet_name.lower(), cell.loc.lower()))
+            deleted_cells.append((sheet_name.lower(), cell.get_loc().lower()))
             cell.empty()
 
         del self.sheet_objects[sheet_name.lower()]
