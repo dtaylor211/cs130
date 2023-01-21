@@ -2,6 +2,7 @@ import re
 from typing import Dict, List, Tuple, Optional, Any
 
 from .cell import Cell
+from .evaluator import Evaluator
 
 class Sheet:
     '''
@@ -12,13 +13,57 @@ class Sheet:
     def __init__(self, sheet_name, evaluator):
         ''' Initialize a new spreadsheet '''
         
-        self.name = sheet_name 
+        self._name = sheet_name 
 
         # dictonary that maps (row, col) tuple -> Cell
         # need to make sure inputted location "D14" is converted to (4, 14)
         ## location = D14, coords = (4,14)
-        self.cells: Dict[Tuple[int, int], Cell] = {}
-        self.evaluator = evaluator
+        self._cells: Dict[Tuple[int, int], Cell] = {}
+        self._evaluator = evaluator
+
+    def get_name(self) -> str:
+        '''
+        Get the name of the sheet
+
+        Returns:
+        - string of sheet name
+
+        '''
+
+        return self._name
+    
+    def set_name(self, sheet_name: str):
+        '''
+        Set the name of the sheet
+
+        Arguments:
+        - sheet_name: str 
+
+        '''
+
+        self._name = sheet_name
+
+    def get_all_cells(self) -> Dict[Tuple[int, int], Cell]:
+        '''
+        Get the name of the sheet
+
+        Returns:
+        - string of sheet name
+
+        '''
+        
+        return self._cells
+    
+    def get_evaluator(self) -> Evaluator:
+        '''
+        Get the Evaluator for a sheet
+
+        Returns:
+        - the sheet's Evaluator
+
+        '''
+
+        return self._evaluator
 
     def get_extent(self) -> Tuple[int, int]:
         '''
@@ -30,10 +75,11 @@ class Sheet:
 
         '''
 
-        if len(self.cells.keys()) == 0:
+        cells = self.get_all_cells()
+        if len(cells.keys()) == 0:
             return (0, 0) # empty sheet
 
-        coords = list(self.cells.keys())
+        coords = list(cells.keys())
         rows = [coord[0] for coord in coords]
         cols = [coord[1] for coord in coords]
         return max(rows), max(cols)
@@ -50,9 +96,10 @@ class Sheet:
 
         '''
 
-        return self.cells[self.get_coords_from_loc(location)]
+        cells = self.get_all_cells()
+        return cells[self.__get_coords_from_loc(location)]
 
-    def get_coords_from_loc(self, location: str) -> Tuple[int, int]:
+    def __get_coords_from_loc(self, location: str) -> Tuple[int, int]:
         '''
         Get the coordinate tuple from a location
 
@@ -93,11 +140,12 @@ class Sheet:
 
         '''
 
-        coords = self.get_coords_from_loc(location)
-        if coords not in self.cells.keys():
+        cells = self.get_all_cells()
+        coords = self.__get_coords_from_loc(location)
+        if coords not in cells.keys():
             return None
         
-        return self.cells[coords].contents
+        return cells[coords].get_contents()
 
     def set_cell_contents(self, location: str, contents: Optional[str]) -> None:
         '''
@@ -109,17 +157,18 @@ class Sheet:
 
         '''
 
-        coords = self.get_coords_from_loc(location)
-        if coords not in self.cells.keys():
-            cell = Cell(location, self.evaluator)
-            self.cells[coords] = cell
+        cells = self.get_all_cells()
+        coords = self.__get_coords_from_loc(location)
+        if coords not in cells.keys():
+            cell = Cell(location, self.get_evaluator())
+            cells[coords] = cell
 
         if contents is None or contents.strip() == "":
-            self.cells[coords].empty()
-            del self.cells[coords]
+            cells[coords].empty()
+            del cells[coords]
             return
 
-        self.cells[coords].set_contents(contents)
+        cells[coords].set_contents(contents)
 
     def get_cell_value(self, location: str) -> Any:
         '''
@@ -133,11 +182,12 @@ class Sheet:
 
         '''
 
-        coords = self.get_coords_from_loc(location)
-        if coords not in self.cells.keys():
+        cells = self.get_all_cells()
+        coords = self.__get_coords_from_loc(location)
+        if coords not in cells.keys():
             return None
 
-        return self.cells[coords].value # I think we need a get_value()
+        return cells[coords].get_value()
 
     def get_cell_adjacency_list(self) -> Dict[
         Tuple[str, str], List[Tuple[str, str]]]:
@@ -147,10 +197,12 @@ class Sheet:
         Returns:
         - dictionary of coordinate tuples as keys and a list of 
             coordinate tuples as values
-            
+
         '''
 
-        adjacency_list = {}
-        for cell in self.cells.values():
-            adjacency_list[(self.name.lower(), cell.loc.lower())] = cell.get_children()
-        return adjacency_list
+        adj_list = {}
+        cells = self.get_all_cells()
+        for cell in cells.values():
+            name = self.get_name()
+            adj_list[(name.lower(), cell.get_loc().lower())] = cell.get_children()
+        return adj_list
