@@ -149,7 +149,7 @@ class Cell:
                 tree = parser.parse(inp)
                 visitor = _CellTreeVisitor(str(evaluator.working_sheet))
                 visitor.visit(tree)
-                self.children = list(visitor.children)
+                self._children = list(visitor.children)
                 eval = evaluator.transform(tree).children[0]
                 self.set_contents_and_value(contents, eval)
 
@@ -182,7 +182,7 @@ class Cell:
         - List of the children
 
         '''
-
+        
         return self._children
 
     def empty(self):
@@ -213,5 +213,5 @@ class Cell:
 
         '''
 
-        self.value = CellError(CellErrorType.CIRCULAR_REFERENCE, 
+        self._value = CellError(CellErrorType.CIRCULAR_REFERENCE, 
                                 "Cell is in a circular reference.")
