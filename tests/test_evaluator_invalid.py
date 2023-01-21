@@ -110,6 +110,16 @@ class TestEvaluatorInvalid:
         assert result_value.get_type() == CellErrorType.BAD_REFERENCE
         assert(isinstance(result_value, CellError))
 
+        WB.new_sheet('Del')
+        WB.set_cell_contents('Del', 'A1', '1')
+        WB.set_cell_contents('Test', 'A1', '=Del!A1')
+        WB.del_sheet('Del')
+        result_contents = WB.get_cell_contents('Test','A1')
+        result_value = WB.get_cell_value('Test', 'A1')
+        assert(result_contents == '=Del!A1')
+        assert result_value.get_type() == CellErrorType.BAD_REFERENCE
+        assert(isinstance(result_value, CellError))
+
 
     def test_bad_name(self):
         # to be implemented in later projects

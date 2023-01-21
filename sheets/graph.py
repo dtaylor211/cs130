@@ -23,7 +23,7 @@ class Graph:
         for v in [v for l in adjacency_list.values() 
                 for v in l if v not in adjacency_list]:
             adjacency_list[v] = []
-        self.adjacency_list = adjacency_list
+        self._adjacency_list = adjacency_list
 
     def transpose(self):
         '''
@@ -31,13 +31,13 @@ class Graph:
 
         '''
         transpose_adjacency_list = {}
-        for k in self.adjacency_list:
+        for k in self._adjacency_list:
             transpose_adjacency_list[k] = []
 
-        for k, l in self.adjacency_list.items():
+        for k, l in self._adjacency_list.items():
             for v in l:
                 transpose_adjacency_list[v].append(k)
-        self.adjacency_list = transpose_adjacency_list
+        self._adjacency_list = transpose_adjacency_list
     
     def get_strongly_connected_components(self) -> List[List[T]]:
         '''
@@ -55,7 +55,7 @@ class Graph:
             lowlink[k] = idx
             stack_pos = len(stack)
             stack.append(k)
-            for v in self.adjacency_list[k]:
+            for v in self._adjacency_list[k]:
                 if v not in lowlink:
                     strongconnect(v)
                 lowlink[k] = min(lowlink[k], lowlink[v])
@@ -64,9 +64,9 @@ class Graph:
                 del stack[stack_pos:]
                 scc.append(component)
                 for item in component:
-                    lowlink[item] = len(self.adjacency_list)
+                    lowlink[item] = len(self._adjacency_list)
 
-        for k in self.adjacency_list:
+        for k in self._adjacency_list:
             if k not in lowlink:
                 strongconnect(k)
         
@@ -81,14 +81,14 @@ class Graph:
         '''
         visited = set()
         result = []
-        for k in self.adjacency_list:
+        for k in self._adjacency_list:
             stack = [(k, True)]
             while stack:
                 (k, enter) = stack.pop()
                 if enter and k not in visited:
                     visited.add(k)
                     stack.append((k, False))
-                    for v in self.adjacency_list[k]:
+                    for v in self._adjacency_list[k]:
                         if v not in visited:
                             stack.append((v, True))
                 else: # Leaving the node
@@ -108,8 +108,8 @@ class Graph:
             stack = [v]
             while stack:
                 u = stack.pop()
-                if u in self.adjacency_list:
-                    for w in self.adjacency_list[u]:
+                if u in self._adjacency_list:
+                    for w in self._adjacency_list[u]:
                         if w not in reachable:
                             stack.append(w)
                             reachable.add(w)
@@ -124,7 +124,7 @@ class Graph:
 
         '''
         sub_adjacency_list = {}
-        for k in self.adjacency_list:
+        for k in self._adjacency_list:
             if k in nodes:
-                sub_adjacency_list[k] = [v for v in self.adjacency_list[k] if v in nodes]
-        self.adjacency_list = sub_adjacency_list
+                sub_adjacency_list[k] = [v for v in self._adjacency_list[k] if v in nodes]
+        self._adjacency_list = sub_adjacency_list
