@@ -69,30 +69,30 @@ class TestSheet:
 
         # (col, row) = sheet.__get_coords_from_loc("a1")
         # assert (col, row) == (1, 1)
-        sheet.set_cell_contents("a1", 1)
+        sheet.set_cell_contents("a1", '1')
         assert sheet.get_extent() == (1, 1)
 
         # (col, row) = sheet.__get_coords_from_loc("a5")
         # assert (col, row) == (1, 5)
-        sheet.set_cell_contents("a5", 1)
+        sheet.set_cell_contents("a5", '1')
         assert sheet.get_extent() == (1, 5)
 
         # (col, row) = sheet.__get_coords_from_loc("AA15")
         # assert (col, row) == (27, 15)
-        sheet.set_cell_contents("AA15", 1)
+        sheet.set_cell_contents("AA15", '1')
         assert sheet.get_extent() == (27, 15)
 
         # (col, row) = sheet.__get_coords_from_loc("Aa16")
         # assert (col, row) == (27, 16)
-        sheet.set_cell_contents("Aa16", 1)
+        sheet.set_cell_contents("Aa16", '1')
         assert sheet.get_extent() == (27, 16)
 
         # (col, row) = sheet.__get_coords_from_loc("AAC750")
         # assert (col, row) == (705, 750)
-        sheet.set_cell_contents("AAC750", 1)
+        sheet.set_cell_contents("AAC750", '1')
         assert sheet.get_extent() == (705, 750)
 
         # (col, row) = sheet.__get_coords_from_loc("AAc751")
         # assert (col, row) == (705, 751)
-        sheet.set_cell_contents("AAc751", 1)
+        sheet.set_cell_contents("AAc751", '1')
         assert sheet.get_extent() == (705, 751)
