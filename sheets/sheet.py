@@ -80,9 +80,9 @@ class Sheet:
             return (0, 0) # empty sheet
 
         coords = list(cells.keys())
-        rows = [coord[0] for coord in coords]
-        cols = [coord[1] for coord in coords]
-        return max(rows), max(cols)
+        cols = [coord[0] for coord in coords]
+        rows = [coord[1] for coord in coords]
+        return max(cols), max(rows)
 
     def get_cell(self, location: str) -> Optional[Cell]:
         '''
