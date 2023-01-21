@@ -6,7 +6,7 @@ class Graph:
     '''
     This class represents a generic graph used for cell dependencies in a 
     spreadsheet.
-    Stores the adjacency list representing the graph
+    Stores the adjacency list representing the graph.
     '''
 
     def __init__(self, adjacency_list: Dict[T,List[T]]):
@@ -25,9 +25,9 @@ class Graph:
             adjacency_list[v] = []
         self._adjacency_list = adjacency_list
 
-    def transpose(self):
+    def transpose(self) -> None:
         '''
-        Transposes the graph.
+        Transposes the graph in place.
 
         '''
         transpose_adjacency_list = {}
@@ -43,6 +43,10 @@ class Graph:
         '''
         Calculate strongly connected components of the graph.
         Follows an iteritive version of Tarjan's algorithm.
+
+        Returns:
+        - List of strongly connected components (list of nodes in the component)
+        in graph
 
         '''
         scc = []
@@ -75,8 +79,10 @@ class Graph:
     def topological_sort(self) -> List[T]:
         '''
         Calculates a topological sort of the graph.
-        Follows the iterative implementation given in class.
-        Doesn't handle graphs with cycles.
+        Only returns a valid topological sort for acyclic graphs.
+
+        Returns:
+        - List of nodes in graph sorted in topological order
 
         '''
         visited = set()
@@ -95,12 +101,15 @@ class Graph:
                     result.append(k)
         return result
 
-    def get_reachable_nodes(self, initial: Set[T]):
+    def get_reachable_nodes(self, initial: Set[T]) -> Set[T]:
         '''
-        Gets reachable nodes of graph given a list of initial nodes
+        Gets reachable nodes of graph given a set of initial nodes
 
         Arguments:
-        - initial: List[T] -  list of initial nodes
+        - initial: Set[T] - set of initial nodes
+
+        Returns:
+        - Set of reachable nodes in graph from initial nodes
 
         '''
         reachable = set(initial)
@@ -115,12 +124,12 @@ class Graph:
                             reachable.add(w)
         return reachable
 
-    def subgraph_from_nodes(self, nodes: Set[T]):
+    def subgraph_from_nodes(self, nodes: Set[T]) -> None:
         '''
-        Creates a subgraph of the graph with the given set of nodes
+        Creates a subgraph of the graph in place with the given set of nodes
 
         Arguments:
-        - nodes: Set[T] -  list of nodes in subgraph
+        - nodes: Set[T] - list of nodes in subgraph
 
         '''
         sub_adjacency_list = {}
