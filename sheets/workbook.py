@@ -282,12 +282,12 @@ class Workbook:
         - the cell value
 
         '''
-        
+
         sheet_name = sheet_name.lower()
 
         if sheet_name not in self.sheet_objects.keys():
             raise KeyError("Specified sheet name is not found")
-
+        
         # calls get_cell_value from Sheet
         return self.sheet_objects[sheet_name].get_cell_value(location)
 

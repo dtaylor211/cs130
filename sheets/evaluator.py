@@ -55,6 +55,17 @@ class Evaluator(Transformer):
 
         self._working_sheet = sheet_name
 
+    def get_workbook(self):
+        '''
+        Set the name of the current working sheet
+
+        Arguments:
+        - sheet_name: str - string sheet name
+
+        '''
+
+        return self._workbook
+
     ########################################################################
     # Bases
     ########################################################################
@@ -166,6 +177,7 @@ class Evaluator(Transformer):
         '''
         
         try:
+
             operator = args[1]
             x = self.transform(args[0]).children[-1]
             y = self.transform(args[-1]).children[-1]
@@ -183,9 +195,9 @@ class Evaluator(Transformer):
             # Check for division by zero
             if y == Decimal(0) and operator == '/':
                 raise ZeroDivisionError
-                
+            
             result = x * y if operator == '*' else x / y
-            return Tree('number', [self.normalize_number(Decimal(result))])
+            return Tree('number', [self.__normalize_number(Decimal(result))])
 
         except Exception as e:
             return self.__process_exceptions(e, detail='multiplication/division')    
@@ -258,7 +270,7 @@ class Evaluator(Transformer):
         - args: List - list of Tree and/or Token objects of format [sheet, cell]
 
         Returns:
-        - Tree holding the resulting cell as a
+        - Tree holding the resulting cell as a Cell object
 
         '''
 
@@ -276,7 +288,8 @@ class Evaluator(Transformer):
             if not re.match(r"^[A-Z]{1,4}[1-9][0-9]{0,3}$", cell_name.upper()):
                 raise KeyError('Cell location out of bounds')
             
-            result = self.workbook.get_cell_value(working_sheet, cell_name)
+            workbook = self.get_workbook()
+            result = workbook.get_cell_value(working_sheet, cell_name)
 
             # Check for propogating errors
             if isinstance(result, CellError):
