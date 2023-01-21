@@ -26,14 +26,38 @@ class Evaluator(Transformer):
         '''
 
         Transformer.__init__(self)
-        self.workbook = workbook
-        self.working_sheet = sheet_name
+        self._workbook = workbook
+        self._working_sheet = sheet_name
 
+    ########################################################################
+    # Getters and Setters
+    ########################################################################
+
+    def get_working_sheet(self) -> str:
+        '''
+        Get the name of the current working sheet
+
+        Returns:
+        - string sheet name
+
+        '''
+
+        return self._working_sheet
+    
+    def set_working_sheet(self, sheet_name: str):
+        '''
+        Set the name of the current working sheet
+
+        Arguments:
+        - sheet_name: str - string sheet name
+
+        '''
+
+        self._working_sheet = sheet_name
 
     ########################################################################
     # Bases
     ########################################################################
-
 
     def NUMBER(self, token: Token):
         '''
@@ -48,8 +72,7 @@ class Evaluator(Transformer):
 
         '''
 
-        return self.normalize_number(Decimal(token))
-
+        return self.__normalize_number(Decimal(token))
 
     def STRING(self, token: Token):
         '''
@@ -65,7 +88,6 @@ class Evaluator(Transformer):
 
         return (str(token)[1:-1])
     
-
     def CELLREF(self, token: Token):
         '''
         Evaluate a CELLREF type
@@ -80,11 +102,9 @@ class Evaluator(Transformer):
 
         return token
 
-
     ########################################################################
     # Expressions
     ########################################################################
-
 
     def expr(self, args: List) -> Tree:
         '''
@@ -99,7 +119,6 @@ class Evaluator(Transformer):
         '''
 
         return eval(args[0])
-
 
     def add_expr(self, args: List) -> Tree:
         '''
@@ -129,11 +148,10 @@ class Evaluator(Transformer):
             y = Decimal(0) if y is None else Decimal(y)
 
             result = x + y if operator == '+' else x - y
-            return Tree('number', [self.normalize_number(Decimal(result))])
+            return Tree('number', [self.__normalize_number(Decimal(result))])
 
         except Exception as e:
-            return self.process_exceptions(e, detail='addition/subtraction')
-    
+            return self.__process_exceptions(e, detail='addition/subtraction')
 
     def mul_expr(self, args: List) -> Tree:
         '''
@@ -170,8 +188,7 @@ class Evaluator(Transformer):
             return Tree('number', [self.normalize_number(Decimal(result))])
 
         except Exception as e:
-            return self.process_exceptions(e, detail='multiplication/division')    
-
+            return self.__process_exceptions(e, detail='multiplication/division')    
 
     def unary_op(self, args: List) -> Tree:
         '''
@@ -200,8 +217,7 @@ class Evaluator(Transformer):
             return Tree('number', [Decimal(result)])
 
         except Exception as e:
-            return self.process_exceptions(e, detail='unary operations')
-
+            return self.__process_exceptions(e, detail='unary operations')
 
     def concat_expr(self, args: List) -> Tree:
         '''
@@ -232,8 +248,7 @@ class Evaluator(Transformer):
             return Tree('string', [s1+s2])
 
         except Exception as e:
-            return self.process_exceptions(e, 'string concatenation')
-
+            return self.__process_exceptions(e, 'string concatenation')
 
     def cell(self, args: List) -> Tree:
         '''
@@ -254,7 +269,7 @@ class Evaluator(Transformer):
                     working_sheet = working_sheet[1:-1]
                 cell_name = args[1]
             else:
-                working_sheet = self.working_sheet
+                working_sheet = self.get_working_sheet()
                 cell_name = args[0]
 
             # Check that cell location is within bounds
@@ -274,10 +289,10 @@ class Evaluator(Transformer):
             if k.args[0] == 'Cell location out of bounds':
                 detail = 'cell'
             else: detail = 'sheet'
-            return self.process_exceptions(k, detail)
+            return self.__process_exceptions(k, detail)
 
         except Exception as e:
-            return self.process_exceptions(e, 'cell operations')
+            return self.__process_exceptions(e, 'cell operations')
         
     def parens(self, args: List) -> Tree:
         '''
@@ -293,7 +308,6 @@ class Evaluator(Transformer):
 
         return args[0] # removes the outer brackets
     
-
     def error(self, args: List) -> Tree:
         '''
         Evaluate an error expression
@@ -311,13 +325,11 @@ class Evaluator(Transformer):
         c = CellErrorType(e_type[0])
         return Tree('cell_error', [CellError(c, '', None)])
 
-
     ########################################################################
     # Exception Processing
     ########################################################################       
 
-
-    def process_exceptions(self, ex: Exception, detail: str = '') -> Tree:
+    def __process_exceptions(self, ex: Exception, detail: str = '') -> Tree:
         '''
         Process the occurrence of an exception
 
@@ -352,12 +364,11 @@ class Evaluator(Transformer):
         return Tree('cell_error', 
             [CellError(error_type, detail=detail, exception = ex)])
     
-
     ########################################################################
     # Helper Functions
     ######################################################################## 
 
-    def normalize_number(self, num: Decimal) -> Decimal:
+    def __normalize_number(self, num: Decimal) -> Decimal:
         '''
         Normalize a Decimal object such that we remove all leading and 
         trailing zeros, while not simplifying using exponent notation

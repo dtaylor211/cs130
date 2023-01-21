@@ -1,6 +1,7 @@
 import enum
 from typing import Optional
 
+
 CELL_ERRORS = {
     1: '#ERROR!',
     2: '#CIRCREF!',

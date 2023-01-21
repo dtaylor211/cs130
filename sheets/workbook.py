@@ -204,8 +204,7 @@ class Workbook:
 
         '''
 
-        if self.evaluator.working_sheet != sheet_name:
-            self.evaluator.working_sheet = sheet_name
+        self.evaluator.set_working_sheet(sheet_name)
 
         sheet_name = sheet_name.lower()
 
@@ -246,8 +245,7 @@ class Workbook:
 
         '''
 
-        if self.evaluator.working_sheet != sheet_name:
-            self.evaluator.working_sheet = sheet_name
+        self.evaluator.set_working_sheet(sheet_name)
 
         sheet_name = sheet_name.lower()
 
