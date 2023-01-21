@@ -188,7 +188,7 @@ class Evaluator(Transformer):
             if isinstance(y, CellError):
                 return Tree('cell_error', [y])
 
-            # Check for compatible types, deal with empty case
+            # Check for compatible types, deal with empty cases
             x = Decimal(0) if x is None else Decimal(x)
             y = Decimal(0) if y is None else Decimal(y)
 
