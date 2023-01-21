@@ -134,11 +134,13 @@ class Workbook:
         if sheet_name.lower() not in self.sheet_objects.keys():
             raise KeyError("Specified sheet name is not found")
         
-        original_sheet_name = self.sheet_objects[sheet_name.lower()].name
+        original_sheet_name = self.sheet_objects[sheet_name.lower()].get_name()
         # set all cells to empty and add them to set of initial cells to
         # propogate updates from
         deleted_cells = []
-        for cell in self.sheet_objects[sheet_name.lower()].cells.values():
+        for cell in self.sheet_objects[
+            sheet_name.lower()].get_all_cells().values():
+
             deleted_cells.append((sheet_name.lower(), cell.loc.lower()))
             cell.empty()
 

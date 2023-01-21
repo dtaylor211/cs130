@@ -2,7 +2,7 @@ import enum
 import lark
 from lark import Visitor, Tree
 from decimal import Decimal, DecimalException
-from typing import Optional, List
+from typing import Optional, List, Tuple, Any
 
 from .evaluator import Evaluator
 from .cell_error import CellError, CellErrorType, CELL_ERRORS
@@ -54,16 +54,73 @@ class Cell:
 
         '''
 
-        self.loc = loc
+        self._loc = loc
 
         # new Cell is treated as an empty cell, contents and values are None
-        self.contents = None
-        self.value = None
-        self.children = []
-        self.evaluator = evaluator
-        self.parser = lark.Lark.open(
+        self._contents = None
+        self._value = None
+        self._children = []
+        self._evaluator = evaluator
+        self._parser = lark.Lark.open(
             'formulas.lark', start='formula', rel_to=__file__)
 
+    def get_loc(self) -> str:
+        '''
+        Get the location of the cell
+
+        Returns:
+        - string location of the cell
+
+        '''
+
+        return self._loc
+    
+    def get_contents(self) -> str:
+        '''
+        Get the contents of the cell
+
+        Returns:
+        - string contents instructions of the cell
+
+        '''
+
+        return self._contents
+    
+    def get_value(self) -> str:
+        '''
+        Get the value of the cell
+
+        Returns:
+        - value of the cell with various type
+
+        '''
+
+        return self._value
+    
+    def get_parser_and_evaluator(self) -> Tuple:
+        '''
+        Get the parser and evaluator
+
+        Returns:
+        - tuple with [parser, evaluator]
+
+        '''
+
+        return self._parser, self._evaluator
+    
+    def set_contents_and_value(self, contents: Optional[str], 
+                                                        value: Optional[Any]):
+        '''
+        Set the contents and value fields of the cell
+
+        Arguments:
+        - contents: Optional[str] - contents to set, can be None
+        - value: Optional[str] - value to set, can be None
+
+        '''
+
+        self._contents = contents
+        self._value = value
 
     def set_contents(self, input_str: Optional[str]):
         '''
@@ -76,44 +133,46 @@ class Cell:
 
         # Remove leading and trailing whitespace
         inp = input_str.strip()
-        self.contents = inp
+        contents = inp
 
         try:
 
             # Check if there is a leading single quote, set to STRING type
             if inp[0] == "'":
-                self.value = inp[1:].strip() # Remove whitespace again
+                value = inp[1:].strip() # Remove whitespace again
+                self.set_contents_and_value(contents, value)
 
             # Check if there is a leading equal sign, set to FORMULA type
             # and evaluate
             elif inp[0] == "=":
-                tree = self.parser.parse(inp)
-                visitor = _CellTreeVisitor(str(self.evaluator.working_sheet))
+                parser, evaluator = self.get_parser_and_evaluator()
+                tree = parser.parse(inp)
+                visitor = _CellTreeVisitor(str(evaluator.working_sheet))
                 visitor.visit(tree)
                 self.children = list(visitor.children)
-                eval = self.evaluator.transform(tree).children[0]
-                self.value = eval
+                eval = evaluator.transform(tree).children[0]
+                self.set_contents_and_value(contents, eval)
 
             elif inp.upper() in list(CELL_ERRORS.values()):
                 e_type = [i for i in CELL_ERRORS if CELL_ERRORS[i]==inp.upper()]
                 c = CellErrorType(e_type[0])
-                self.value = CellError(c, '', None)
+                self.set_contents_and_value(contents, CellError(c, '', None))
 
             # Otherwise set to NUMBER type - works for now, will need to change
             # if we can have other cell types
             else:
                 temp_value = Decimal(inp) 
                 if temp_value in RESTRICTED_VALUES:
-                    self.value = inp
-                else: self.value = temp_value
+                    temp_value = inp
+                self.set_contents_and_value(contents, temp_value)
 
         except DecimalException as d:
-            self.value = inp
+            self.set_contents_and_value(contents, inp)
         
         except lark.exceptions.LarkError as l:
-            self.value = CellError(CellErrorType.PARSE_ERROR, 
+            value = CellError(CellErrorType.PARSE_ERROR, 
                             detail='Unable to parse entry', exception = l)
-
+            self.set_contents_and_value(contents, value)
 
     def get_children(self) -> List:
         '''
@@ -124,8 +183,7 @@ class Cell:
 
         '''
 
-        return self.children
-
+        return self._children
 
     def empty(self):
         '''
@@ -133,9 +191,7 @@ class Cell:
 
         '''
 
-        self.contents = None
-        self.value = None
-
+        self.set_contents_and_value(None, None)
 
     def get_string_from_error(self, cell_error_type: CellErrorType) -> str:
         '''
@@ -150,7 +206,6 @@ class Cell:
         '''
         
         return CELL_ERRORS[cell_error_type]
-
 
     def set_circular_error(self):
         '''
