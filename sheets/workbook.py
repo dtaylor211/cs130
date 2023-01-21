@@ -14,8 +14,7 @@ class Workbook:
 
     '''
 
-    DEFAULT_SHEET_NUM = 1
-
+    # DEFAULT_SHEET_NUM = 1 - Plan to use in future projects
 
     def __init__(self):
         '''
@@ -24,7 +23,7 @@ class Workbook:
         Contains (lowercase) sheet names (preserves order?)
 
         '''
-        self.sheet_names = [] # needs to be all lowercase?
+        self.sheet_names = []
 
         # dictionary that maps lowercase sheet name to Sheet object
         self.sheet_objects: Dict[str, Sheet] = {}
