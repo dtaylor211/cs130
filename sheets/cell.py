@@ -11,7 +11,14 @@ from typing import Optional, List, Tuple, Any
 from .evaluator import Evaluator
 from .cell_error import CellError, CellErrorType, CELL_ERRORS
 
-    # ERROR: int = 5 ?
+
+RESTRICTED_VALUES = [
+    Decimal('Infinity'),
+    Decimal('-Infinity'), 
+    Decimal('NaN'),
+    Decimal('-NaN')
+]
+
 
 class _CellTreeVisitor(Visitor):
     '''
@@ -146,7 +153,7 @@ class Cell:
             elif inp[0] == "=":
                 parser, evaluator = self.get_parser_and_evaluator()
                 tree = parser.parse(inp)
-                visitor = _CellTreeVisitor(str(evaluator.working_sheet))
+                visitor = _CellTreeVisitor(str(evaluator.get_working_sheet()))
                 visitor.visit(tree)
                 self.children = list(visitor.children)
                 eval = evaluator.transform(tree).children[0]
