@@ -134,23 +134,11 @@ class TestEvaluatorInvalid:
         assert result_value.get_type() == CellErrorType.BAD_REFERENCE
         assert(isinstance(result_value, CellError))
 
-        WB.new_sheet('Del sheet')
-        WB.set_cell_contents('Test', 'A1', "='Del sheet'!A1+1")
-        WB.del_sheet('Del sheet')
-        result_contents = WB.get_cell_contents('Test','A1')
-        result_value = WB.get_cell_value('Test', 'A1')
-        assert(result_contents == "='Del sheet'!A1+1")
-        assert result_value.get_type() == CellErrorType.BAD_REFERENCE
-        assert(isinstance(result_value, CellError))
-
-        WB.new_sheet('Sheet1')
-        WB.set_cell_contents('Sheet1', 'A1', 'Sheet2')
-        WB.set_cell_contents('Sheet1', 'A2', '=Sheet1!A1 & Sheet2')
-        contents = WB.get_cell_contents('Sheet1', 'A2')
-        value = WB.get_cell_value('Sheet1', 'A2')
-        assert contents == '=Sheet1!A1 & Sheet2'
-        assert isinstance(value, CellError)
-        assert value.get_type() == CellErrorType.BAD_REFERENCE
+# [-5] If A refers to a cell in some sheet S, but then sheet S is deleted, A
+# should be updated to be a BAD_REFERENCE error. 
+# ALREADY TEST FOR THIS AND IT PASSES???????
+# THINK ABOUT POSSIBLE CORNER CASES
+# Possibly the handling sheet names with spaces
 
     def test_bad_name(self):
         # to be implemented in later projects

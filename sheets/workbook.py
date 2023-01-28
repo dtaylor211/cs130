@@ -176,8 +176,8 @@ class Workbook:
         sheet_objects[sheet_name.lower()] = Sheet(
             sheet_name, self.get_evaluator())
 
-        self.set_sheet_names(sheet_names) # preserves case
-        self.set_sheet_objects(sheet_objects)
+        self.updateCellValues([(sheet_name.lower(), None)])
+        return self.num_sheets() - 1, sheet_name
 
         self.update_cell_values(sheet_name.lower())
         return self.num_sheets() - 1, sheet_name
@@ -279,6 +279,9 @@ class Workbook:
             location, contents)
 
         # update other cells
+        self.updateCellValues([(sheet_name, location.lower())])
+
+        # update other cells
         self.update_cell_values(sheet_name, location.lower())
 
     def get_cell_contents(self, sheet_name: str, location: str)-> Optional[str]:
@@ -353,8 +356,7 @@ class Workbook:
         # calls get_cell_value from Sheet
         return sheet_objects[sheet_name].get_cell_value(location)
 
-    def update_cell_values(self, updated_sheet: str, updated_cell: 
-        Optional[str] = None, renamed_sheet: Optional[str] = None) -> None:
+    def updateCellValues(self, updatedCells: List[Tuple[str,Optional[str]]]) -> None:
         '''
         Updates the contents of all cells. If given a sheet and/or cell,
         only updates cells effected.
@@ -376,38 +378,14 @@ class Workbook:
         cell_graph = Graph(adj)
         cell_graph.transpose()
         # get cells to update if only given a sheet
-        if updated_cell is None:
-            # get the cells in the sheet
-            updated_cells = [(child_sheet, child_cell) 
-            for children in adj.values() 
-            for (child_sheet, child_cell) in children 
-            if child_sheet == updated_sheet]
-            # rename references if we have a renamed sheet
-            if renamed_sheet is not None:
-                # fix new sheet name
-                if re.search(R'[ .?!,:;!@#$%^&*\(\)\-]', renamed_sheet):
-                    renamed_sheet = "'"+renamed_sheet+"'"
-                # get the adjacency list of the cell parents graph
-                parent_adj = cell_graph.get_adjacency_list()
-                # go through cells that reference the cells on sheet
-                for ref in updated_cells:
-                    for (sheet, cell) in parent_adj[ref]:
-                        # get cell contents
-                        contents = self.get_cell_contents(sheet, cell)
-                        # replace sheet name with new name
-                        contents=re.sub(R"([=\+\-*/& ])"+updated_sheet+"!", 
-                                        R"\1"+renamed_sheet+"!", 
-                                        contents, flags=re.IGNORECASE)
-                        contents=re.sub("'"+updated_sheet+"'"+"!", 
-                        renamed_sheet+"!", contents, flags=re.IGNORECASE)
-                        # set the new contents with new sheet name
-                        sheet_objects[sheet].set_cell_contents(cell, contents)
-                        # may need to move here *******
-                        # call helper function to update sheet names in contents
-                        self.format_sheet_names(sheet, cell, adj[(sheet, cell)])
-                self.set_sheet_objects(sheet_objects)
-        else:
-            updated_cells = [(updated_sheet, updated_cell)]
+        if len(updatedCells) == 1:
+            sheet, cell = updatedCells[0]
+            if cell is None:
+                updatedCells = []
+                for children in adjacency_list.values():
+                    for (child_sheet, child_cell) in children:
+                        if child_sheet == sheet:
+                            updatedCells.append((child_sheet, child_cell))
         # get the graph of only cells needing to be updated
         reachable = cell_graph.get_reachable_nodes(updated_cells)
         cell_graph.subgraph_from_nodes(reachable)
