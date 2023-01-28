@@ -33,6 +33,8 @@ class _CellTreeVisitor(Visitor):
     def cell(self, tree: Tree):
         if len(tree.children) == 2:
             cell_sheet = str(tree.children[0])
+            if cell_sheet[0] == '\'':
+                    cell_sheet = cell_sheet[1:-1]
             cell = str(tree.children[1])
         else:
             cell_sheet = self.sheet

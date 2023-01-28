@@ -120,6 +120,11 @@ class TestEvaluatorInvalid:
         assert result_value.get_type() == CellErrorType.BAD_REFERENCE
         assert(isinstance(result_value, CellError))
 
+# [-5] If A refers to a cell in some sheet S, but then sheet S is deleted, A
+# should be updated to be a BAD_REFERENCE error. 
+# ALREADY TEST FOR THIS AND IT PASSES???????
+# THINK ABOUT POSSIBLE CORNER CASES
+# Possibly the handling sheet names with spaces
 
     def test_bad_name(self):
         # to be implemented in later projects

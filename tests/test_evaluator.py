@@ -454,5 +454,18 @@ class TestEvaluator:
         WB.set_cell_contents("June Totals", "B2", "=A2")
         contents = WB.get_cell_contents("June Totals", "B2")
         assert contents == "=A2"
-        value = wb.get_cell_value("June Totals", "B2")
+        value = WB.get_cell_value("June Totals", "B2")
         assert value == Decimal(2)
+
+        WB.set_cell_contents("June Totals", "B1", "='August Totals'!A1+3")
+        WB.new_sheet("August Totals")
+        contents = WB.get_cell_contents("June Totals", "B1")
+        assert contents == "='August Totals'!A1+3"
+        value = WB.get_cell_value("June Totals", "B1")
+        assert value == Decimal(3)
+        value = WB.get_cell_value("June Totals", "B1")
+        WB.set_cell_contents("August Totals", "A1", "1")
+        contents = WB.get_cell_contents("June Totals", "B1")
+        assert contents == "='August Totals'!A1+3"
+        value = WB.get_cell_value("June Totals", "B1")
+        assert value == Decimal(4)
