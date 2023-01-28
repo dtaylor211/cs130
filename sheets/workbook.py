@@ -114,6 +114,7 @@ class Workbook:
         self.sheet_objects[sheet_name.lower()] = Sheet(sheet_name, 
                                                        self.evaluator)
 
+        self.updateCellValues([(sheet_name.lower(), None)])
         return self.num_sheets() - 1, sheet_name
 
 
@@ -214,6 +215,7 @@ class Workbook:
         # set cell contents
         cell = self.sheet_objects[sheet_name].set_cell_contents(
             location, contents)
+
         # update other cells
         self.updateCellValues([(sheet_name, location.lower())])
 
@@ -291,7 +293,7 @@ class Workbook:
         # calls get_cell_value from Sheet
         return self.sheet_objects[sheet_name].get_cell_value(location)
 
-    def updateCellValues(self, updatedCells: List[Tuple[str,str]]) -> None:
+    def updateCellValues(self, updatedCells: List[Tuple[str,Optional[str]]]) -> None:
         '''
         Updates the contents of all cells. If given a list of updated cells,
         only updates cells effected.
@@ -307,6 +309,15 @@ class Workbook:
         # make a graph of cell children, transpose to get graph of cell parents
         cell_graph = Graph(adjacency_list)
         cell_graph.transpose()
+        # get cells to update if only given a sheet
+        if len(updatedCells) == 1:
+            sheet, cell = updatedCells[0]
+            if cell is None:
+                updatedCells = []
+                for children in adjacency_list.values():
+                    for (child_sheet, child_cell) in children:
+                        if child_sheet == sheet:
+                            updatedCells.append((child_sheet, child_cell))
         # get the graph of only cells needing to be updated
         reachable = cell_graph.get_reachable_nodes(updatedCells)
         cell_graph.subgraph_from_nodes(reachable)
