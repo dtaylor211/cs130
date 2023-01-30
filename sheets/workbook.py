@@ -114,7 +114,7 @@ class Workbook:
         self.sheet_objects[sheet_name.lower()] = Sheet(sheet_name, 
                                                        self.evaluator)
 
-        self.updateCellValues([(sheet_name.lower(), None)])
+        self.update_cell_values(sheet_name.lower(), None)
         return self.num_sheets() - 1, sheet_name
 
 
@@ -136,19 +136,11 @@ class Workbook:
             raise KeyError("Specified sheet name is not found")
         
         original_sheet_name = self.sheet_objects[sheet_name.lower()].get_name()
-        # set all cells to empty and add them to set of initial cells to
-        # propogate updates from
-        deleted_cells = []
-        for cell in self.sheet_objects[
-            sheet_name.lower()].get_all_cells().values():
-
-            deleted_cells.append((sheet_name.lower(), cell.get_loc().lower()))
-            cell.empty()
 
         del self.sheet_objects[sheet_name.lower()]
         self.sheet_names.remove(original_sheet_name)
-        # update all cells dependent on deleted cells
-        self.updateCellValues(deleted_cells)
+        # update all cells dependent on deleted sheet
+        self.update_cell_values(sheet_name.lower(), None)
 
     def get_sheet_extent(self, sheet_name: str) -> Tuple[int, int]:
         '''
@@ -217,7 +209,7 @@ class Workbook:
             location, contents)
 
         # update other cells
-        self.updateCellValues([(sheet_name, location.lower())])
+        self.update_cell_values(sheet_name, location.lower())
 
 
     def get_cell_contents(self, sheet_name: str, location: str)-> Optional[str]:
@@ -293,13 +285,15 @@ class Workbook:
         # calls get_cell_value from Sheet
         return self.sheet_objects[sheet_name].get_cell_value(location)
 
-    def updateCellValues(self, updatedCells: List[Tuple[str,Optional[str]]]) -> None:
+    def update_cell_values(self, updated_sheet: str, 
+                                updated_cell: Optional[str]) -> None:
         '''
-        Updates the contents of all cells. If given a list of updated cells,
+        Updates the contents of all cells. If given a sheet and/or cell,
         only updates cells effected.
 
         Arguments:
-        - updatedCells - cells that have been updated
+        - updated_sheet - sheet that has been updated
+        - updated_cell - cell that has been updated
 
         '''
         # get all the cell children
@@ -310,16 +304,15 @@ class Workbook:
         cell_graph = Graph(adjacency_list)
         cell_graph.transpose()
         # get cells to update if only given a sheet
-        if len(updatedCells) == 1:
-            sheet, cell = updatedCells[0]
-            if cell is None:
-                updatedCells = []
-                for children in adjacency_list.values():
-                    for (child_sheet, child_cell) in children:
-                        if child_sheet == sheet:
-                            updatedCells.append((child_sheet, child_cell))
+        if updated_cell is None:
+            updated_cells = [(child_sheet, child_cell) 
+            for children in adjacency_list.values() 
+            for (child_sheet, child_cell) in children 
+            if child_sheet == updated_sheet]
+        else:
+            updated_cells = [(updated_sheet, updated_cell)]
         # get the graph of only cells needing to be updated
-        reachable = cell_graph.get_reachable_nodes(updatedCells)
+        reachable = cell_graph.get_reachable_nodes(updated_cells)
         cell_graph.subgraph_from_nodes(reachable)
         # get the acyclic components from the scc
         components = cell_graph.get_strongly_connected_components()
@@ -337,7 +330,7 @@ class Workbook:
         cell_topological = cell_graph.topological_sort()
         # update cells
         for sheet, cell in cell_topological:
-            if (sheet, cell) not in updatedCells:
+            if (sheet, cell) not in updated_cells:
                 self.set_cell_contents(sheet, cell, 
                     self.sheet_objects[sheet].get_cell_contents(cell))
 
