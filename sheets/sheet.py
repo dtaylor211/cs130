@@ -3,6 +3,7 @@ from typing import Dict, List, Tuple, Optional, Any
 
 from .cell import Cell
 from .evaluator import Evaluator
+from .helpers import get_loc_from_coords
 
 class Sheet:
     '''
@@ -206,3 +207,21 @@ class Sheet:
             name = self.get_name()
             adj_list[(name.lower(), cell.get_loc().lower())] = cell.get_children()
         return adj_list
+
+    def save_sheet(self) -> Dict[str, str]:
+        '''
+        Saves Sheet in proper dictionary formatting for JSON export
+
+        Returns:
+        - dictionary with sheet name and nested dictionary for cell contents
+        '''
+        cell_contents = {}
+
+        for coords, cell in self.get_all_cells().items():
+            cell_loc = get_loc_from_coords(coords) # uppercase cell location
+            cell_contents[cell_loc] = cell.get_contents()
+
+        return {
+            "name": self.get_name(),
+            "cell-contents": cell_contents
+        }
