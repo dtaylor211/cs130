@@ -351,7 +351,44 @@ class Workbook:
         # If any expected value in the input JSON is not of the proper type
         # (e.g. an object instead of a list, or a number instead of a string),
         # raise a TypeError with a suitably descriptive message.
-        pass
+        loaded_wb = json.load(fp)
+        new_wb = Workbook()
+
+        if "sheets" not in loaded_wb:
+            raise KeyError("Missing: 'sheets'")
+        sheets = loaded_wb["sheets"]
+        if not isinstance(sheets, list):
+            raise TypeError("'sheets' is not proper type (list)")
+
+        for sheet in sheets:
+            if not isinstance(sheet, dict):
+                raise TypeError("Sheet representation is not proper type (dict)")
+            
+            if "name" not in sheet:
+                raise KeyError("Missing: 'name'")
+            if not isinstance(sheet("name", str)):
+                raise TypeError("Sheet name is not proper type (string)")
+            sheet_name = sheet["name"]
+
+            if not isinstance(sheet("cell-contents", dict)):
+                raise TypeError("Sheet name is not proper type (dictionary))")
+            if "cell-contents" not in sheet:
+                KeyError("Missing: 'cell-contents'")
+            cell_contents = sheet["cell-contents"]
+
+            (index, name) = new_wb.new_sheet(sheet_name)
+
+            for location in cell_contents:
+                if not isinstance(location, str):
+                    raise TypeError("Cell location is not proper type (string)")
+                
+                if not isinstance(cell_contents[location], str):
+                    raise TypeError("Cell contents is not proper type (string)")
+                contents = cell_contents[location]
+
+                new_wb.set_cell_contents(sheet_name, location, contents)
+
+            return new_wb
 
     def save_workbook(self, fp: TextIO) -> None:
         # Instance method (not a static/class method) to save a workbook to a
@@ -368,9 +405,11 @@ class Workbook:
             sheet  = self.sheet_objects(sheet_name.lower())
             json_sheets.append(sheet.save_sheet())
 
-        obj["sheets"] = 
+        obj = {
+            "sheets": json_sheets 
+        }
 
-        
+        json.dump(obj=obj, fp=fp)
 
     def notify_cells_changed(self,
             notify_function: Callable[[Workbook, Iterable[Tuple[str, str]]], None]) -> None:
