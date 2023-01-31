@@ -1,6 +1,5 @@
 import re
-import json
-from typing import Optional, List, Tuple, Any, Dict
+from typing import Optional, List, Tuple, Any, Dict, Callable, Iterable
 
 from .sheet import Sheet
 from .evaluator import Evaluator
@@ -30,6 +29,7 @@ class Workbook:
         # dictionary that maps lowercase sheet name to Sheet object
         self.sheet_objects: Dict[str, Sheet] = {}
         self.evaluator = Evaluator(self, '')
+        self.notify_functions = []
 
     def num_sheets(self) -> int:
         '''
@@ -329,203 +329,48 @@ class Workbook:
         cell_graph.subgraph_from_nodes(dag_nodes)
         # get the topological sort of non-circular nodes needing to be updated
         cell_topological = cell_graph.topological_sort()
+        # get cells to notify
+        notify_cells = []
         # update cells
         for sheet, cell in cell_topological:
             if (sheet, cell) not in updated_cells:
-                self.set_cell_contents(sheet, cell, 
+                notify_cells.append((sheet, cell))
+                self.sheet_objects[sheet].set_cell_contents(cell, 
                     self.sheet_objects[sheet].get_cell_contents(cell))
+        for notify_function in self.notify_functions:
+            try:
+                notify_function(self, notify_cells)
+            except:
+                pass
 
-    @staticmethod
-    def load_workbook(fp: TextIO) -> Workbook:
-        # This is a static method (not an instance method) to load a workbook
-        # from a text file or file-like object in JSON format, and return the
-        # new Workbook instance.  Note that the _caller_ of this function is
-        # expected to have opened the file; this function merely reads the file.
-        #
-        # If the contents of the input cannot be parsed by the Python json
-        # module then a json.JSONDecodeError should be raised by the method.
-        # (Just let the json module's exceptions propagate through.)  Similarly,
-        # if an IO read error occurs (unlikely but possible), let any raised
-        # exception propagate through.
-        #
-        # If any expected value in the input JSON is missing (e.g. a sheet
-        # object doesn't have the "cell-contents" key), raise a KeyError with
-        # a suitably descriptive message.
-        #
-        # If any expected value in the input JSON is not of the proper type
-        # (e.g. an object instead of a list, or a number instead of a string),
-        # raise a TypeError with a suitably descriptive message.
-        loaded_wb = json.load(fp)
-        new_wb = Workbook()
-
-        if "sheets" not in loaded_wb:
-            raise KeyError("Missing: 'sheets'")
-        sheets = loaded_wb["sheets"]
-        if not isinstance(sheets, list):
-            raise TypeError("'sheets' is not proper type (list)")
-
-        for sheet in sheets:
-            if not isinstance(sheet, dict):
-                raise TypeError("Sheet representation is not proper type (dict)")
-            
-            if "name" not in sheet:
-                raise KeyError("Missing: 'name'")
-            if not isinstance(sheet("name", str)):
-                raise TypeError("Sheet name is not proper type (string)")
-            sheet_name = sheet["name"]
-
-            if not isinstance(sheet("cell-contents", dict)):
-                raise TypeError("Sheet name is not proper type (dictionary))")
-            if "cell-contents" not in sheet:
-                KeyError("Missing: 'cell-contents'")
-            cell_contents = sheet["cell-contents"]
-
-            (index, name) = new_wb.new_sheet(sheet_name)
-
-            for location in cell_contents:
-                if not isinstance(location, str):
-                    raise TypeError("Cell location is not proper type (string)")
-                
-                if not isinstance(cell_contents[location], str):
-                    raise TypeError("Cell contents is not proper type (string)")
-                contents = cell_contents[location]
-
-                new_wb.set_cell_contents(sheet_name, location, contents)
-
-            return new_wb
-
-    def save_workbook(self, fp: TextIO) -> None:
-        # Instance method (not a static/class method) to save a workbook to a
-        # text file or file-like object in JSON format.  Note that the _caller_
-        # of this function is expected to have opened the file; this function
-        # merely writes the file.
-        #
-        # If an IO write error occurs (unlikely but possible), let any raised
-        # exception propagate through.
-        obj = {}
-        json_sheets = []
-
-        for sheet_name in self.list_sheets: # preserves ordering
-            sheet  = self.sheet_objects(sheet_name.lower())
-            json_sheets.append(sheet.save_sheet())
-
-        obj = {
-            "sheets": json_sheets 
-        }
-
-        json.dump(obj=obj, fp=fp)
-
-    def notify_cells_changed(self,
-            notify_function: Callable[[Workbook, Iterable[Tuple[str, str]]], None]) -> None:
-        # Request that all changes to cell values in the workbook are reported
-        # to the specified notify_function.  The values passed to the notify
-        # function are the workbook, and an iterable of 2-tuples of strings,
-        # of the form ([sheet name], [cell location]).  The notify_function is
-        # expected not to return any value; any return-value will be ignored.
-        #
-        # Multiple notification functions may be registered on the workbook;
-        # functions will be called in the order that they are registered.
-        #
-        # A given notification function may be registered more than once; it
-        # will receive each notification as many times as it was registered.
-        #
-        # If the notify_function raises an exception while handling a
-        # notification, this will not affect workbook calculation updates or
-        # calls to other notification functions.
-        #
-        # A notification function is expected to not mutate the workbook or
-        # iterable that it is passed to it.  If a notification function violates
-        # this requirement, the behavior is undefined.
-        pass
-
-    def rename_sheet(self, sheet_name: str, new_sheet_name: str) -> None:
-        # Rename the specified sheet to the new sheet name.  Additionally, all
-        # cell formulas that referenced the original sheet name are updated to
-        # reference the new sheet name (using the same case as the new sheet
-        # name, and single-quotes iff [if and only if] necessary).
-        #
-        # The sheet_name match is case-insensitive; the text must match but the
-        # case does not have to.
-        #
-        # As with new_sheet(), the case of the new_sheet_name is preserved by
-        # the workbook.
-        #
-        # If the sheet_name is not found, a KeyError is raised.
-        #
-        # If the new_sheet_name is an empty string or is otherwise invalid, a
-        # ValueError is raised.
-        pass
-
-    def move_sheet(self, sheet_name: str, index: int) -> None:
-        # Move the specified sheet to the specified index in the workbook's
-        # ordered sequence of sheets.  The index can range from 0 to
-        # workbook.num_sheets() - 1.  The index is interpreted as if the
-        # specified sheet were removed from the list of sheets, and then
-        # re-inserted at the specified index.
-        #
-        # The sheet name match is case-insensitive; the text must match but the
-        # case does not have to.
-        #
-        # If the specified sheet name is not found, a KeyError is raised.
-        #
-        # If the index is outside the valid range, an IndexError is raised.
+    def notify_cells_changed(self, notify_function: 
+                Callable[['Workbook', Iterable[Tuple[str, str]]], None]) -> None:
+        '''
+        Request that all changes to cell values in the workbook are reported
+        to the specified notify_function.  The values passed to the notify
+        function are the workbook, and an iterable of 2-tuples of strings,
+        of the form ([sheet name], [cell location]).  The notify_function is
+        expected not to return any value; any return-value will be ignored.
         
-        if sheet_name.lower() not in self.sheet_objects.keys():
-            raise KeyError("Specified sheet name is not found")
-
-        if index < 0 or index >= self.num_sheets():
-            raise IndexError("Provided index is outside valid range")
-
-        # Handles case when "shEEt1" is provided to move "Sheet1"
-        # IF statement TRUE if text matches but case does not
-        if sheet_name not in self.sheet_names(): 
-            actual_sheet_name = self.sheet_objects[sheet_name.lower()].get_name()
-            self.sheet_names.remove(actual_sheet_name)
-            self.sheet_names.insert(index, actual_sheet_name)
-            return
-
-        self.sheet_names.remove(sheet_name)
-        self.sheet_names.insert(index, sheet_name)
+        Multiple notification functions may be registered on the workbook;
+        functions will be called in the order that they are registered.
         
-
-    def copy_sheet(self, sheet_name: str) -> Tuple[int, str]:
-        # Make a copy of the specified sheet, storing the copy at the end of the
-        # workbook's sequence of sheets.  The copy's name is generated by
-        # appending "_1", "_2", ... to the original sheet's name (preserving the
-        # original sheet name's case), incrementing the number until a unique
-        # name is found.  As usual, "uniqueness" is determined in a
-        # case-insensitive manner.
-        #
-        # The sheet name match is case-insensitive; the text must match but the
-        # case does not have to.
-        #
-        # The copy should be added to the end of the sequence of sheets in the
-        # workbook.  Like new_sheet(), this function returns a tuple with two
-        # elements:  (0-based index of copy in workbook, copy sheet name).  This
-        # allows the function to report the new sheet's name and index in the
-        # sequence of sheets.
-        #
-        # If the specified sheet name is not found, a KeyError is raised.
+        A given notification function may be registered more than once; it
+        will receive each notification as many times as it was registered.
         
-        if sheet_name.lower() not in self.sheet_objects.keys():
-            raise KeyError("Specified sheet name is not found")
+        If the notify_function raises an exception while handling a
+        notification, this will not affect workbook calculation updates or
+        calls to other notification functions.
+        
+        A notification function is expected to not mutate the workbook or
+        iterable that it is passed to it.  If a notification function violates
+        this requirement, the behavior is undefined.
 
-        # generate sheet name for copy
-        og_sheet_name = self.sheet_objects[sheet_name.lower()].get_name()
-        copy_num = 1
-        sheet_copy_name = og_sheet_name + "-" + str(copy_num)
-        while sheet_copy_name.lower() in self.sheet_objects.keys():
-            copy_num += 1
-            sheet_copy_name = og_sheet_name + "-" + str(copy_num)
+        Arguments:
+        - notify_function: Callable - a function to call on cell updates
 
-        # explicitly set each cell in (new) copy sheet using locations and 
-        # contents from copied (og) sheet 
-        (sheet_copy_idx, sheet_copy_name) = self.new_sheet(sheet_copy_name)
-        # get_all_cells() returns self._cells: Dict[Tuple[int, int], Cell] = {}
-        for cell_coords in self.sheet_objects[sheet_name.lower()].get_all_cells().keys():
-            # need the location from the cell coords (we get coords from keys())
-            cell_loc = get_loc_from_coords(cell_coords)
-            og_cell = self.sheet_objects[sheet_name.lower()].get_cell(cell_loc)
-            self.set_cell_contents(sheet_copy_name, cell_loc, og_cell.contents)
+        Returns: 
+        - None
 
-        return (sheet_copy_idx, sheet_copy_name)
+        '''
+        self.notify_functions.append(notify_function)

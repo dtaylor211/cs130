@@ -85,11 +85,13 @@ class Graph:
         - List of nodes in graph sorted in topological order
 
         '''
-        visited = set()
-        result = []
+        visited = set() 
+        result = [] 
         for k in self._adjacency_list:
-            stack = [(k, True)]
-            while stack:
+            stack = []
+            if k not in visited:
+                stack.append((k, True))
+            while stack: 
                 (k, enter) = stack.pop()
                 if enter and k not in visited:
                     visited.add(k)
@@ -97,8 +99,9 @@ class Graph:
                     for v in self._adjacency_list[k]:
                         if v not in visited:
                             stack.append((v, True))
-                else: # Leaving the node
+                else:
                     result.append(k)
+        result.reverse()
         return result
 
     def get_reachable_nodes(self, initial: Set[T]) -> Set[T]:
