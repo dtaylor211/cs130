@@ -60,8 +60,9 @@ class Workbook:
         - List of sheet names
 
         '''
-
-        return self.sheet_names
+        # Fixes "mutating the list comes back from list_sheets() shouldn't 
+        # mangle the workbook's internal details"
+        return [name for name in self.sheet_names]
 
     def new_sheet(self, sheet_name: Optional[str] = None) -> Tuple[int, str]:
         '''
@@ -360,7 +361,16 @@ class Workbook:
         #
         # If an IO write error occurs (unlikely but possible), let any raised
         # exception propagate through.
-        pass
+        obj = {}
+        json_sheets = []
+
+        for sheet_name in self.list_sheets: # preserves ordering
+            sheet  = self.sheet_objects(sheet_name.lower())
+            json_sheets.append(sheet.save_sheet())
+
+        obj["sheets"] = 
+
+        
 
     def notify_cells_changed(self,
             notify_function: Callable[[Workbook, Iterable[Tuple[str, str]]], None]) -> None:
