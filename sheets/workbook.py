@@ -1,5 +1,5 @@
 import re
-from typing import Optional, List, Tuple, Any, Dict
+from typing import Optional, List, Tuple, Any, Dict, Callable, Iterable
 
 from .sheet import Sheet
 from .evaluator import Evaluator
@@ -28,6 +28,7 @@ class Workbook:
         # dictionary that maps lowercase sheet name to Sheet object
         self.sheet_objects: Dict[str, Sheet] = {}
         self.evaluator = Evaluator(self, '')
+        self.notify_functions = []
 
     def num_sheets(self) -> int:
         '''
@@ -328,10 +329,48 @@ class Workbook:
         cell_graph.subgraph_from_nodes(dag_nodes)
         # get the topological sort of non-circular nodes needing to be updated
         cell_topological = cell_graph.topological_sort()
+        # get cells to notify
+        notify_cells = []
         # update cells
         for sheet, cell in cell_topological:
             if (sheet, cell) not in updated_cells:
-                self.set_cell_contents(sheet, cell, 
+                notify_cells.append((sheet, cell))
+                self.sheet_objects[sheet].set_cell_contents(cell, 
                     self.sheet_objects[sheet].get_cell_contents(cell))
+        for notify_function in self.notify_functions:
+            try:
+                notify_function(self, notify_cells)
+            except:
+                pass
 
+    def notify_cells_changed(self, notify_function: 
+                Callable[['Workbook', Iterable[Tuple[str, str]]], None]) -> None:
+        '''
+        Request that all changes to cell values in the workbook are reported
+        to the specified notify_function.  The values passed to the notify
+        function are the workbook, and an iterable of 2-tuples of strings,
+        of the form ([sheet name], [cell location]).  The notify_function is
+        expected not to return any value; any return-value will be ignored.
+        
+        Multiple notification functions may be registered on the workbook;
+        functions will be called in the order that they are registered.
+        
+        A given notification function may be registered more than once; it
+        will receive each notification as many times as it was registered.
+        
+        If the notify_function raises an exception while handling a
+        notification, this will not affect workbook calculation updates or
+        calls to other notification functions.
+        
+        A notification function is expected to not mutate the workbook or
+        iterable that it is passed to it.  If a notification function violates
+        this requirement, the behavior is undefined.
 
+        Arguments:
+        - notify_function: Callable - a function to call on cell updates
+
+        Returns: 
+        - None
+
+        '''
+        self.notify_functions.append(notify_function)
