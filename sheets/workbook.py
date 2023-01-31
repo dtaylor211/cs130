@@ -5,6 +5,7 @@ from typing import Optional, List, Tuple, Any, Dict
 from .sheet import Sheet
 from .evaluator import Evaluator
 from .graph import Graph
+from .helpers import get_loc_from_coords
 
 class Workbook:
     '''
@@ -455,3 +456,23 @@ class Workbook:
         
         if sheet_name.lower() not in self.sheet_objects.keys():
             raise KeyError("Specified sheet name is not found")
+
+        # generate sheet name for copy
+        og_sheet_name = self.sheet_objects[sheet_name.lower()].get_name()
+        copy_num = 1
+        sheet_copy_name = og_sheet_name + "-" + str(copy_num)
+        while sheet_copy_name.lower() in self.sheet_objects.keys():
+            copy_num += 1
+            sheet_copy_name = og_sheet_name + "-" + str(copy_num)
+
+        # explicitly set each cell in (new) copy sheet using locations and 
+        # contents from copied (og) sheet 
+        (sheet_copy_idx, sheet_copy_name) = self.new_sheet(sheet_copy_name)
+        # get_all_cells() returns self._cells: Dict[Tuple[int, int], Cell] = {}
+        for cell_coords in self.sheet_objects[sheet_name.lower()].get_all_cells().keys():
+            # need the location from the cell coords (we get coords from keys())
+            cell_loc = get_loc_from_coords(cell_coords)
+            og_cell = self.sheet_objects[sheet_name.lower()].get_cell(cell_loc)
+            self.set_cell_contents(sheet_copy_name, cell_loc, og_cell.contents)
+
+        return (sheet_copy_idx, sheet_copy_name)
