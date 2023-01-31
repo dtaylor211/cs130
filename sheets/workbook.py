@@ -450,7 +450,54 @@ class Workbook:
         #
         # If the new_sheet_name is an empty string or is otherwise invalid, a
         # ValueError is raised.
-        pass
+
+        if sheet_name.lower() not in self.sheet_objects.keys():
+            raise KeyError("Specified sheet name is not found")
+
+        # assume new_sheet_name is not None
+        # checking empty string
+        if new_sheet_name == "":
+            raise ValueError("Invalid Sheet name: cannot be empty string")
+        # check whitespace
+        elif new_sheet_name != new_sheet_name.strip():
+            raise ValueError(
+                "Invalid Sheet name: cannot start/end with whitespace")
+        # check valid (letters, numbers, spaces, .?!,:;!@#$%^&*()-_)
+        elif not re.match(R'^[a-zA-Z0-9 .?!,:;!@#$%^&*\(\)\-\_]+$', 
+                            new_sheet_name):
+            raise ValueError("Invalid Sheet name: improper characters used")
+
+        # check uniqueness
+        if new_sheet_name.lower() in self.sheet_objects.keys():
+            raise ValueError("Sheet name already exists")
+
+        # Update sheet_names (list preserving order & case of sheet names)
+        # old_sheet_name used to retrieve proper casing
+        old_sheet_name = self.sheet_objects[sheet_name.lower()].get_name()
+        old_sheet_idx = self.sheet_names.index(old_sheet_name)
+        self.sheet_names[old_sheet_idx] = new_sheet_name
+
+        # Update sheet_objects dict (delete old key, add key with new name)
+        sheet = self.sheet_objects[sheet_name.lower()]
+        sheet.set_name(new_sheet_name)
+        self.sheet_objects[new_sheet_name.lower()] = sheet
+        del self.sheet_objects[sheet_name.lower()]
+
+        # TODO: 
+        # -update formulas with proper sheet naming 
+        # -check single quote requirement 
+        #
+        # *Process might look like:
+        # 
+        # for cell in renamed sheet:
+        #   if cell contents = formula: update formula
+        #   else: next cell
+        #
+        #   for each child of cell:
+        #       if child cell contents = formula: update formula
+        #   for each parent of cell:
+        #       if parent cell contents = formula: update formula
+
 
     def move_sheet(self, sheet_name: str, index: int) -> None:
         # Move the specified sheet to the specified index in the workbook's
@@ -473,16 +520,9 @@ class Workbook:
             raise IndexError("Provided index is outside valid range")
 
         # Handles case when "shEEt1" is provided to move "Sheet1"
-        # IF statement TRUE if text matches but case does not
-        if sheet_name not in self.sheet_names(): 
-            actual_sheet_name = self.sheet_objects[sheet_name.lower()].get_name()
-            self.sheet_names.remove(actual_sheet_name)
-            self.sheet_names.insert(index, actual_sheet_name)
-            return
-
+        sheet_name = self.sheet_objects[sheet_name.lower()].get_name()
         self.sheet_names.remove(sheet_name)
-        self.sheet_names.insert(index, sheet_name)
-        
+        self.sheet_names.insert(index, sheet_name)     
 
     def copy_sheet(self, sheet_name: str) -> Tuple[int, str]:
         # Make a copy of the specified sheet, storing the copy at the end of the
@@ -522,6 +562,6 @@ class Workbook:
             # need the location from the cell coords (we get coords from keys())
             cell_loc = get_loc_from_coords(cell_coords)
             og_cell = self.sheet_objects[sheet_name.lower()].get_cell(cell_loc)
-            self.set_cell_contents(sheet_copy_name, cell_loc, og_cell.contents)
+            self.set_cell_contents(sheet_copy_name, cell_loc, og_cell.get_contents())
 
         return (sheet_copy_idx, sheet_copy_name)
