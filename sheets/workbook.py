@@ -415,7 +415,24 @@ class Workbook:
         # If the specified sheet name is not found, a KeyError is raised.
         #
         # If the index is outside the valid range, an IndexError is raised.
-        pass
+        
+        if sheet_name.lower() not in self.sheet_objects.keys():
+            raise KeyError("Specified sheet name is not found")
+
+        if index < 0 or index >= self.num_sheets():
+            raise IndexError("Provided index is outside valid range")
+
+        # Handles case when "shEEt1" is provided to move "Sheet1"
+        # IF statement TRUE if text matches but case does not
+        if sheet_name not in self.sheet_names(): 
+            actual_sheet_name = self.sheet_objects[sheet_name.lower()].get_name()
+            self.sheet_names.remove(actual_sheet_name)
+            self.sheet_names.insert(index, actual_sheet_name)
+            return
+
+        self.sheet_names.remove(sheet_name)
+        self.sheet_names.insert(index, sheet_name)
+        
 
     def copy_sheet(self, sheet_name: str) -> Tuple[int, str]:
         # Make a copy of the specified sheet, storing the copy at the end of the
@@ -435,4 +452,6 @@ class Workbook:
         # sequence of sheets.
         #
         # If the specified sheet name is not found, a KeyError is raised.
-        pass
+        
+        if sheet_name.lower() not in self.sheet_objects.keys():
+            raise KeyError("Specified sheet name is not found")
