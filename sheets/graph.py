@@ -25,6 +25,13 @@ class Graph:
             adjacency_list[v] = []
         self._adjacency_list = adjacency_list
 
+    def get_adjacency_list(self):
+        '''
+        Returns the graph's adjacency list.
+
+        '''
+        return self._adjacency_list
+
     def transpose(self) -> None:
         '''
         Transposes the graph in place.
