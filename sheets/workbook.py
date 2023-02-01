@@ -1,6 +1,6 @@
 import re
 import json
-from typing import Optional, List, Tuple, Any, Dict, Callable, Iterable, TextIO
+from typing import Optional, List, Tuple, Any, Dict, TextIO
 
 from .sheet import Sheet
 from .evaluator import Evaluator
@@ -531,13 +531,11 @@ class Workbook:
             sheet_copy_name = og_sheet_name + "-" + str(copy_num)
 
         # explicitly set each cell in (new) copy sheet using locations and 
-        # contents from copied (og) sheet 
+        # contents from copied sheet 
         (sheet_copy_idx, sheet_copy_name) = self.new_sheet(sheet_copy_name)
-        # get_all_cells() returns self._cells: Dict[Tuple[int, int], Cell] = {}
-        for cell_coords in self.sheet_objects[sheet_name.lower()].get_all_cells().keys():
-            # need the location from the cell coords (we get coords from keys())
-            cell_loc = get_loc_from_coords(cell_coords)
-            og_cell = self.sheet_objects[sheet_name.lower()].get_cell(cell_loc)
-            self.set_cell_contents(sheet_copy_name, cell_loc, og_cell.get_contents())
+        cells_dict = self.sheet_objects[sheet_name.lower()].get_all_cells()
+        for coords, cell in cells_dict.items():
+            loc = get_loc_from_coords(coords)
+            self.set_cell_contents(sheet_copy_name, loc, cell.get_contents())
 
-        return (sheet_copy_idx, sheet_copy_name)
+        return sheet_copy_idx, sheet_copy_name
