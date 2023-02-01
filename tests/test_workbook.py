@@ -181,7 +181,7 @@ class TestWorkbook:
         assert value == Decimal(2)
 
     ########################################################################
-    # Helpers
+    # Project 2
     ########################################################################
 
     def test_load_workbook_valid(self):
