@@ -1,6 +1,6 @@
 import re
 import json
-from typing import Optional, List, Tuple, Any, Dict
+from typing import Optional, List, Tuple, Any, Dict, Callable, Iterable
 
 from .sheet import Sheet
 from .evaluator import Evaluator
@@ -30,6 +30,7 @@ class Workbook:
         # dictionary that maps lowercase sheet name to Sheet object
         self.sheet_objects: Dict[str, Sheet] = {}
         self.evaluator = Evaluator(self, '')
+        self.notify_functions = []
 
     def num_sheets(self) -> int:
         '''
@@ -117,6 +118,7 @@ class Workbook:
         self.sheet_objects[sheet_name.lower()] = Sheet(sheet_name, 
                                                        self.evaluator)
 
+        self.update_cell_values(sheet_name.lower(), None)
         return self.num_sheets() - 1, sheet_name
 
     def del_sheet(self, sheet_name: str) -> None:
@@ -137,19 +139,11 @@ class Workbook:
             raise KeyError("Specified sheet name is not found")
         
         original_sheet_name = self.sheet_objects[sheet_name.lower()].get_name()
-        # set all cells to empty and add them to set of initial cells to
-        # propogate updates from
-        deleted_cells = []
-        for cell in self.sheet_objects[
-            sheet_name.lower()].get_all_cells().values():
-
-            deleted_cells.append((sheet_name.lower(), cell.get_loc().lower()))
-            cell.empty()
 
         del self.sheet_objects[sheet_name.lower()]
         self.sheet_names.remove(original_sheet_name)
-        # update all cells dependent on deleted cells
-        self.updateCellValues(deleted_cells)
+        # update all cells dependent on deleted sheet
+        self.update_cell_values(sheet_name.lower(), None)
 
     def get_sheet_extent(self, sheet_name: str) -> Tuple[int, int]:
         '''
@@ -216,8 +210,9 @@ class Workbook:
         # set cell contents
         cell = self.sheet_objects[sheet_name].set_cell_contents(
             location, contents)
+
         # update other cells
-        self.updateCellValues([(sheet_name, location.lower())])
+        self.update_cell_values(sheet_name, location.lower())
 
     def get_cell_contents(self, sheet_name: str, location: str)-> Optional[str]:
         '''
@@ -292,13 +287,15 @@ class Workbook:
         # calls get_cell_value from Sheet
         return self.sheet_objects[sheet_name].get_cell_value(location)
 
-    def updateCellValues(self, updatedCells: List[Tuple[str,str]]) -> None:
+    def update_cell_values(self, updated_sheet: str, 
+                                updated_cell: Optional[str]) -> None:
         '''
-        Updates the contents of all cells. If given a list of updated cells,
+        Updates the contents of all cells. If given a sheet and/or cell,
         only updates cells effected.
 
         Arguments:
-        - updatedCells - cells that have been updated
+        - updated_sheet - sheet that has been updated
+        - updated_cell - cell that has been updated
 
         '''
         # get all the cell children
@@ -308,8 +305,16 @@ class Workbook:
         # make a graph of cell children, transpose to get graph of cell parents
         cell_graph = Graph(adjacency_list)
         cell_graph.transpose()
+        # get cells to update if only given a sheet
+        if updated_cell is None:
+            updated_cells = [(child_sheet, child_cell) 
+            for children in adjacency_list.values() 
+            for (child_sheet, child_cell) in children 
+            if child_sheet == updated_sheet]
+        else:
+            updated_cells = [(updated_sheet, updated_cell)]
         # get the graph of only cells needing to be updated
-        reachable = cell_graph.get_reachable_nodes(updatedCells)
+        reachable = cell_graph.get_reachable_nodes(updated_cells)
         cell_graph.subgraph_from_nodes(reachable)
         # get the acyclic components from the scc
         components = cell_graph.get_strongly_connected_components()
@@ -325,11 +330,19 @@ class Workbook:
         cell_graph.subgraph_from_nodes(dag_nodes)
         # get the topological sort of non-circular nodes needing to be updated
         cell_topological = cell_graph.topological_sort()
+        # get cells to notify
+        notify_cells = []
         # update cells
         for sheet, cell in cell_topological:
-            if (sheet, cell) not in updatedCells:
-                self.set_cell_contents(sheet, cell, 
+            if (sheet, cell) not in updated_cells:
+                notify_cells.append((sheet, cell))
+                self.sheet_objects[sheet].set_cell_contents(cell, 
                     self.sheet_objects[sheet].get_cell_contents(cell))
+        for notify_function in self.notify_functions:
+            try:
+                notify_function(self, notify_cells)
+            except:
+                pass
 
     @staticmethod
     def load_workbook(fp: TextIO) -> Workbook:
@@ -432,7 +445,7 @@ class Workbook:
         # A notification function is expected to not mutate the workbook or
         # iterable that it is passed to it.  If a notification function violates
         # this requirement, the behavior is undefined.
-        pass
+        self.notify_functions.append(notify_function)
 
     def rename_sheet(self, sheet_name: str, new_sheet_name: str) -> None:
         # Rename the specified sheet to the new sheet name.  Additionally, all
