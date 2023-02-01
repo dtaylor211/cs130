@@ -1,6 +1,7 @@
 import re
 import json
-from typing import Optional, List, Tuple, Any, Dict, TextIO, Iterable, Callable
+from typing import Optional, List, Tuple, Any, Dict, Callable, Iterable, TextIO
+from lark import Lark
 
 from .sheet import Sheet
 from .evaluator import Evaluator
@@ -178,7 +179,7 @@ class Workbook:
         sheet_objects[sheet_name.lower()] = Sheet(
             sheet_name, self.get_evaluator())
 
-        self.update_cell_values(sheet_name.lower(), None)
+        self.update_cell_values(sheet_name.lower())
         return self.num_sheets() - 1, sheet_name
 
         self.update_cell_values(sheet_name.lower())
@@ -206,7 +207,7 @@ class Workbook:
         del self.sheet_objects[sheet_name.lower()]
         self.sheet_names.remove(original_sheet_name)
         # update all cells dependent on deleted sheet
-        self.update_cell_values(sheet_name.lower(), None)
+        self.update_cell_values(sheet_name.lower())
 
     def get_sheet_extent(self, sheet_name: str) -> Tuple[int, int]:
         '''
@@ -353,8 +354,8 @@ class Workbook:
         # calls get_cell_value from Sheet
         return sheet_objects[sheet_name].get_cell_value(location)
 
-    def update_cell_values(self, updated_sheet: str, 
-                                updated_cell: Optional[str]) -> None:
+    def update_cell_values(self, updated_sheet: str, updated_cell: 
+        Optional[str] = None, renamed_sheet: Optional[str] = None) -> None:
         '''
         Updates the contents of all cells. If given a sheet and/or cell,
         only updates cells effected.
@@ -362,6 +363,7 @@ class Workbook:
         Arguments:
         - updated_sheet - sheet that has been updated
         - updated_cell - cell that has been updated
+        - renamed_sheet - new name of renamed sheet with preserved case
 
         '''
 
@@ -369,17 +371,36 @@ class Workbook:
 
         # get all the cell children
         adj = {}
-        for sheet in sheet_objects.values():
+        for sheet in self.sheet_objects.values():
             adj.update(sheet.get_cell_adjacency_list())
         # make a graph of cell children, transpose to get graph of cell parents
         cell_graph = Graph(adj)
         cell_graph.transpose()
         # get cells to update if only given a sheet
         if updated_cell is None:
+            # get the cells in the sheet
             updated_cells = [(child_sheet, child_cell) 
-            for children in adjacency_list.values() 
+            for children in adj.values() 
             for (child_sheet, child_cell) in children 
             if child_sheet == updated_sheet]
+            # rename references if we have a renamed sheet
+            if renamed_sheet is not None:
+                # fix new sheet name
+                if re.search(R'[ .?!,:;!@#$%^&*\(\)\-]', renamed_sheet):
+                    renamed_sheet = "'"+renamed_sheet+"'"
+                # get the adjacency list of the cell parents graph
+                parent_adj = cell_graph.get_adjacency_list()
+                # go through cells that reference the cells on sheet
+                for ref in updated_cells:
+                    for (sheet, cell) in parent_adj[ref]:
+                        # get cell contents
+                        contents = self.get_cell_contents(sheet, cell)
+                        contents=re.sub(R"([=+-])"+updated_sheet+"!", R"\1"+
+                            renamed_sheet+"!", contents, flags=re.IGNORECASE)
+                        contents=re.sub(R"([=+-])"+"'"+updated_sheet+"'"+"!", 
+                        R"\1"+renamed_sheet+"!", contents, flags=re.IGNORECASE)
+                        self.sheet_objects[sheet].set_cell_contents(cell, 
+                                                                    contents)
         else:
             updated_cells = [(updated_sheet, updated_cell)]
         # get the graph of only cells needing to be updated
@@ -518,20 +539,9 @@ class Workbook:
         self.sheet_objects[new_sheet_name.lower()] = sheet
         del self.sheet_objects[sheet_name.lower()]
 
-        # TODO: 
-        # -update formulas with proper sheet naming 
-        # -check single quote requirement 
-        #
-        # *Process might look like:
-        # 
-        # for cell in renamed sheet:
-        #   if cell contents = formula: update formula
-        #   else: next cell
-        #
-        #   for each child of cell:
-        #       if child cell contents = formula: update formula
-        #   for each parent of cell:
-        #       if parent cell contents = formula: update formula
+        # updates the contents of all cells referencing the cell name
+        self.update_cell_values(sheet_name.lower(), 
+                                renamed_sheet = new_sheet_name)
 
 
     def move_sheet(self, sheet_name: str, index: int) -> None:
