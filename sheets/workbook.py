@@ -485,20 +485,19 @@ class Workbook:
             sheet_name = sheet["name"]
 
             if not isinstance(sheet("cell-contents", dict)):
-                raise TypeError("Sheet name is not proper type (dictionary))")
+                raise TypeError("Cell-contents is not proper type (dictionary))")
             if "cell-contents" not in sheet:
                 KeyError("Missing: 'cell-contents'")
             cell_contents = sheet["cell-contents"]
 
             (index, name) = new_wb.new_sheet(sheet_name)
 
-            for location in cell_contents:
+            for location, contents in cell_contents.items():
                 if not isinstance(location, str):
-                    raise TypeError("Cell location is not proper type (string)")
+                    raise TypeError("Location is not proper type (string)")
                 
-                if not isinstance(cell_contents[location], str):
-                    raise TypeError("Cell contents is not proper type (string)")
-                contents = cell_contents[location]
+                if not isinstance(contents, str):
+                    raise TypeError("Contents is not proper type (string)")
 
                 new_wb.set_cell_contents(sheet_name, location, contents)
 
