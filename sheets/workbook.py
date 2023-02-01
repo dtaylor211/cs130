@@ -1,6 +1,6 @@
 import re
 import json
-from typing import Optional, List, Tuple, Any, Dict, Callable, Iterable
+from typing import Optional, List, Tuple, Any, Dict, Callable, Iterable, TextIO
 
 from .sheet import Sheet
 from .evaluator import Evaluator
@@ -345,7 +345,7 @@ class Workbook:
                 pass
 
     @staticmethod
-    def load_workbook(fp: TextIO) -> Workbook:
+    def load_workbook(fp: TextIO) -> 'Workbook':
         # This is a static method (not an instance method) to load a workbook
         # from a text file or file-like object in JSON format, and return the
         # new Workbook instance.  Note that the _caller_ of this function is
@@ -424,8 +424,8 @@ class Workbook:
 
         json.dump(obj=obj, fp=fp)
 
-    def notify_cells_changed(self,
-            notify_function: Callable[[Workbook, Iterable[Tuple[str, str]]], None]) -> None:
+    def notify_cells_changed(self, notify_function: 
+        Callable[['Workbook', Iterable[Tuple[str, str]]], None]) -> None:
         # Request that all changes to cell values in the workbook are reported
         # to the specified notify_function.  The values passed to the notify
         # function are the workbook, and an iterable of 2-tuples of strings,
