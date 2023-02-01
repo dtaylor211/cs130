@@ -165,6 +165,13 @@ class TestWorkbook:
         value = wb.get_cell_value(name, "A1")
         assert value == "eight"
 
+        # string values with whitespace
+        wb.set_cell_contents(name, "A1", "'   eight")
+        contents = wb.get_cell_contents(name, "A1")
+        assert contents == "'   eight"
+        value = wb.get_cell_value(name, "A1")
+        assert value == "   eight"
+
         # simple formulas (no references to other cells)
         # formulas tested more extensively elsewhere
         wb.set_cell_contents(name, "A1", "=1+1")

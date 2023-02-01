@@ -147,7 +147,7 @@ class TestEvaluator:
 
         tree = PARSER.parse('=A7')
         result = EVALUATOR.transform(tree)
-        assert(result == Tree('cell_ref', ['123']))
+        assert(result == Tree('cell_ref', ['    123']))
 
     
     def test_string_concatenation(self):
