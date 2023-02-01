@@ -1,6 +1,6 @@
 import re
 import json
-from typing import Optional, List, Tuple, Any, Dict, TextIO
+from typing import Optional, List, Tuple, Any, Dict, TextIO, Iterable, Callable
 
 from .sheet import Sheet
 from .evaluator import Evaluator
@@ -446,8 +446,8 @@ class Workbook:
         # exception propagate through.
         pass
 
-    def notify_cells_changed(self, notify_function: 
-        Callable[['Workbook', Iterable[Tuple[str, str]]], None]) -> None:
+    def notify_cells_changed(self,
+            notify_function: Callable[['Workbook', Iterable[Tuple[str, str]]], None]) -> None:
         # Request that all changes to cell values in the workbook are reported
         # to the specified notify_function.  The values passed to the notify
         # function are the workbook, and an iterable of 2-tuples of strings,
