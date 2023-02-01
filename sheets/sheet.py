@@ -3,7 +3,7 @@ from typing import Dict, List, Tuple, Optional, Any
 
 from .cell import Cell
 from .evaluator import Evaluator
-from .helpers import get_loc_from_coords
+from .utils import get_loc_from_coords
 
 class Sheet:
     '''

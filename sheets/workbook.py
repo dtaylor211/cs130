@@ -6,7 +6,7 @@ from lark import Lark
 from .sheet import Sheet
 from .evaluator import Evaluator
 from .graph import Graph
-from .helpers import get_loc_from_coords
+from .utils import get_loc_from_coords
 
 class Workbook:
     '''
@@ -586,3 +586,25 @@ class Workbook:
             self.set_cell_contents(sheet_copy_name, loc, cell.get_contents())
 
         return sheet_copy_idx, sheet_copy_name
+
+    ########################################################################
+    # Helpers
+    ########################################################################
+
+    def format_sheet_names(self, sheet_name: str, location: str, 
+        sheets_in_contents: List[Tuple]) -> None:
+        '''
+        Set the cell's contents to be properly formatted so that sheet names
+        with quotations that do not need them, will have them removed
+
+        Arguments:
+        - sheet_name: str - name of the current cell's sheet
+        - location: str - location of the current cell
+        - sheets_in_contents: List[Tuple] -
+        '''
+        for sheet, _ in sheets_in_contents:
+            if not re.search(R'\'[ .?!,:;!@#$%^&*\(\)\-]\'', sheet):
+                curr_contents = self.get_cell_contents(sheet_name, location)
+                contents = re.sub("'"+sheet+"'", sheet, curr_contents)
+                self.sheet_objects[sheet_name]\
+                    .set_cell_contents(location, contents)
