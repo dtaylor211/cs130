@@ -143,8 +143,8 @@ class Cell:
 
             # Check if there is a leading single quote, set to STRING type
             if inp[0] == "'":
-                value = inp[1:].strip() # Remove whitespace again
-                self.set_contents_and_value(contents, value)
+                # value = inp[1:].strip() # Remove whitespace again
+                self.set_contents_and_value(contents, inp[1:])
 
             # Check if there is a leading equal sign, set to FORMULA type
             # and evaluate
