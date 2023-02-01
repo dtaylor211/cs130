@@ -26,6 +26,7 @@ class Workbook:
         Contains (lowercase) sheet names (preserves order?)
 
         '''
+
         self.sheet_names = []
 
         # dictionary that maps lowercase sheet name to Sheet object
@@ -62,6 +63,7 @@ class Workbook:
         - List of sheet names
 
         '''
+
         # Fixes "mutating the list comes back from list_sheets() shouldn't 
         # mangle the workbook's internal details"
         return [name for name in self.sheet_names]
@@ -103,8 +105,7 @@ class Workbook:
                 raise ValueError("Invalid Sheet name: improper characters used")
 
             # check uniqueness
-            if sheet_name.lower() in self.sheet_objects.keys():
-                raise ValueError("Sheet name already exists")
+            self.validate_sheet_uniqueness(sheet_name)
             
         # sheet name not specified -> generate ununused "Sheet" + "#" name
         else:
@@ -136,8 +137,7 @@ class Workbook:
 
         '''
         
-        if sheet_name.lower() not in self.sheet_objects.keys():
-            raise KeyError("Specified sheet name is not found")
+        self.validate_sheet_existence(sheet_name)
         
         original_sheet_name = self.sheet_objects[sheet_name.lower()].get_name()
 
@@ -163,10 +163,10 @@ class Workbook:
 
         '''
         
-        if sheet_name.lower() not in self.sheet_objects.keys():
-            raise KeyError("Specified sheet name is not found")
+        self.validate_sheet_existence(sheet_name)
 
-        # get_extent() should be a function of Sheet object (implemented in spreadsheet.py)
+        # get_extent() should be a function of Sheet object 
+        # (implemented in spreadsheet.py)
         return self.sheet_objects[sheet_name.lower()].get_extent() 
 
     def set_cell_contents(self, sheet_name: str, location: str,
@@ -205,8 +205,7 @@ class Workbook:
 
         sheet_name = sheet_name.lower()
 
-        if sheet_name not in self.sheet_objects.keys():
-            raise KeyError("Specified sheet name is not found")
+        self.validate_sheet_existence(sheet_name)
         
         # set cell contents
         cell = self.sheet_objects[sheet_name].set_cell_contents(
@@ -246,8 +245,7 @@ class Workbook:
 
         sheet_name = sheet_name.lower()
 
-        if sheet_name not in self.sheet_objects.keys():
-            raise KeyError("Specified sheet name is not found")
+        self.validate_sheet_existence(sheet_name)
         
         return self.sheet_objects[sheet_name].get_cell_contents(location)
 
@@ -282,8 +280,7 @@ class Workbook:
 
         sheet_name = sheet_name.lower()
 
-        if sheet_name not in self.sheet_objects.keys():
-            raise KeyError("Specified sheet name is not found")
+        self.validate_sheet_existence(sheet_name)
         
         # calls get_cell_value from Sheet
         return self.sheet_objects[sheet_name].get_cell_value(location)
@@ -406,7 +403,8 @@ class Workbook:
 
         for sheet in sheets:
             if not isinstance(sheet, dict):
-                raise TypeError("Sheet representation is not proper type (dict)")
+                raise TypeError(
+                    "Sheet representation is not proper type (dict)")
             
             if "name" not in sheet:
                 raise KeyError("Missing: 'name'")
@@ -517,8 +515,7 @@ class Workbook:
 
         '''
 
-        if sheet_name.lower() not in self.sheet_objects.keys():
-            raise KeyError("Specified sheet name is not found")
+        self.validate_sheet_existence(sheet_name)
 
         # assume new_sheet_name is not None
         # checking empty string
@@ -534,8 +531,7 @@ class Workbook:
             raise ValueError("Invalid Sheet name: improper characters used")
 
         # check uniqueness
-        if new_sheet_name.lower() in self.sheet_objects.keys():
-            raise ValueError("Sheet name already exists")
+        self.validate_sheet_uniqueness(new_sheet_name)
 
         # Update sheet_names (list preserving order & case of sheet names)
         # old_sheet_name used to retrieve proper casing
@@ -575,8 +571,7 @@ class Workbook:
 
         '''
         
-        if sheet_name.lower() not in self.sheet_objects.keys():
-            raise KeyError("Specified sheet name is not found")
+        self.validate_sheet_existence(sheet_name)
 
         if index < 0 or index >= self.num_sheets():
             raise IndexError("Provided index is outside valid range")
@@ -615,8 +610,7 @@ class Workbook:
 
         '''
         
-        if sheet_name.lower() not in self.sheet_objects.keys():
-            raise KeyError("Specified sheet name is not found")
+        self.validate_sheet_existence(sheet_name)
 
         # generate sheet name for copy
         og_sheet_name = self.sheet_objects[sheet_name.lower()].get_name()
@@ -639,6 +633,35 @@ class Workbook:
     ########################################################################
     # Helpers
     ########################################################################
+
+    def validate_sheet_existence(self, sheet_name: str) -> None:
+        '''
+        Validate whether the given sheet name already exists within the workbook
+
+        Throw a KeyError if the name cannot be found
+
+        Arguments:
+        - sheet_name: str - name of the sheet to validate
+
+        '''
+
+        if sheet_name.lower() not in self.sheet_objects.keys():
+            raise KeyError(f"Specified sheet name '{sheet_name}' is not found")
+        
+    def validate_sheet_uniqueness(self, sheet_name: str) -> None:
+        '''
+        Validate that the given sheet name does not already exist within the 
+        workbook
+
+        Throw a ValueError if the name already exists
+
+        Arguments:
+        - sheet_name: str - name of the sheet to validate
+
+        '''
+
+        if sheet_name.lower() in self.sheet_objects.keys():
+            raise ValueError(f"Sheet name '{sheet_name}' already exists")
 
     def format_sheet_names(self, sheet_name: str, location: str, 
         sheets_in_contents: List[Tuple]) -> None:
