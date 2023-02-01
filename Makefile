@@ -14,5 +14,6 @@ test-evaluator:
 test:
 	pytest -q ./tests/test_workbook.py
 	pytest -q ./tests/test_sheet.py
+	pytest -q ./tests/test_utils.py
 	pytest -q ./tests/test_evaluator.py
 	pytest -q ./tests/test_evaluator_invalid.py

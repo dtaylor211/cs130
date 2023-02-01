@@ -7,7 +7,7 @@ from sheets.workbook import Workbook
 
 
 class TestWorkbook:
-    ''' Workbook tests (Project 1) '''
+    ''' Workbook tests (Project 1 & 2) '''
 
     def test_empty_workbook(self):
         wb = Workbook()
@@ -179,3 +179,51 @@ class TestWorkbook:
         assert contents == "=1+1"
         value = wb.get_cell_value(name, "A1")
         assert value == Decimal(2)
+
+    ########################################################################
+    # Helpers
+    ########################################################################
+
+    def test_load_workbook_valid(self):
+        pass
+
+    def test_load_workbook_missing_value(self):
+        pass
+
+    def test_load_workbook_improper_type(self):
+        pass
+
+    def test_save_workbook(self):
+        pass
+
+    def test_notify_cell(self):
+        pass # TODO @Kyle?
+
+    def test_rename_sheet_bad_name(self):
+        # KeyError / ValueError
+        pass     
+
+    def test_rename_sheet(self):
+        pass
+        # check preserve casing, sheet_names, sheet_objects
+
+    def test_rename_sheet_update_refs(self):
+        pass # more complex
+
+    def test_rename_sheet_apply_quotes(self):
+        pass
+
+    def test_rename_sheet_remove_quotes(self):
+        pass
+
+    def test_format_sheet_names_helper(self):
+        pass
+
+    def test_rename_sheet_parse_error(self):
+        pass # ignore invalid formulas?
+
+    def test_move_sheet(self):
+        pass
+
+    def test_copy_sheet(self):
+        pass
