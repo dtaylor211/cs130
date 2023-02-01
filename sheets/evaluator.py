@@ -168,6 +168,8 @@ class Evaluator(Transformer):
         '''
         Evaluate a multiplication/divison expression within the Tree
 
+        Throw a ZeroDivisionError if trying to divide by 0
+
         Arguments:
         - args: List - list with Tree and/or Token objects of format [x, *//, y]
 
@@ -265,6 +267,8 @@ class Evaluator(Transformer):
     def cell(self, args: List) -> Tree:
         '''
         Evaluate a cell expression
+
+        Throw a KeyError if the cell location in the cell_ref is out of bounds
 
         Arguments:
         - args: List - list of Tree and/or Token objects of format [sheet, cell]
