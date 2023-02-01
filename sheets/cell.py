@@ -8,7 +8,7 @@ from lark import Visitor, Tree
 from decimal import Decimal, DecimalException
 from typing import Optional, List, Tuple, Any
 
-from .evaluator import Evaluator
+from .evaluator import Evaluator, QUOTATIONS
 from .cell_error import CellError, CellErrorType, CELL_ERRORS
 
 
@@ -33,8 +33,8 @@ class _CellTreeVisitor(Visitor):
     def cell(self, tree: Tree):
         if len(tree.children) == 2:
             cell_sheet = str(tree.children[0])
-            if cell_sheet[0] == '\'':
-                    cell_sheet = cell_sheet[1:-1]
+            if cell_sheet[0] in QUOTATIONS:
+                cell_sheet = cell_sheet[1:-1]
             cell = str(tree.children[1])
         else:
             cell_sheet = self.sheet
