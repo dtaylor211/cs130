@@ -50,23 +50,6 @@ class TestSheet:
         with pytest.raises(ValueError):
             sheet.set_cell_contents("A0001", None)
 
-        # with pytest.raises(ValueError):
-        #     sheet.__get_coords_from_loc("A0")
-        # with pytest.raises(ValueError):
-        #     sheet.__get_coords_from_loc("A-1")
-        # with pytest.raises(ValueError):
-        #     sheet.__get_coords_from_loc("A 1")
-        # with pytest.raises(ValueError):
-        #     sheet.__get_coords_from_loc(" A1")
-        # with pytest.raises(ValueError):
-        #     sheet.__get_coords_from_loc("A1 ")
-        # with pytest.raises(ValueError):
-        #     sheet.__get_coords_from_loc("AAAAA1")
-        # with pytest.raises(ValueError):
-        #     sheet.__get_coords_from_loc("A11111")
-        # with pytest.raises(ValueError):
-        #     sheet.__get_coords_from_loc("A0001")
-
         # (col, row) = sheet.__get_coords_from_loc("a1")
         # assert (col, row) == (1, 1)
         sheet.set_cell_contents("a1", '1')
