@@ -199,6 +199,11 @@ class TestWorkbook:
             assert wb.get_cell_value("Sheet1", "B1") == Decimal("5.3")
             assert wb.get_cell_value("Sheet1", "C1") == Decimal("651.9")
 
+    def test_load_workbook_dup_sheet(self):
+        with open("tests/json_data/wb_data_invalid_dup.json") as fp:
+            with pytest.raises(ValueError):
+                wb = Workbook.load_workbook(fp)
+
     def test_load_workbook_missing_value(self):
         with open("tests/json_data/wb_data_missing_sheets.json") as fp:
             with pytest.raises(KeyError):
@@ -223,7 +228,6 @@ class TestWorkbook:
         with open("tests/json_data/wb_data_bad_type_contents.json") as fp:
             with pytest.raises(TypeError):
                 wb = Workbook.load_workbook(fp)
-        # How to properly test this?  See wb_data_bad_type_location.json
         # with open("tests/json_data/wb_data_bad_type_location.json") as fp:
         #     with pytest.raises(TypeError):
         #         wb = Workbook.load_workbook(fp)
@@ -259,12 +263,35 @@ class TestWorkbook:
             }
             assert json_act == json_exp
 
+        with io.StringIO("") as fp:
+            wb = Workbook()
+            wb.new_sheet("Sheet1")
+            wb.set_cell_contents("Sheet1", "A1", "1")
+            wb.new_sheet("Sheet2")
+            wb.set_cell_contents("Sheet2", "B2", "=Sheet1!A1")
+            wb.save_workbook(fp)
+            fp.seek(0)
+            json_act = json.load(fp)
+            json_exp = {
+                "sheets":[
+                    {
+                        "name":"Sheet1",
+                        "cell-contents":{
+                            "A1":"1"
+                        }
+                    },
+                    {
+                        "name":"Sheet2",
+                        "cell-contents":{
+                            "B2":"=Sheet1!A1"
+                        }
+                    }
+                ]
+            }
+            assert json_act == json_exp
+
     def test_notify_cell(self):
         pass # TODO @Kyle?
-
-    def test_rename_sheet_bad_name(self):
-        # KeyError / ValueError
-        pass     
 
     def test_rename_sheet(self):
         # test if Sheet1Sheet1 and Sheet1, and we rename Sheet1
@@ -481,36 +508,49 @@ class TestWorkbook:
 
         wb.copy_sheet("Sheet1_2")
         assert wb.list_sheets() == ["Sheet1", "Sheet1_1", "Sheet1_2", 
-            "Sheet_1_2_1"]
+            "Sheet1_2_1"]
         
-        assert wb.get_cell_value("Sheet1") == Decimal("1")
-        assert wb.get_cell_value("Sheet1_1") == Decimal("1")
-        assert wb.get_cell_value("Sheet1_2") == Decimal("1")
-        assert wb.get_cell_value("Sheet1_2_1") == Decimal("1")
+        assert wb.get_cell_value("Sheet1", "A1") == Decimal("1")
+        assert wb.get_cell_value("Sheet1_1", "A1") == Decimal("1")
+        assert wb.get_cell_value("Sheet1_2", "A1") == Decimal("1")
+        assert wb.get_cell_value("Sheet1_2_1", "A1") == Decimal("1")
 
         wb.set_cell_contents("Sheet1", "A1", "=2")
-        assert wb.get_cell_value("Sheet1") == Decimal("2")
-        assert wb.get_cell_value("Sheet1_1") == Decimal("1")
-        assert wb.get_cell_value("Sheet1_2") == Decimal("1")
-        assert wb.get_cell_value("Sheet1_2_1") == Decimal("1")
+        assert wb.get_cell_value("Sheet1", "A1") == Decimal("2")
+        assert wb.get_cell_value("Sheet1_1", "A1") == Decimal("1")
+        assert wb.get_cell_value("Sheet1_2", "A1") == Decimal("1")
+        assert wb.get_cell_value("Sheet1_2_1", "A1") == Decimal("1")
 
         wb.set_cell_contents("Sheet1_2", "A1", "=3")
-        assert wb.get_cell_value("Sheet1") == Decimal("2")
-        assert wb.get_cell_value("Sheet1_1") == Decimal("1")
-        assert wb.get_cell_value("Sheet1_2") == Decimal("3")
-        assert wb.get_cell_value("Sheet1_2_1") == Decimal("1")
+        assert wb.get_cell_value("Sheet1", "A1") == Decimal("2")
+        assert wb.get_cell_value("Sheet1_1", "A1") == Decimal("1")
+        assert wb.get_cell_value("Sheet1_2", "A1") == Decimal("3")
+        assert wb.get_cell_value("Sheet1_2_1", "A1") == Decimal("1")
 
         wb.new_sheet("Sheet2")
         wb.new_sheet("Sheet3")
         wb.set_cell_contents("Sheet2", "B2", "=2")
-        wb.set_cell_contents("Sheet3", "B2", "=Sheet2!B2+Sheet1!B2")
+        wb.set_cell_contents("Sheet3", "B2", "=Sheet2!B2+Sheet2!B2")
         wb.copy_sheet("Sheet2")
         wb.copy_sheet("Sheet3")
         wb.copy_sheet("Sheet2")
 
         assert wb.list_sheets() == ["Sheet1", "Sheet1_1", "Sheet1_2", 
-            "Sheet_1_2_1", "Sheet2", "Sheet3", "Sheet2_1", "Sheet3_1", 
+            "Sheet1_2_1", "Sheet2", "Sheet3", "Sheet2_1", "Sheet3_1", 
             "Sheet2_2"]
         assert wb.get_cell_value("Sheet2_1", "B2") == Decimal("2")
         assert wb.get_cell_value("Sheet3_1", "B2") == Decimal("4")
 
+        wb.new_sheet("Sheet4")
+        wb.set_cell_contents("Sheet4", "D4", "=#CIRCREF!")
+        wb.copy_sheet("Sheet4")
+        contents = wb.get_cell_contents("Sheet4_1", "D4")
+        value = wb.get_cell_value("Sheet4_1", "D4")
+        assert contents == "=#CIRCREF!"
+        assert isinstance(value, CellError)
+        assert value.get_type() == CellErrorType.CIRCULAR_REFERENCE
+
+        (idx, name) = wb.copy_sheet("Sheet4")
+        assert name == "Sheet4_2"
+        (idx, name) = wb.copy_sheet("Sheet4")
+        assert name == "Sheet4_3"
