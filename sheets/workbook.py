@@ -326,10 +326,12 @@ class Workbook:
                     for (sheet, cell) in parent_adj[ref]:
                         # get cell contents
                         contents = self.get_cell_contents(sheet, cell)
+                        # replace sheet name with new name
                         contents=re.sub(R"([=+-])"+updated_sheet+"!", R"\1"+
                             renamed_sheet+"!", contents, flags=re.IGNORECASE)
                         contents=re.sub(R"([=+-])"+"'"+updated_sheet+"'"+"!", 
                         R"\1"+renamed_sheet+"!", contents, flags=re.IGNORECASE)
+                        # set the new contents with new sheet name
                         self.sheet_objects[sheet].set_cell_contents(cell, 
                                                                     contents)
         else:
