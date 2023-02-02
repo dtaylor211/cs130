@@ -410,11 +410,11 @@ class Workbook:
             
             if "name" not in sheet:
                 raise KeyError("Missing: 'name'")
-            if not isinstance(sheet("name", str)):
+            if not isinstance(sheet["name"], str):
                 raise TypeError("Sheet name is not proper type (string)")
             sheet_name = sheet["name"]
 
-            if not isinstance(sheet("cell-contents", dict)):
+            if not isinstance(sheet["cell-contents"], dict):
                 raise TypeError("Cell-contents is not proper type (dictionary))")
             if "cell-contents" not in sheet:
                 KeyError("Missing: 'cell-contents'")
@@ -431,7 +431,7 @@ class Workbook:
 
                 new_wb.set_cell_contents(sheet_name, location, contents)
 
-            return new_wb
+        return new_wb
 
     def save_workbook(self, fp: TextIO) -> None:
         '''
@@ -451,8 +451,8 @@ class Workbook:
         obj = {}
         json_sheets = []
 
-        for sheet_name in self.list_sheets: # preserves ordering
-            sheet  = self.sheet_objects(sheet_name.lower())
+        for sheet_name in self.list_sheets(): # preserves ordering
+            sheet  = self.sheet_objects[sheet_name.lower()]
             json_sheets.append(sheet.save_sheet())
 
         obj = {
