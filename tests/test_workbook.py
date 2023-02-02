@@ -303,7 +303,8 @@ class TestWorkbook:
         wb.set_cell_contents('Sheet1', 'A2', '=A1')
         wb.rename_sheet('Sheet1', 'SheEt2')
         sheet_names = wb.list_sheets()
-        sheet_objects = wb.sheet_objects
+        sheet_objects = wb.get_sheet_objects()
+        print(sheet_objects)
         assert sheet_names == ['SheEt2']
         assert sheet_objects['sheet2'] is not None
         with pytest.raises(KeyError):
@@ -316,12 +317,12 @@ class TestWorkbook:
         wb.new_sheet('Sheet3')
         wb.rename_sheet('Sheet2', 'Sheet4')
         new_sheet_names = wb.list_sheets()
-        new_sheet_objects = wb.sheet_objects
+        new_sheet_objects = wb.get_sheet_objects()
         assert new_sheet_names == ['Sheet4', 'Sheet3']
         assert new_sheet_objects['sheet4'] is not None
         assert new_sheet_objects['sheet3'] is not None
         with pytest.raises(KeyError):
-            sheet_objects['sheet2']
+            new_sheet_objects['sheet2']
         value = wb.get_cell_value('Sheet4', 'A1')
         assert value == Decimal(2)
 
@@ -580,3 +581,18 @@ class TestWorkbook:
         assert name == "Sheet4_2"
         (idx, name) = wb.copy_sheet("Sheet4")
         assert name == "Sheet4_3"
+
+    def test_mutate_returned_attributes(self):
+        wb = Workbook()
+        wb.new_sheet('Sheet1')
+        wb.new_sheet('Sheet2')
+        sheet_names = wb.list_sheets()
+        sheet_names.remove('Sheet1')
+        sheet_names = wb.list_sheets()
+        assert sheet_names == ['Sheet1', 'Sheet2']
+
+        sheet_objects = wb.get_sheet_objects()
+        del sheet_objects['sheet1']
+        new_sheet_objects = wb.get_sheet_objects()
+        assert new_sheet_objects['sheet1'] is not None
+        
