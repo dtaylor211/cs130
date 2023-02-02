@@ -1,7 +1,3 @@
-<<<<<<< HEAD
-class CellType:
-    LITERAL: int = 1
-=======
 import enum
 import lark
 from lark import Visitor, Tree

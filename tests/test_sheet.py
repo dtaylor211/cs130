@@ -78,15 +78,4 @@ class TestSheet:
         # (col, row) = sheet.__get_coords_from_loc("AAc751")
         # assert (col, row) == (705, 751)
         sheet.set_cell_contents("AAc751", '1')
-<<<<<<< HEAD
         assert sheet.get_extent() == (705, 751)
-=======
-        assert sheet.get_extent() == (705, 751)
-
-    ########################################################################
-    # Project 2
-    ########################################################################
-
-    def test_save_sheet(self):
-        pass
->>>>>>> 50a2ca3... DJJ-32: Added new test frameworks, added utils tests + updated Makefile

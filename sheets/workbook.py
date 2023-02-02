@@ -27,12 +27,7 @@ class Workbook:
 
         '''
 
-        self.sheet_names = []
-
-        # dictionary that maps lowercase sheet name to Sheet object
-        self.sheet_objects: Dict[str, Sheet] = {}
-        self.evaluator = Evaluator(self, '')
-        self.notify_functions = []
+        self._sheet_names = []
 
         # dictionary that maps lowercase sheet name to Sheet object
         self._sheet_objects: Dict[str, Sheet] = {}
@@ -181,8 +176,8 @@ class Workbook:
         sheet_objects[sheet_name.lower()] = Sheet(
             sheet_name, self.get_evaluator())
 
-        self.update_cell_values(sheet_name.lower())
-        return self.num_sheets() - 1, sheet_name
+        self.set_sheet_names(sheet_names) # preserves case
+        self.set_sheet_objects(sheet_objects)
 
         self.update_cell_values(sheet_name.lower())
         return self.num_sheets() - 1, sheet_name
@@ -201,12 +196,18 @@ class Workbook:
 
         '''
         
+        sheet_names = self.list_sheets()
+        sheet_objects = self.get_sheet_objects()
+        
         self.validate_sheet_existence(sheet_name)
         
-        original_sheet_name = self.sheet_objects[sheet_name.lower()].get_name()
+        original_sheet_name = sheet_objects[sheet_name.lower()].get_name()
 
-        del self.sheet_objects[sheet_name.lower()]
-        self.sheet_names.remove(original_sheet_name)
+        sheet_names.remove(original_sheet_name)
+        del sheet_objects[sheet_name.lower()]
+
+        self.set_sheet_names(sheet_names)
+        self.set_sheet_objects(sheet_objects)
         # update all cells dependent on deleted sheet
         self.update_cell_values(sheet_name.lower())
 
@@ -227,11 +228,13 @@ class Workbook:
 
         '''
         
+        sheet_objects = self.get_sheet_objects()
+
         self.validate_sheet_existence(sheet_name)
 
         # get_extent() should be a function of Sheet object 
         # (implemented in spreadsheet.py)
-        return self.sheet_objects[sheet_name.lower()].get_extent() 
+        return sheet_objects[sheet_name.lower()].get_extent() 
 
     def set_cell_contents(self, sheet_name: str, location: str,
                           contents: Optional[str]) -> None:
@@ -274,9 +277,6 @@ class Workbook:
         # set cell contents
         cell = sheet_objects[sheet_name].set_cell_contents(
             location, contents)
-
-        # update other cells
-        self.update_cell_values(sheet_name, location.lower())
 
         # update other cells
         self.update_cell_values(sheet_name, location.lower())
@@ -370,7 +370,7 @@ class Workbook:
 
         # get all the cell children
         adj = {}
-        for sheet in self.sheet_objects.values():
+        for sheet in sheet_objects.values():
             adj.update(sheet.get_cell_adjacency_list())
         # make a graph of cell children, transpose to get graph of cell parents
         cell_graph = Graph(adj)
@@ -401,10 +401,11 @@ class Workbook:
                         contents=re.sub("'"+updated_sheet+"'"+"!", 
                         renamed_sheet+"!", contents, flags=re.IGNORECASE)
                         # set the new contents with new sheet name
-                        self.sheet_objects[sheet].set_cell_contents(cell, 
-                                                                    contents)
+                        sheet_objects[sheet].set_cell_contents(cell, contents)
+                        # may need to move here *******
                         # call helper function to update sheet names in contents
                         self.format_sheet_names(sheet, cell, adj[(sheet, cell)])
+                self.set_sheet_objects(sheet_objects)
         else:
             updated_cells = [(updated_sheet, updated_cell)]
         # get the graph of only cells needing to be updated
@@ -431,8 +432,9 @@ class Workbook:
         for sheet, cell in cell_topological:
             if (sheet, cell) not in updated_cells:
                 notify_cells.append((sheet, cell))
-                self.sheet_objects[sheet].set_cell_contents(cell, 
-                    self.sheet_objects[sheet].get_cell_contents(cell))
+                sheet_objects[sheet].set_cell_contents(cell, 
+                    sheet_objects[sheet].get_cell_contents(cell))
+        self.set_sheet_objects(sheet_objects)
         for notify_function in self.notify_functions:
             try:
                 notify_function(self, notify_cells)
@@ -525,9 +527,11 @@ class Workbook:
 
         obj = {}
         json_sheets = []
+        sheet_names = self.list_sheets()
+        sheet_objects = self.get_sheet_objects()
 
-        for sheet_name in self.list_sheets(): # preserves ordering
-            sheet  = self.sheet_objects[sheet_name.lower()]
+        for sheet_name in sheet_names: # preserves ordering
+            sheet  = sheet_objects[sheet_name.lower()]
             json_sheets.append(sheet.save_sheet())
 
         obj = {
@@ -590,7 +594,8 @@ class Workbook:
         - new_sheet_name: str - new name to be used
 
         '''
-
+        sheet_names = self.list_sheets()
+        sheet_objects = self.get_sheet_objects()
         self.validate_sheet_existence(sheet_name)
 
         # assume new_sheet_name is not None
@@ -611,15 +616,17 @@ class Workbook:
 
         # Update sheet_names (list preserving order & case of sheet names)
         # old_sheet_name used to retrieve proper casing
-        old_sheet_name = self.sheet_objects[sheet_name.lower()].get_name()
-        old_sheet_idx = self.sheet_names.index(old_sheet_name)
-        self.sheet_names[old_sheet_idx] = new_sheet_name
+        old_sheet_name = sheet_objects[sheet_name.lower()].get_name()
+        old_sheet_idx = sheet_names.index(old_sheet_name)
+        sheet_names[old_sheet_idx] = new_sheet_name
+        self.set_sheet_names(sheet_names)
 
         # Update sheet_objects dict (delete old key, add key with new name)
-        sheet = self.sheet_objects[sheet_name.lower()]
+        sheet = sheet_objects[sheet_name.lower()]
         sheet.set_name(new_sheet_name)
-        self.sheet_objects[new_sheet_name.lower()] = sheet
-        del self.sheet_objects[sheet_name.lower()]
+        sheet_objects[new_sheet_name.lower()] = sheet
+        del sheet_objects[sheet_name.lower()]
+        self.set_sheet_objects(sheet_objects)
 
         # updates the contents of all cells referencing the cell name
         self.update_cell_values(sheet_name.lower(), 
@@ -647,15 +654,18 @@ class Workbook:
 
         '''
         
+        sheet_names = self.list_sheets()
+        sheet_objects = self.get_sheet_objects()
         self.validate_sheet_existence(sheet_name)
 
         if index < 0 or index >= self.num_sheets():
             raise IndexError("Provided index is outside valid range")
 
         # Handles case when "shEEt1" is provided to move "Sheet1"
-        sheet_name = self.sheet_objects[sheet_name.lower()].get_name()
-        self.sheet_names.remove(sheet_name)
-        self.sheet_names.insert(index, sheet_name)     
+        sheet_name = sheet_objects[sheet_name.lower()].get_name()
+        sheet_names.remove(sheet_name)
+        sheet_names.insert(index, sheet_name)     
+        self.set_sheet_names(sheet_names)
 
     def copy_sheet(self, sheet_name: str) -> Tuple[int, str]:
         '''
@@ -686,20 +696,22 @@ class Workbook:
 
         '''
         
+        sheet_names = self.list_sheets()
+        sheet_objects = self.get_sheet_objects()
         self.validate_sheet_existence(sheet_name)
 
         # generate sheet name for copy
-        og_sheet_name = self.sheet_objects[sheet_name.lower()].get_name()
+        og_sheet_name = sheet_objects[sheet_name.lower()].get_name()
         copy_num = 1
-        sheet_copy_name = og_sheet_name + "-" + str(copy_num)
-        while sheet_copy_name.lower() in self.sheet_objects.keys():
+        sheet_copy_name = og_sheet_name + "_" + str(copy_num)
+        while sheet_copy_name.lower() in sheet_objects.keys():
             copy_num += 1
-            sheet_copy_name = og_sheet_name + "-" + str(copy_num)
+            sheet_copy_name = og_sheet_name + "_" + str(copy_num)
 
         # explicitly set each cell in (new) copy sheet using locations and 
         # contents from copied sheet 
         (sheet_copy_idx, sheet_copy_name) = self.new_sheet(sheet_copy_name)
-        cells_dict = self.sheet_objects[sheet_name.lower()].get_all_cells()
+        cells_dict = sheet_objects[sheet_name.lower()].get_all_cells()
         for coords, cell in cells_dict.items():
             loc = get_loc_from_coords(coords)
             self.set_cell_contents(sheet_copy_name, loc, cell.get_contents())
@@ -721,7 +733,9 @@ class Workbook:
 
         '''
 
-        if sheet_name.lower() not in self.sheet_objects.keys():
+        sheet_objects = self.get_sheet_objects()
+
+        if sheet_name.lower() not in sheet_objects.keys():
             raise KeyError(f"Specified sheet name '{sheet_name}' is not found")
         
     def validate_sheet_uniqueness(self, sheet_name: str) -> None:
@@ -736,7 +750,9 @@ class Workbook:
 
         '''
 
-        if sheet_name.lower() in self.sheet_objects.keys():
+        sheet_objects = self.get_sheet_objects()
+
+        if sheet_name.lower() in sheet_objects.keys():
             raise ValueError(f"Sheet name '{sheet_name}' already exists")
 
     def format_sheet_names(self, sheet_name: str, location: str, 
@@ -751,9 +767,12 @@ class Workbook:
         - sheets_in_contents: List[Tuple] -
         '''
 
+        sheet_objects = self.get_sheet_objects()
+
         for sheet, _ in sheets_in_contents:
             if not re.search(R'\'[ .?!,:;!@#$%^&*\(\)\-]\'', sheet):
                 curr_contents = self.get_cell_contents(sheet_name, location)
                 contents = re.sub("'"+sheet+"'", sheet, curr_contents)
-                self.sheet_objects[sheet_name]\
+                sheet_objects[sheet_name]\
                     .set_cell_contents(location, contents)
+        self.set_sheet_objects(sheet_objects)

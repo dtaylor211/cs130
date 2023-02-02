@@ -136,37 +136,45 @@ A1.  [4pts] Briefly enumerate the performance tests you created to exercise
      your implementation, along with the teammates that collaborated to
      implement each of them.
 
-     TODO
+     1 - test_circular_chain : Dallas and Kyle
+          stress tests for very long circular chains/cycles
+     2 - test_reference_chain : Dallas and Ben
+          stress tests for very long reference chains
+     3 - test_rename_volume1 : Dallas and Ben
+          stress tests for renaming a sheet with a lot of references in another 
+          sheet
+     4 - test_rename_volume2 : Dallas, Ben, Kyle
+          stress tests for renaming a sheet with a lot of cells in the sheet
+          to be renamed
+     5 - test_rename_chain : Dallas, Ben, Kyle
+          stress tests for renaming a sheet that begins a long reference chain
 
 A2.  [2pts] What profiler did you choose to run your performance tests with?
      Why?  Give an example of how to invoke one of your tests with the profiler.
 
      We used the cProfiler profiler since it is built-in and because there was 
      an useful amount of documentation accessible.  We also used SnakeViz (with
-     permission) to better visualize how performance results. 
+     permission) to better visualize how performance results.  The use of 
+     SnakeViz has to be specificied by the user from the terminal. Upon running
+     your desired performance test, the user will be prompted whether to 
+     visualize the data, and further evaluation depends on their y/N response.
      
      Here is an example of how to invoke one of our tests with the profiler:
 
-     (with $ make test_performance)
-     python -m cProfile -o program.prof ./tests/test_performance.py
-	snakeviz program.prof
+     (with $ make test_rename_volume2)
+     python -m cProfile -o program.prof \
+		./tests/performance/test_rename_volume2.py
+	@read -p "Visualize Data? [y/N] " ans && ans=$${ans:-N} ; \
+     if [ $${ans} = y ] || [ $${ans} = Y ]; then \
+        snakeviz program.prof; \
+     fi
 
-     More specifically, in test_performance.py, we can measure the performance
-     of any stress test by encasing the corresponding test function within 
-     profiler.enable() and profiler.disable():
-
-     profiler = cProfile.Profile()
-     profiler.enable()
-     
-     # ... do something ...
-
-     profiler.disable()
+     To run another performance test, you just hit another make target.
 
 A3.  [6pts] What are ~3 of the most significant hot-spots you identified in your
      performance testing?  Did you expect these hot-spots, or were they
      surprising to you?
 
-<<<<<<< HEAD
      We discovered one main hot spots, which was expected.
      1 - When renaming sheets, we spend a lot of time within the 
      update_cells call.  We expected this to be true because we suspect
@@ -178,10 +186,6 @@ A3.  [6pts] What are ~3 of the most significant hot-spots you identified in your
      that we would run into this error, as our cell cycle detection is not 
      iterative yet.  This bug fix is also under-way.
      
-=======
-     TODO - REACHED MAX RECURSION DEPTH
-
->>>>>>> e03ad8b... DJJ-34: Design doc is almost complete besides A1,3
 A4.  [4pts] Reflect on the experience of pair-programming as you constructed
      these tests.  What went well with it?  What would you like to try to do
      better in the future?
