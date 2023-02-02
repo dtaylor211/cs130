@@ -324,10 +324,11 @@ class Workbook:
                         # get cell contents
                         contents = self.get_cell_contents(sheet, cell)
                         # replace sheet name with new name
-                        contents=re.sub(R"([=+-])"+updated_sheet+"!", R"\1"+
-                            renamed_sheet+"!", contents, flags=re.IGNORECASE)
-                        contents=re.sub(R"([=+-])"+"'"+updated_sheet+"'"+"!", 
-                        R"\1"+renamed_sheet+"!", contents, flags=re.IGNORECASE)
+                        contents=re.sub(R"([=\+\-*/& ])"+updated_sheet+"!", 
+                                        R"\1"+renamed_sheet+"!", 
+                                        contents, flags=re.IGNORECASE)
+                        contents=re.sub("'"+updated_sheet+"'"+"!", 
+                        renamed_sheet+"!", contents, flags=re.IGNORECASE)
                         # set the new contents with new sheet name
                         self.sheet_objects[sheet].set_cell_contents(cell, 
                                                                     contents)
@@ -677,6 +678,7 @@ class Workbook:
         - location: str - location of the current cell
         - sheets_in_contents: List[Tuple] -
         '''
+
         for sheet, _ in sheets_in_contents:
             if not re.search(R'\'[ .?!,:;!@#$%^&*\(\)\-]\'', sheet):
                 curr_contents = self.get_cell_contents(sheet_name, location)
