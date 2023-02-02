@@ -228,11 +228,13 @@ class TestWorkbook:
         with open("tests/json_data/wb_data_bad_type_contents.json") as fp:
             with pytest.raises(TypeError):
                 wb = Workbook.load_workbook(fp)
-        # with open("tests/json_data/wb_data_bad_type_location.json") as fp:
-        #     with pytest.raises(TypeError):
-        #         wb = Workbook.load_workbook(fp)
         with open("tests/json_data/wb_data_bad_type_cell_contents.json") as fp:
             with pytest.raises(TypeError):
+                wb = Workbook.load_workbook(fp)
+        
+    def test_load_workbook_prop_json_error(self):
+        with open("tests/json_data/wb_data_bad_type_location.json") as fp:
+            with pytest.raises(json.JSONDecodeError):
                 wb = Workbook.load_workbook(fp)
 
     def test_save_workbook(self):
