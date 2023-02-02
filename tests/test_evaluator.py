@@ -197,11 +197,14 @@ class TestEvaluator:
         tree = PARSER.parse('=7.1&9.2&"string"')
         result = EVALUATOR.transform(tree)
         assert(result == Tree('string', ['7.19.2string']))
-        print('start')
+
         tree = PARSER.parse('=A1&A6')
-        print(tree)
         result = EVALUATOR.transform(tree)
         assert(result == Tree('string', ['string1']))
+
+        tree = PARSER.parse('=Test!A1&"test"')
+        result = EVALUATOR.transform(tree)
+        assert(result == Tree('string', ['string1test']))
     
 
     def test_unary_operations(self):
