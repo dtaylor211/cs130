@@ -66,6 +66,15 @@ class TestEvaluatorInvalid:
         assert result_value.get_type() == CellErrorType.PARSE_ERROR
         assert(isinstance(result_value, CellError))
 
+        WB.new_sheet('Sheetx')
+        WB.set_cell_contents('Sheetx', 'A1', 'Sheet2')
+        WB.set_cell_contents('Sheetx', 'A2', '=Sheetx!A1 & \'Sheet2\'')
+        contents = WB.get_cell_contents('Sheetx', 'A2')
+        value = WB.get_cell_value('Sheetx', 'A2')
+        assert contents == '=Sheetx!A1 & \'Sheet2\''
+        assert isinstance(value, CellError)
+        assert value.get_type() == CellErrorType.PARSE_ERROR
+
     def test_circular_reference(self):
         WB.set_cell_contents('Test', 'A1', '12')
         WB.set_cell_contents('Test', 'A2', '13')
@@ -133,6 +142,15 @@ class TestEvaluatorInvalid:
         assert(result_contents == "='Del sheet'!A1+1")
         assert result_value.get_type() == CellErrorType.BAD_REFERENCE
         assert(isinstance(result_value, CellError))
+
+        WB.new_sheet('Sheet1')
+        WB.set_cell_contents('Sheet1', 'A1', 'Sheet2')
+        WB.set_cell_contents('Sheet1', 'A2', '=Sheet1!A1 & Sheet2')
+        contents = WB.get_cell_contents('Sheet1', 'A2')
+        value = WB.get_cell_value('Sheet1', 'A2')
+        assert contents == '=Sheet1!A1 & Sheet2'
+        assert isinstance(value, CellError)
+        assert value.get_type() == CellErrorType.BAD_REFERENCE
 
     def test_bad_name(self):
         # to be implemented in later projects
