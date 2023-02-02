@@ -402,6 +402,8 @@ class Workbook:
                         # set the new contents with new sheet name
                         self.sheet_objects[sheet].set_cell_contents(cell, 
                                                                     contents)
+                        # call helper function to update sheet names in contents
+                        self.format_sheet_names(sheet, cell, adj[(sheet, cell)])
         else:
             updated_cells = [(updated_sheet, updated_cell)]
         # get the graph of only cells needing to be updated
