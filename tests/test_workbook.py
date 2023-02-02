@@ -266,10 +266,44 @@ class TestWorkbook:
         pass     
 
     def test_rename_sheet(self):
-        pass
+        wb = Workbook()
+        wb.new_sheet('Sheet1')
+        wb.set_cell_contents('Sheet1', 'A1', '2')
+        wb.set_cell_contents('Sheet1', 'A2', '=A1')
+        wb.rename_sheet('Sheet1', 'SheEt2')
+        sheet_names = wb.list_sheets()
+        sheet_objects = wb.sheet_objects
+        assert sheet_names == ['SheEt2']
+        assert sheet_objects['sheet2'] is not None
+        with pytest.raises(KeyError):
+            sheet_objects['sheet1']
+        value = wb.get_cell_value('Sheet2', 'A1')
+        assert value == Decimal(2)
+        value = wb.get_cell_value('Sheet2','A2')
+        assert value == Decimal(2)
         # check preserve casing, sheet_names, sheet_objects
+        # repeat for when more sheets
+
+        wb.new_sheet('Sheet3')
+        og_sheet_names = wb.list_sheets()
+        og_sheet_objects = wb.sheet_objects
+        wb.rename_sheet('Sheet2', 'Sheet4')
+        new_sheet_names = wb.list_sheets()
+        print(new_sheet_names)
+        new_sheet_objects = wb.sheet_objects
+        assert new_sheet_names.remove('Sheet4') == og_sheet_names.remove('Sheet2')
+        # the above is not working right now
+        assert sheet_objects['sheet2'] is not None
+        with pytest.raises(KeyError):
+            sheet_objects['sheet1']
+        value = wb.get_cell_value('Sheet2', 'A1')
+        assert value == Decimal(2)
+        value = wb.get_cell_value('Sheet2','A2')
+        assert value == Decimal(2)
 
     def test_rename_sheet_update_refs(self):
+        # wb.new_sheet('Sheet2')
+        # wb.set_cell_contents('Sheet2', 'A1', '=Sheet1!A1')
         pass # more complex
 
     def test_rename_sheet_apply_quotes(self):
