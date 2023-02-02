@@ -1,5 +1,5 @@
 import cProfile
-import context
+from tests import context
 
 from pstats import Stats
 from decimal import Decimal
@@ -25,4 +25,4 @@ if __name__ == '__main__':
 
     profiler.disable()
     stats = Stats(profiler).sort_stats("cumtime")
-    stats.print_stats()
+    stats.print_stats(10)

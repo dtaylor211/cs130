@@ -66,7 +66,6 @@ class TestEvaluatorInvalid:
         assert result_value.get_type() == CellErrorType.PARSE_ERROR
         assert(isinstance(result_value, CellError))
 
-
     def test_circular_reference(self):
         WB.set_cell_contents('Test', 'A1', '12')
         WB.set_cell_contents('Test', 'A2', '13')
@@ -87,6 +86,12 @@ class TestEvaluatorInvalid:
         assert result_value.get_type() == CellErrorType.CIRCULAR_REFERENCE
         assert(isinstance(result_value, CellError))
 
+        WB.set_cell_contents('Test', 'A1', '=1')
+        WB.set_cell_contents('Test', 'B1', '=A1')
+        WB.set_cell_contents('Test', 'A1', '=B1')
+        value = WB.get_cell_value('Test', 'A1')
+        assert isinstance(value, CellError)
+        assert value.get_type() == CellErrorType.CIRCULAR_REFERENCE
 
     def test_bad_reference(self):
         WB.set_cell_contents('Test', 'A1', '=Test2!A1')
@@ -129,11 +134,9 @@ class TestEvaluatorInvalid:
         assert result_value.get_type() == CellErrorType.BAD_REFERENCE
         assert(isinstance(result_value, CellError))
 
-
     def test_bad_name(self):
         # to be implemented in later projects
         pass
-
 
     def test_type_errors(self):
         WB.set_cell_contents('Test', 'A1', '="string"+123')
@@ -179,7 +182,6 @@ class TestEvaluatorInvalid:
         assert(result_contents == '=A1/A2')
         assert result_value.get_type() == CellErrorType.TYPE_ERROR
         assert(isinstance(result_value, CellError))
-
     
     def test_divide_by_zero(self):
         WB.set_cell_contents('Test', 'A1', '=12/0')
@@ -205,7 +207,6 @@ class TestEvaluatorInvalid:
         assert(result_contents == '=A1/A3')
         assert result_value.get_type() == CellErrorType.DIVIDE_BY_ZERO
         assert(isinstance(result_value, CellError))
-
     
     def test_errors_as_literals(self):
         WB.set_cell_contents('Test', 'A1', '=#REF!')
@@ -284,7 +285,6 @@ class TestEvaluatorInvalid:
         assert(result_contents == '="string"&#CIRCREF!')
         assert result_value.get_type() == CellErrorType.CIRCULAR_REFERENCE
         assert(isinstance(result_value, CellError))
-
     
     def test_reference_cells_with_errors(self):
         WB.new_sheet('Test3')
@@ -333,7 +333,6 @@ class TestEvaluatorInvalid:
         value = WB.get_cell_value('Test', 'a2')
         assert isinstance(value, CellError)
         assert value.get_type() == CellErrorType.DIVIDE_BY_ZERO
-
 
     def test_error_ordering(self):
         # add more to this later
