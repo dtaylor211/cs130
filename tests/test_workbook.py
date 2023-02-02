@@ -389,6 +389,20 @@ class TestWorkbook:
         assert contents == '=Sheet1Sheet1!A1 * Sheet99!A1'
         assert value == Decimal('3')
 
+        wb.new_sheet('Sheet1')
+        wb.set_cell_contents('Sheet1', 'A1', 'ayo')
+        wb.set_cell_contents('Sheet1', 'A2', '=Sheet1!A1 & "Sheet1"')
+        wb.set_cell_contents('Sheet1', 'A3', '=Sheet1!A1 & "Sheet1!"')
+        wb.rename_sheet('Sheet1', 'Sheet98')
+        contents = wb.get_cell_contents('Sheet98', 'A2')
+        value = wb.get_cell_value('Sheet98', 'A2')
+        assert contents == '=Sheet98!A1 & "Sheet1"'
+        assert value == 'ayoSheet1'
+        contents = wb.get_cell_contents('Sheet98', 'A3')
+        value = wb.get_cell_value('Sheet98', 'A3')
+        assert contents == '=Sheet98!A1 & "Sheet1!"'
+        assert value == 'ayoSheet1!'
+
     def test_rename_sheet_apply_quotes(self):
         wb = Workbook()
         wb.new_sheet('Sheet1')
@@ -480,6 +494,16 @@ class TestWorkbook:
         contents = wb.get_cell_contents('Sheet2', 'A1')
         value = wb.get_cell_value('Sheet2', 'A1')
         assert contents == '=Sheet1!A1 &&'
+        assert isinstance(value, CellError)
+        assert(value.get_type() == CellErrorType.PARSE_ERROR)
+
+        wb.new_sheet('Sheet1')
+        wb.set_cell_contents('Sheet1', 'A1', 'Dallas Taylor')
+        wb.set_cell_contents('Sheet1', 'A2', '=Sheet1!A1 & \'Sheet1\'')
+        wb.rename_sheet('Sheet1', 'Sheet13')
+        contents = wb.get_cell_contents('Sheet13', 'A2')
+        value = wb.get_cell_value('Sheet13', 'A2')
+        assert contents == '=Sheet1!A1 & \'Sheet1\''
         assert isinstance(value, CellError)
         assert(value.get_type() == CellErrorType.PARSE_ERROR)
 
