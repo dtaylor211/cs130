@@ -107,7 +107,7 @@ class Workbook:
         return self._evaluator
 
     ########################################################################
-    # Getters and Setters
+    # Base Functionality
     ########################################################################
 
     def num_sheets(self) -> int:

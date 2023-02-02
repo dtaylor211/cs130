@@ -22,6 +22,10 @@ class Sheet:
         self._cells: Dict[Tuple[int, int], Cell] = {}
         self._evaluator = evaluator
 
+    ########################################################################
+    # Getters and Setters
+    ########################################################################
+
     def get_name(self) -> str:
         '''
         Get the name of the sheet
@@ -65,6 +69,10 @@ class Sheet:
         '''
 
         return self._evaluator
+    
+    ########################################################################
+    # Base Functionality
+    ########################################################################
 
     def get_extent(self) -> Tuple[int, int]:
         '''
