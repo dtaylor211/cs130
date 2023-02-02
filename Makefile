@@ -15,6 +15,44 @@ test:
 	pytest -q ./tests/test_evaluator.py
 	pytest -q ./tests/test_evaluator_invalid.py
 
-test-performance:
-	python -m cProfile -o program.prof ./tests/test_performance.py
-	snakeviz program.prof
+test-performance-reference-chain:
+	python -m cProfile -o program.prof \
+		./tests/performance/test_reference_chain.py
+	@read -p "Visualize Data? [y/N] " ans && ans=$${ans:-N} ; \
+    if [ $${ans} = y ] || [ $${ans} = Y ]; then \
+        snakeviz program.prof; \
+    fi
+
+test-performance-circular-chain:
+	python -m cProfile -o program.prof \
+		./tests/performance/test_circular_chain.py
+	@read -p "Visualize Data? [y/N] " ans && ans=$${ans:-N} ; \
+    if [ $${ans} = y ] || [ $${ans} = Y ]; then \
+        snakeviz program.prof; \
+    fi
+
+test-performance-rename-volume1:
+	python -m cProfile -o program.prof \
+		./tests/performance/test_rename_volume1.py
+	@read -p "Visualize Data? [y/N] " ans && ans=$${ans:-N} ; \
+    if [ $${ans} = y ] || [ $${ans} = Y ]; then \
+        snakeviz program.prof; \
+    fi
+
+test-performance-rename-volume2:
+	python -m cProfile -o program.prof \
+		./tests/performance/test_rename_volume2.py
+	@read -p "Visualize Data? [y/N] " ans && ans=$${ans:-N} ; \
+    if [ $${ans} = y ] || [ $${ans} = Y ]; then \
+        snakeviz program.prof; \
+    fi
+
+test-performance-rename-chain:
+	python -m cProfile -o program.prof \
+		./tests/performance/test_rename_chain.py
+	@read -p "Visualize Data? [y/N] " ans && ans=$${ans:-N} ; \
+    if [ $${ans} = y ] || [ $${ans} = Y ]; then \
+        snakeviz program.prof; \
+    fi
+
+# output only first 10 lines
