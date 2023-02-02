@@ -1,13 +1,15 @@
 import context
 
 import pytest
+import io
+import json
 from decimal import Decimal
 
 from sheets.workbook import Workbook
 
 
 class TestWorkbook:
-    ''' Workbook tests (Project 1) '''
+    ''' Workbook tests (Project 1 & 2) '''
 
     def test_empty_workbook(self):
         wb = Workbook()
@@ -179,3 +181,124 @@ class TestWorkbook:
         assert contents == "=1+1"
         value = wb.get_cell_value(name, "A1")
         assert value == Decimal(2)
+
+    ########################################################################
+    # Project 2
+    ########################################################################
+
+    def test_load_workbook_valid(self):
+        with open("tests/json_data/wb_data_valid.json") as fp:
+            wb = Workbook.load_workbook(fp)
+            assert wb.num_sheets() == 2
+            assert wb.list_sheets() == ["Sheet1", "Sheet2"]
+            assert wb.get_cell_contents("Sheet1", "A1") == "'123"
+            assert wb.get_cell_contents("Sheet1", "B1") == "5.3"
+            assert wb.get_cell_contents("Sheet1", "C1") == "=A1*B1"
+            assert wb.get_cell_value("Sheet1", "A1") == "123"
+            assert wb.get_cell_value("Sheet1", "B1") == Decimal("5.3")
+            assert wb.get_cell_value("Sheet1", "C1") == Decimal("651.9")
+
+    def test_load_workbook_missing_value(self):
+        with open("tests/json_data/wb_data_missing_sheets.json") as fp:
+            with pytest.raises(KeyError):
+                wb = Workbook.load_workbook(fp)
+        with open("tests/json_data/wb_data_missing_name.json") as fp:
+            with pytest.raises(KeyError):
+                wb = Workbook.load_workbook(fp)
+        with open("tests/json_data/wb_data_missing_contents.json") as fp:
+            with pytest.raises(KeyError):
+                wb = Workbook.load_workbook(fp)
+
+    def test_load_workbook_improper_type(self):
+        with open("tests/json_data/wb_data_bad_type_sheets.json") as fp:
+            with pytest.raises(TypeError):
+                wb = Workbook.load_workbook(fp)
+        with open("tests/json_data/wb_data_bad_type_sheet.json") as fp:
+            with pytest.raises(TypeError):
+                wb = Workbook.load_workbook(fp)
+        with open("tests/json_data/wb_data_bad_type_name.json") as fp:
+            with pytest.raises(TypeError):
+                wb = Workbook.load_workbook(fp)
+        with open("tests/json_data/wb_data_bad_type_contents.json") as fp:
+            with pytest.raises(TypeError):
+                wb = Workbook.load_workbook(fp)
+        # How to properly test this?  See wb_data_bad_type_location.json
+        # with open("tests/json_data/wb_data_bad_type_location.json") as fp:
+        #     with pytest.raises(TypeError):
+        #         wb = Workbook.load_workbook(fp)
+        with open("tests/json_data/wb_data_bad_type_cell_contents.json") as fp:
+            with pytest.raises(TypeError):
+                wb = Workbook.load_workbook(fp)
+
+    def test_save_workbook(self):
+        with io.StringIO("") as fp:
+            wb = Workbook()
+            wb.new_sheet("Sheet1")
+            wb.new_sheet("Sheet2")
+            wb.set_cell_contents("Sheet1", "A1", "1")
+            wb.set_cell_contents("Sheet2", "B2", "2")
+            wb.save_workbook(fp)
+            fp.seek(0)
+            json_act = json.load(fp)
+            json_exp = {
+                "sheets":[
+                    {
+                        "name":"Sheet1",
+                        "cell-contents":{
+                            "A1":"1"
+                        }
+                    },
+                    {
+                        "name":"Sheet2",
+                        "cell-contents":{
+                            "B2":"2"
+                        }
+                    }
+                ]
+            }
+            assert json_act == json_exp
+
+    def test_notify_cell(self):
+        pass # TODO @Kyle?
+
+    def test_rename_sheet_bad_name(self):
+        # KeyError / ValueError
+        pass     
+
+    def test_rename_sheet(self):
+        pass
+        # check preserve casing, sheet_names, sheet_objects
+
+    def test_rename_sheet_update_refs(self):
+        pass # more complex
+
+    def test_rename_sheet_apply_quotes(self):
+        pass
+
+    def test_rename_sheet_remove_quotes(self):
+        pass
+
+    def test_format_sheet_names_helper(self):
+        pass
+
+    def test_rename_sheet_parse_error(self):
+        pass # ignore invalid formulas?
+
+    def test_move_sheet(self):
+        wb = Workbook()
+        wb.new_sheet("Sheet1")
+        wb.new_sheet("Sheet2")
+        wb.new_sheet("Sheet3")
+        with pytest.raises(KeyError):
+            wb.move_sheet("Sheet4", 0)
+        with pytest.raises(IndexError):
+            wb.move_sheet("Sheet3", -1)
+        with pytest.raises(IndexError):
+            wb.move_sheet("Sheet3", 4)
+        wb.move_sheet("Sheet3", 0)
+        assert wb.list_sheets() == ["Sheet3", "Sheet1", "Sheet2"]
+        wb.move_sheet("Sheet3", 2)
+        assert wb.list_sheets() == ["Sheet1", "Sheet2", "Sheet3"]
+
+    def test_copy_sheet(self):
+        pass

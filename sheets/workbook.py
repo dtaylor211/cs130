@@ -6,7 +6,7 @@ from lark import Lark
 from .sheet import Sheet
 from .evaluator import Evaluator
 from .graph import Graph
-from .helpers import get_loc_from_coords
+from .utils import get_loc_from_coords
 
 class Workbook:
     '''
@@ -26,6 +26,7 @@ class Workbook:
         Contains (lowercase) sheet names (preserves order?)
 
         '''
+
         self.sheet_names = []
 
         # dictionary that maps lowercase sheet name to Sheet object
@@ -62,6 +63,7 @@ class Workbook:
         - List of sheet names
 
         '''
+
         # Fixes "mutating the list comes back from list_sheets() shouldn't 
         # mangle the workbook's internal details"
         return [name for name in self.sheet_names]
@@ -103,8 +105,7 @@ class Workbook:
                 raise ValueError("Invalid Sheet name: improper characters used")
 
             # check uniqueness
-            if sheet_name.lower() in self.sheet_objects.keys():
-                raise ValueError("Sheet name already exists")
+            self.validate_sheet_uniqueness(sheet_name)
             
         # sheet name not specified -> generate ununused "Sheet" + "#" name
         else:
@@ -136,8 +137,7 @@ class Workbook:
 
         '''
         
-        if sheet_name.lower() not in self.sheet_objects.keys():
-            raise KeyError("Specified sheet name is not found")
+        self.validate_sheet_existence(sheet_name)
         
         original_sheet_name = self.sheet_objects[sheet_name.lower()].get_name()
 
@@ -163,10 +163,10 @@ class Workbook:
 
         '''
         
-        if sheet_name.lower() not in self.sheet_objects.keys():
-            raise KeyError("Specified sheet name is not found")
+        self.validate_sheet_existence(sheet_name)
 
-        # get_extent() should be a function of Sheet object (implemented in spreadsheet.py)
+        # get_extent() should be a function of Sheet object 
+        # (implemented in spreadsheet.py)
         return self.sheet_objects[sheet_name.lower()].get_extent() 
 
     def set_cell_contents(self, sheet_name: str, location: str,
@@ -205,8 +205,7 @@ class Workbook:
 
         sheet_name = sheet_name.lower()
 
-        if sheet_name not in self.sheet_objects.keys():
-            raise KeyError("Specified sheet name is not found")
+        self.validate_sheet_existence(sheet_name)
         
         # set cell contents
         cell = self.sheet_objects[sheet_name].set_cell_contents(
@@ -246,8 +245,7 @@ class Workbook:
 
         sheet_name = sheet_name.lower()
 
-        if sheet_name not in self.sheet_objects.keys():
-            raise KeyError("Specified sheet name is not found")
+        self.validate_sheet_existence(sheet_name)
         
         return self.sheet_objects[sheet_name].get_cell_contents(location)
 
@@ -282,8 +280,7 @@ class Workbook:
 
         sheet_name = sheet_name.lower()
 
-        if sheet_name not in self.sheet_objects.keys():
-            raise KeyError("Specified sheet name is not found")
+        self.validate_sheet_existence(sheet_name)
         
         # calls get_cell_value from Sheet
         return self.sheet_objects[sheet_name].get_cell_value(location)
@@ -369,24 +366,34 @@ class Workbook:
 
     @staticmethod
     def load_workbook(fp: TextIO) -> 'Workbook':
-        # This is a static method (not an instance method) to load a workbook
-        # from a text file or file-like object in JSON format, and return the
-        # new Workbook instance.  Note that the _caller_ of this function is
-        # expected to have opened the file; this function merely reads the file.
-        #
-        # If the contents of the input cannot be parsed by the Python json
-        # module then a json.JSONDecodeError should be raised by the method.
-        # (Just let the json module's exceptions propagate through.)  Similarly,
-        # if an IO read error occurs (unlikely but possible), let any raised
-        # exception propagate through.
-        #
-        # If any expected value in the input JSON is missing (e.g. a sheet
-        # object doesn't have the "cell-contents" key), raise a KeyError with
-        # a suitably descriptive message.
-        #
-        # If any expected value in the input JSON is not of the proper type
-        # (e.g. an object instead of a list, or a number instead of a string),
-        # raise a TypeError with a suitably descriptive message.
+        '''
+        This is a static method (not an instance method) to load a workbook
+        from a text file or file-like object in JSON format, and return the
+        new Workbook instance.  Note that the _caller_ of this function is
+        expected to have opened the file; this function merely reads the file.
+        
+        If the contents of the input cannot be parsed by the Python json
+        module then a json.JSONDecodeError should be raised by the method.
+        (Just let the json module's exceptions propagate through.)  Similarly,
+        if an IO read error occurs (unlikely but possible), let any raised
+        exception propagate through.
+        
+        If any expected value in the input JSON is missing (e.g. a sheet
+        object doesn't have the "cell-contents" key), raise a KeyError with
+        a suitably descriptive message.
+        
+        If any expected value in the input JSON is not of the proper type
+        (e.g. an object instead of a list, or a number instead of a string),
+        raise a TypeError with a suitably descriptive message.
+
+        Arguments:
+        - fp: TextIO - json file to load
+
+        Returns:
+        - a Workbook object with contents specified by fp
+
+        '''
+
         loaded_wb = json.load(fp)
         new_wb = Workbook()
 
@@ -398,47 +405,54 @@ class Workbook:
 
         for sheet in sheets:
             if not isinstance(sheet, dict):
-                raise TypeError("Sheet representation is not proper type (dict)")
+                raise TypeError(
+                    "Sheet representation is not proper type (dict)")
             
             if "name" not in sheet:
                 raise KeyError("Missing: 'name'")
-            if not isinstance(sheet("name", str)):
+            if not isinstance(sheet["name"], str):
                 raise TypeError("Sheet name is not proper type (string)")
             sheet_name = sheet["name"]
 
-            if not isinstance(sheet("cell-contents", dict)):
-                raise TypeError("Sheet name is not proper type (dictionary))")
+            if not isinstance(sheet["cell-contents"], dict):
+                raise TypeError("Cell-contents is not proper type (dictionary))")
             if "cell-contents" not in sheet:
                 KeyError("Missing: 'cell-contents'")
             cell_contents = sheet["cell-contents"]
 
             (index, name) = new_wb.new_sheet(sheet_name)
 
-            for location in cell_contents:
+            for location, contents in cell_contents.items():
                 if not isinstance(location, str):
-                    raise TypeError("Cell location is not proper type (string)")
+                    raise TypeError("Location is not proper type (string)")
                 
-                if not isinstance(cell_contents[location], str):
-                    raise TypeError("Cell contents is not proper type (string)")
-                contents = cell_contents[location]
+                if not isinstance(contents, str):
+                    raise TypeError("Contents is not proper type (string)")
 
                 new_wb.set_cell_contents(sheet_name, location, contents)
 
-            return new_wb
+        return new_wb
 
     def save_workbook(self, fp: TextIO) -> None:
-        # Instance method (not a static/class method) to save a workbook to a
-        # text file or file-like object in JSON format.  Note that the _caller_
-        # of this function is expected to have opened the file; this function
-        # merely writes the file.
-        #
-        # If an IO write error occurs (unlikely but possible), let any raised
-        # exception propagate through.
+        '''
+        Instance method (not a static/class method) to save a workbook to a
+        text file or file-like object in JSON format.  Note that the _caller_
+        of this function is expected to have opened the file; this function
+        merely writes the file.
+        
+        If an IO write error occurs (unlikely but possible), let any raised
+        exception propagate through.
+
+        Arguments:
+        - fp: TextIO - write supporting file like object to save to 
+
+        '''
+
         obj = {}
         json_sheets = []
 
-        for sheet_name in self.list_sheets: # preserves ordering
-            sheet  = self.sheet_objects(sheet_name.lower())
+        for sheet_name in self.list_sheets(): # preserves ordering
+            sheet  = self.sheet_objects[sheet_name.lower()]
             json_sheets.append(sheet.save_sheet())
 
         obj = {
@@ -449,46 +463,60 @@ class Workbook:
 
     def notify_cells_changed(self, notify_function: 
         Callable[['Workbook', Iterable[Tuple[str, str]]], None]) -> None:
-        # Request that all changes to cell values in the workbook are reported
-        # to the specified notify_function.  The values passed to the notify
-        # function are the workbook, and an iterable of 2-tuples of strings,
-        # of the form ([sheet name], [cell location]).  The notify_function is
-        # expected not to return any value; any return-value will be ignored.
-        #
-        # Multiple notification functions may be registered on the workbook;
-        # functions will be called in the order that they are registered.
-        #
-        # A given notification function may be registered more than once; it
-        # will receive each notification as many times as it was registered.
-        #
-        # If the notify_function raises an exception while handling a
-        # notification, this will not affect workbook calculation updates or
-        # calls to other notification functions.
-        #
-        # A notification function is expected to not mutate the workbook or
-        # iterable that it is passed to it.  If a notification function violates
-        # this requirement, the behavior is undefined.
+        '''
+        Request that all changes to cell values in the workbook are reported
+        to the specified notify_function.  The values passed to the notify
+        function are the workbook, and an iterable of 2-tuples of strings,
+        of the form ([sheet name], [cell location]).  The notify_function is
+        expected not to return any value; any return-value will be ignored.
+        
+        Multiple notification functions may be registered on the workbook;
+        functions will be called in the order that they are registered.
+        
+        A given notification function may be registered more than once; it
+        will receive each notification as many times as it was registered.
+        
+        If the notify_function raises an exception while handling a
+        notification, this will not affect workbook calculation updates or
+        calls to other notification functions.
+        
+        A notification function is expected to not mutate the workbook or
+        iterable that it is passed to it.  If a notification function violates
+        this requirement, the behavior is undefined.
+
+        Arguments:
+        - notify_function: Callable[['Workbook', Iterable[Tuple], None]] - 
+            callable function to notify that a cell value is changed
+
+        '''
+
         self.notify_functions.append(notify_function)
 
     def rename_sheet(self, sheet_name: str, new_sheet_name: str) -> None:
-        # Rename the specified sheet to the new sheet name.  Additionally, all
-        # cell formulas that referenced the original sheet name are updated to
-        # reference the new sheet name (using the same case as the new sheet
-        # name, and single-quotes iff [if and only if] necessary).
-        #
-        # The sheet_name match is case-insensitive; the text must match but the
-        # case does not have to.
-        #
-        # As with new_sheet(), the case of the new_sheet_name is preserved by
-        # the workbook.
-        #
-        # If the sheet_name is not found, a KeyError is raised.
-        #
-        # If the new_sheet_name is an empty string or is otherwise invalid, a
-        # ValueError is raised.
+        '''
+        Rename the specified sheet to the new sheet name.  Additionally, all
+        cell formulas that referenced the original sheet name are updated to
+        reference the new sheet name (using the same case as the new sheet
+        name, and single-quotes iff [if and only if] necessary).
+        
+        The sheet_name match is case-insensitive; the text must match but the
+        case does not have to.
+        
+        As with new_sheet(), the case of the new_sheet_name is preserved by
+        the workbook.
+        
+        If the sheet_name is not found, a KeyError is raised.
+        
+        If the new_sheet_name is an empty string or is otherwise invalid, a
+        ValueError is raised.
 
-        if sheet_name.lower() not in self.sheet_objects.keys():
-            raise KeyError("Specified sheet name is not found")
+        Arguments:
+        - sheet_name: str - name of sheet to be renamed
+        - new_sheet_name: str - new name to be used
+
+        '''
+
+        self.validate_sheet_existence(sheet_name)
 
         # assume new_sheet_name is not None
         # checking empty string
@@ -504,8 +532,7 @@ class Workbook:
             raise ValueError("Invalid Sheet name: improper characters used")
 
         # check uniqueness
-        if new_sheet_name.lower() in self.sheet_objects.keys():
-            raise ValueError("Sheet name already exists")
+        self.validate_sheet_uniqueness(new_sheet_name)
 
         # Update sheet_names (list preserving order & case of sheet names)
         # old_sheet_name used to retrieve proper casing
@@ -525,21 +552,27 @@ class Workbook:
 
 
     def move_sheet(self, sheet_name: str, index: int) -> None:
-        # Move the specified sheet to the specified index in the workbook's
-        # ordered sequence of sheets.  The index can range from 0 to
-        # workbook.num_sheets() - 1.  The index is interpreted as if the
-        # specified sheet were removed from the list of sheets, and then
-        # re-inserted at the specified index.
-        #
-        # The sheet name match is case-insensitive; the text must match but the
-        # case does not have to.
-        #
-        # If the specified sheet name is not found, a KeyError is raised.
-        #
-        # If the index is outside the valid range, an IndexError is raised.
+        '''
+        Move the specified sheet to the specified index in the workbook's
+        ordered sequence of sheets.  The index can range from 0 to
+        workbook.num_sheets() - 1.  The index is interpreted as if the
+        specified sheet were removed from the list of sheets, and then
+        re-inserted at the specified index.
         
-        if sheet_name.lower() not in self.sheet_objects.keys():
-            raise KeyError("Specified sheet name is not found")
+        The sheet name match is case-insensitive; the text must match but the
+        case does not have to.
+        
+        If the specified sheet name is not found, a KeyError is raised.
+        
+        If the index is outside the valid range, an IndexError is raised.
+
+        Arguments:
+        - sheet_name: str - name of the sheet to be moved
+        - index: int - index to move the desired sheet to 
+
+        '''
+        
+        self.validate_sheet_existence(sheet_name)
 
         if index < 0 or index >= self.num_sheets():
             raise IndexError("Provided index is outside valid range")
@@ -550,26 +583,35 @@ class Workbook:
         self.sheet_names.insert(index, sheet_name)     
 
     def copy_sheet(self, sheet_name: str) -> Tuple[int, str]:
-        # Make a copy of the specified sheet, storing the copy at the end of the
-        # workbook's sequence of sheets.  The copy's name is generated by
-        # appending "_1", "_2", ... to the original sheet's name (preserving the
-        # original sheet name's case), incrementing the number until a unique
-        # name is found.  As usual, "uniqueness" is determined in a
-        # case-insensitive manner.
-        #
-        # The sheet name match is case-insensitive; the text must match but the
-        # case does not have to.
-        #
-        # The copy should be added to the end of the sequence of sheets in the
-        # workbook.  Like new_sheet(), this function returns a tuple with two
-        # elements:  (0-based index of copy in workbook, copy sheet name).  This
-        # allows the function to report the new sheet's name and index in the
-        # sequence of sheets.
-        #
-        # If the specified sheet name is not found, a KeyError is raised.
+        '''
+        Make a copy of the specified sheet, storing the copy at the end of the
+        workbook's sequence of sheets.  The copy's name is generated by
+        appending "_1", "_2", ... to the original sheet's name (preserving the
+        original sheet name's case), incrementing the number until a unique
+        name is found.  As usual, "uniqueness" is determined in a
+        case-insensitive manner.
         
-        if sheet_name.lower() not in self.sheet_objects.keys():
-            raise KeyError("Specified sheet name is not found")
+        The sheet name match is case-insensitive; the text must match but the
+        case does not have to.
+        
+        The copy should be added to the end of the sequence of sheets in the
+        workbook.  Like new_sheet(), this function returns a tuple with two
+        elements:  (0-based index of copy in workbook, copy sheet name).  This
+        allows the function to report the new sheet's name and index in the
+        sequence of sheets.
+        
+        If the specified sheet name is not found, a KeyError is raised.
+
+        Arguments:
+        - sheet_name: str - name of the sheet to copy
+
+        Returns:
+        - Tuple of int, str holding the index of the sheet in the workbook as
+            well as the copied sheet's name
+
+        '''
+        
+        self.validate_sheet_existence(sheet_name)
 
         # generate sheet name for copy
         og_sheet_name = self.sheet_objects[sheet_name.lower()].get_name()
@@ -588,3 +630,54 @@ class Workbook:
             self.set_cell_contents(sheet_copy_name, loc, cell.get_contents())
 
         return sheet_copy_idx, sheet_copy_name
+
+    ########################################################################
+    # Helpers
+    ########################################################################
+
+    def validate_sheet_existence(self, sheet_name: str) -> None:
+        '''
+        Validate whether the given sheet name already exists within the workbook
+
+        Throw a KeyError if the name cannot be found
+
+        Arguments:
+        - sheet_name: str - name of the sheet to validate
+
+        '''
+
+        if sheet_name.lower() not in self.sheet_objects.keys():
+            raise KeyError(f"Specified sheet name '{sheet_name}' is not found")
+        
+    def validate_sheet_uniqueness(self, sheet_name: str) -> None:
+        '''
+        Validate that the given sheet name does not already exist within the 
+        workbook
+
+        Throw a ValueError if the name already exists
+
+        Arguments:
+        - sheet_name: str - name of the sheet to validate
+
+        '''
+
+        if sheet_name.lower() in self.sheet_objects.keys():
+            raise ValueError(f"Sheet name '{sheet_name}' already exists")
+
+    def format_sheet_names(self, sheet_name: str, location: str, 
+        sheets_in_contents: List[Tuple]) -> None:
+        '''
+        Set the cell's contents to be properly formatted so that sheet names
+        with quotations that do not need them, will have them removed
+
+        Arguments:
+        - sheet_name: str - name of the current cell's sheet
+        - location: str - location of the current cell
+        - sheets_in_contents: List[Tuple] -
+        '''
+        for sheet, _ in sheets_in_contents:
+            if not re.search(R'\'[ .?!,:;!@#$%^&*\(\)\-]\'', sheet):
+                curr_contents = self.get_cell_contents(sheet_name, location)
+                contents = re.sub("'"+sheet+"'", sheet, curr_contents)
+                self.sheet_objects[sheet_name]\
+                    .set_cell_contents(location, contents)

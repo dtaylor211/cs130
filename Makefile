@@ -4,9 +4,6 @@ setup: requirements.txt
 clean:
 	rm -rf __pycache__
 
-test-workbook: 
-	pytest -q ./tests/test_workbook.py
-
 test-evaluator:
 	pytest -q ./tests/test_evaluator.py
 	pytest -q ./tests/test_evaluator_invalid.py
@@ -14,5 +11,10 @@ test-evaluator:
 test:
 	pytest -q ./tests/test_workbook.py
 	pytest -q ./tests/test_sheet.py
+	pytest -q ./tests/test_utils.py
 	pytest -q ./tests/test_evaluator.py
 	pytest -q ./tests/test_evaluator_invalid.py
+
+test-performance:
+	python -m cProfile -o program.prof ./tests/test_performance.py
+	snakeviz program.prof
