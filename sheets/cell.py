@@ -126,7 +126,7 @@ class Cell:
         - value: Optional[str] - value to set, can be None
 
         '''
-
+        
         self._contents = contents
         self._value = value
 
