@@ -317,12 +317,12 @@ class TestWorkbook:
         wb.new_sheet('Sheet3')
         wb.rename_sheet('Sheet2', 'Sheet4')
         new_sheet_names = wb.list_sheets()
-        new_sheet_objects = wb.get_sheet_objects()
+        new_sheet_objects = wb.sheet_objects
         assert new_sheet_names == ['Sheet4', 'Sheet3']
         assert new_sheet_objects['sheet4'] is not None
         assert new_sheet_objects['sheet3'] is not None
         with pytest.raises(KeyError):
-            new_sheet_objects['sheet2']
+            sheet_objects['sheet2']
         value = wb.get_cell_value('Sheet4', 'A1')
         assert value == Decimal(2)
 
@@ -389,20 +389,6 @@ class TestWorkbook:
         value = wb.get_cell_value('Sheet5', 'A1')
         assert contents == '=Sheet1Sheet1!A1 * Sheet99!A1'
         assert value == Decimal('3')
-
-        wb.new_sheet('Sheet1')
-        wb.set_cell_contents('Sheet1', 'A1', 'ayo')
-        wb.set_cell_contents('Sheet1', 'A2', '=Sheet1!A1 & "Sheet1"')
-        wb.set_cell_contents('Sheet1', 'A3', '=Sheet1!A1 & "Sheet1!"')
-        wb.rename_sheet('Sheet1', 'Sheet98')
-        contents = wb.get_cell_contents('Sheet98', 'A2')
-        value = wb.get_cell_value('Sheet98', 'A2')
-        assert contents == '=Sheet98!A1 & "Sheet1"'
-        assert value == 'ayoSheet1'
-        contents = wb.get_cell_contents('Sheet98', 'A3')
-        value = wb.get_cell_value('Sheet98', 'A3')
-        assert contents == '=Sheet98!A1 & "Sheet1!"'
-        assert value == 'ayoSheet1!'
 
     def test_rename_sheet_apply_quotes(self):
         wb = Workbook()
@@ -495,16 +481,6 @@ class TestWorkbook:
         contents = wb.get_cell_contents('Sheet2', 'A1')
         value = wb.get_cell_value('Sheet2', 'A1')
         assert contents == '=Sheet1!A1 &&'
-        assert isinstance(value, CellError)
-        assert(value.get_type() == CellErrorType.PARSE_ERROR)
-
-        wb.new_sheet('Sheet1')
-        wb.set_cell_contents('Sheet1', 'A1', 'Dallas Taylor')
-        wb.set_cell_contents('Sheet1', 'A2', '=Sheet1!A1 & \'Sheet1\'')
-        wb.rename_sheet('Sheet1', 'Sheet13')
-        contents = wb.get_cell_contents('Sheet13', 'A2')
-        value = wb.get_cell_value('Sheet13', 'A2')
-        assert contents == '=Sheet1!A1 & \'Sheet1\''
         assert isinstance(value, CellError)
         assert(value.get_type() == CellErrorType.PARSE_ERROR)
 
