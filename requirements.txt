@@ -4,3 +4,6 @@ lark==1.1.5
 
 # Testing
 pytest==7.2.1
+
+# Profile Visualization
+snakeviz==2.1.1
