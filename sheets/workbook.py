@@ -619,10 +619,10 @@ class Workbook:
         # generate sheet name for copy
         og_sheet_name = self.sheet_objects[sheet_name.lower()].get_name()
         copy_num = 1
-        sheet_copy_name = og_sheet_name + "-" + str(copy_num)
+        sheet_copy_name = og_sheet_name + "_" + str(copy_num)
         while sheet_copy_name.lower() in self.sheet_objects.keys():
             copy_num += 1
-            sheet_copy_name = og_sheet_name + "-" + str(copy_num)
+            sheet_copy_name = og_sheet_name + "_" + str(copy_num)
 
         # explicitly set each cell in (new) copy sheet using locations and 
         # contents from copied sheet 

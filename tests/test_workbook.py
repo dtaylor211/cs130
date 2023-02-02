@@ -471,4 +471,46 @@ class TestWorkbook:
         assert wb.list_sheets() == ["Sheet1", "Sheet2", "Sheet3"]
 
     def test_copy_sheet(self):
-        pass
+        wb = Workbook()
+        wb.new_sheet("Sheet1")
+        wb.set_cell_contents("Sheet1", "A1", "=1")
+        wb.copy_sheet("Sheet1")
+        wb.copy_sheet("Sheet1")
+        assert wb.num_sheets() == 3
+        assert wb.list_sheets() == ["Sheet1", "Sheet1_1", "Sheet1_2"]
+
+        wb.copy_sheet("Sheet1_2")
+        assert wb.list_sheets() == ["Sheet1", "Sheet1_1", "Sheet1_2", 
+            "Sheet_1_2_1"]
+        
+        assert wb.get_cell_value("Sheet1") == Decimal("1")
+        assert wb.get_cell_value("Sheet1_1") == Decimal("1")
+        assert wb.get_cell_value("Sheet1_2") == Decimal("1")
+        assert wb.get_cell_value("Sheet1_2_1") == Decimal("1")
+
+        wb.set_cell_contents("Sheet1", "A1", "=2")
+        assert wb.get_cell_value("Sheet1") == Decimal("2")
+        assert wb.get_cell_value("Sheet1_1") == Decimal("1")
+        assert wb.get_cell_value("Sheet1_2") == Decimal("1")
+        assert wb.get_cell_value("Sheet1_2_1") == Decimal("1")
+
+        wb.set_cell_contents("Sheet1_2", "A1", "=3")
+        assert wb.get_cell_value("Sheet1") == Decimal("2")
+        assert wb.get_cell_value("Sheet1_1") == Decimal("1")
+        assert wb.get_cell_value("Sheet1_2") == Decimal("3")
+        assert wb.get_cell_value("Sheet1_2_1") == Decimal("1")
+
+        wb.new_sheet("Sheet2")
+        wb.new_sheet("Sheet3")
+        wb.set_cell_contents("Sheet2", "B2", "=2")
+        wb.set_cell_contents("Sheet3", "B2", "=Sheet2!B2+Sheet1!B2")
+        wb.copy_sheet("Sheet2")
+        wb.copy_sheet("Sheet3")
+        wb.copy_sheet("Sheet2")
+
+        assert wb.list_sheets() == ["Sheet1", "Sheet1_1", "Sheet1_2", 
+            "Sheet_1_2_1", "Sheet2", "Sheet3", "Sheet2_1", "Sheet3_1", 
+            "Sheet2_2"]
+        assert wb.get_cell_value("Sheet2_1", "B2") == Decimal("2")
+        assert wb.get_cell_value("Sheet3_1", "B2") == Decimal("4")
+
