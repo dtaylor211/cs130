@@ -6,6 +6,7 @@ import json
 from decimal import Decimal
 
 from sheets.workbook import Workbook
+from sheets.cell_error import CellError, CellErrorType
 
 
 class TestWorkbook:
@@ -266,6 +267,7 @@ class TestWorkbook:
         pass     
 
     def test_rename_sheet(self):
+        # test if Sheet1Sheet1 and Sheet1, and we rename Sheet1
         wb = Workbook()
         wb.new_sheet('Sheet1')
         wb.set_cell_contents('Sheet1', 'A1', '2')
@@ -281,42 +283,176 @@ class TestWorkbook:
         assert value == Decimal(2)
         value = wb.get_cell_value('Sheet2','A2')
         assert value == Decimal(2)
-        # check preserve casing, sheet_names, sheet_objects
-        # repeat for when more sheets
 
         wb.new_sheet('Sheet3')
-        og_sheet_names = wb.list_sheets()
-        og_sheet_objects = wb.sheet_objects
         wb.rename_sheet('Sheet2', 'Sheet4')
         new_sheet_names = wb.list_sheets()
-        print(new_sheet_names)
         new_sheet_objects = wb.sheet_objects
-        assert new_sheet_names.remove('Sheet4') == og_sheet_names.remove('Sheet2')
-        # the above is not working right now
-        assert sheet_objects['sheet2'] is not None
+        assert new_sheet_names == ['Sheet4', 'Sheet3']
+        assert new_sheet_objects['sheet4'] is not None
+        assert new_sheet_objects['sheet3'] is not None
         with pytest.raises(KeyError):
-            sheet_objects['sheet1']
-        value = wb.get_cell_value('Sheet2', 'A1')
-        assert value == Decimal(2)
-        value = wb.get_cell_value('Sheet2','A2')
+            sheet_objects['sheet2']
+        value = wb.get_cell_value('Sheet4', 'A1')
         assert value == Decimal(2)
 
     def test_rename_sheet_update_refs(self):
-        # wb.new_sheet('Sheet2')
-        # wb.set_cell_contents('Sheet2', 'A1', '=Sheet1!A1')
-        pass # more complex
+        wb = Workbook()
+        wb.new_sheet('Sheet1')
+        wb.new_sheet('Sheet2')
+        wb.set_cell_contents('Sheet1', 'A1', '=2')
+        wb.set_cell_contents('Sheet2', 'A1', '=Sheet1!A1')
+        wb.rename_sheet('Sheet1', 'Sheet3')
+        contents = wb.get_cell_contents('Sheet2', 'A1')
+        value = wb.get_cell_value('Sheet2', 'A1')
+        assert contents == '=Sheet3!A1'
+        assert value == Decimal(2)
+
+        wb.set_cell_contents('Sheet3', 'A2', '=3')
+        wb.set_cell_contents('Sheet3', 'A3', '=4')
+        wb.set_cell_contents('Sheet2', 'A2', '=Sheet3!A2')
+        wb.set_cell_contents('Sheet2', 'A3', '=Sheet3!A3')
+        wb.rename_sheet('Sheet3', 'Sheet4')
+        contents = wb.get_cell_contents('Sheet2', 'A1')
+        value = wb.get_cell_value('Sheet2', 'A1')
+        assert contents == '=Sheet4!A1'
+        assert value == Decimal(2)
+        contents = wb.get_cell_contents('Sheet2', 'A2')
+        value = wb.get_cell_value('Sheet2', 'A2')
+        assert contents == '=Sheet4!A2'
+        assert value == Decimal(3)
+        contents = wb.get_cell_contents('Sheet2', 'A3')
+        value = wb.get_cell_value('Sheet2', 'A3')
+        assert contents == '=Sheet4!A3'
+        assert value == Decimal(4)
+
+        wb.new_sheet('Sheet5')
+        wb.set_cell_contents('Sheet5', 'A1', '=Sheet2!A2 + Sheet2!A3')
+        wb.set_cell_contents('Sheet5', 'A2', '=Sheet2!A2 + Sheet4!A3')
+        wb.rename_sheet('Sheet2', 'Sheet6')
+        wb.rename_sheet('Sheet4', 'Sheet7')
+        contents = wb.get_cell_contents('Sheet5', 'A1')
+        value = wb.get_cell_value('Sheet5', 'A1')
+        assert contents == '=Sheet6!A2 + Sheet6!A3'
+        assert value == Decimal(7)
+        contents = wb.get_cell_contents('Sheet5', 'A2')
+        value = wb.get_cell_value('Sheet5', 'A2')
+        assert contents == '=Sheet6!A2 + Sheet7!A3'
+        assert value == Decimal(7)
+
+        wb.new_sheet('A Sheet')
+        wb.set_cell_contents('A Sheet', 'A1', '=0.1')
+        wb.set_cell_contents('Sheet5', 'A1', "='A Sheet'!A1")
+        wb.rename_sheet('A Sheet', 'Darth Jar Jar')
+        contents = wb.get_cell_contents('Sheet5', 'A1')
+        value = wb.get_cell_value('Sheet5', 'A1')
+        assert contents == "='Darth Jar Jar'!A1"
+        assert value == Decimal('0.1')
+
+        wb.new_sheet('Sheet1')
+        wb.new_sheet('Sheet1Sheet1')
+        wb.set_cell_contents('Sheet1', 'A1', '2')
+        wb.set_cell_contents('Sheet1Sheet1', 'A1', '1.5')
+        wb.set_cell_contents('Sheet5', 'A1', '=Sheet1Sheet1!A1 * Sheet1!A1')
+        wb.rename_sheet('Sheet1', 'Sheet99')
+        contents = wb.get_cell_contents('Sheet5', 'A1')
+        value = wb.get_cell_value('Sheet5', 'A1')
+        assert contents == '=Sheet1Sheet1!A1 * Sheet99!A1'
+        assert value == Decimal('3')
 
     def test_rename_sheet_apply_quotes(self):
-        pass
+        wb = Workbook()
+        wb.new_sheet('Sheet1')
+        wb.new_sheet('Sheet2')
+        wb.set_cell_contents('Sheet1', 'A1', 'do or do not, there is no try')
+        wb.set_cell_contents('Sheet2', 'A1', '=Sheet1!A1')
+        wb.rename_sheet('Sheet1', 'Sheet 1')
+        contents = wb.get_cell_contents('Sheet2', 'A1')
+        value = wb.get_cell_value('Sheet2', 'A1')
+        assert contents == "='Sheet 1'!A1"
+        assert value == 'do or do not, there is no try'
+
+        wb.new_sheet('Sheet3')
+        wb.rename_sheet('Sheet 1', 'Sheet1')
+        wb.set_cell_contents('Sheet1', 'A2', '\' roger')
+        wb.set_cell_contents('Sheet3', 'A1', '- Yoda (master shiesty)')
+        wb.set_cell_contents('Sheet2', 'A2', '=Sheet1!A1 & Sheet3!A1')
+        wb.set_cell_contents('Sheet2', 'A3', '=Sheet1!A2 & Sheet1!A2')
+        wb.rename_sheet('Sheet1', 'Sheet 1')
+        wb.rename_sheet('Sheet3', 'Sheet 3')
+        contents = wb.get_cell_contents('Sheet2', 'A2')
+        value = wb.get_cell_value('Sheet2', 'A2')
+        assert contents == "='Sheet 1'!A1 & 'Sheet 3'!A1"
+        assert value == 'do or do not, there is no try- Yoda (master shiesty)'
+        contents = wb.get_cell_contents('Sheet2', 'A3')
+        value = wb.get_cell_value('Sheet2', 'A3')
+        assert contents == "='Sheet 1'!A2 & 'Sheet 1'!A2"
+        assert value == ' roger roger'
+
+        wb.new_sheet('Sheet4')
+        wb.new_sheet('ShEet5')
+        wb.set_cell_contents('Sheet4', 'A1', 'good relations')
+        wb.set_cell_contents('Sheet4', 'A2', '\' with the wookies,')
+        wb.set_cell_contents('Sheet5', 'A1', '\' I have')
+        wb.set_cell_contents('Sheet2', 'A1', '=Sheet4!A1 & Sheet4!A2 & Sheet5!A1')
+        wb.rename_sheet('Sheet4', 'Sheet4?')
+        contents = wb.get_cell_contents('Sheet2', 'A1')
+        value = wb.get_cell_value('Sheet2', 'A1')
+        assert contents == "='Sheet4?'!A1 & 'Sheet4?'!A2 & Sheet5!A1"
+        assert value == 'good relations with the wookies, I have'
 
     def test_rename_sheet_remove_quotes(self):
-        pass
+        wb = Workbook()
+        wb.new_sheet('Sheet1')
+        wb.new_sheet('Benjamin Juarez')
+        wb.set_cell_contents('Benjamin Juarez', 'A1', 'i heart jar jar binks')
+        wb.set_cell_contents('Sheet1', 'A1', '=\'Benjamin Juarez\'!A1')
+        wb.rename_sheet('Benjamin Juarez', 'BJ')
+        contents = wb.get_cell_contents('Sheet1', 'A1')
+        value = wb.get_cell_value('Sheet1', 'A1')
+        assert contents == '=BJ!A1'
+        assert value == 'i heart jar jar binks'
 
-    def test_format_sheet_names_helper(self):
-        pass
+        wb.new_sheet('Kyle McGraw')
+        wb.set_cell_contents('Kyle McGraw', 'A1', 'anakin skywalker')
+        wb.set_cell_contents('Sheet1', 
+                             'A2', '=BJ!A1&" and "&\'Kyle McGraw\'!A1')
+        wb.rename_sheet('Kyle McGraw', 'KM')
+        contents = wb.get_cell_contents('Sheet1', 'A2')
+        value = wb.get_cell_value('Sheet1', 'A2')
+        assert contents == '=BJ!A1&" and "&KM!A1'
+        assert value == 'i heart jar jar binks and anakin skywalker'
+
+        wb.new_sheet('Sheet2')
+        wb.set_cell_contents('Sheet2', 'A1', '=\'KM\'!A1 & KM!A1')
+        wb.rename_sheet('KM', 'DT')
+        contents = wb.get_cell_contents('Sheet2', 'A1')
+        value = wb.get_cell_value('Sheet2', 'A1')
+        assert contents == '=DT!A1 & DT!A1'
+        assert value == 'anakin skywalkeranakin skywalker'
 
     def test_rename_sheet_parse_error(self):
-        pass # ignore invalid formulas?
+        wb = Workbook()
+        wb.new_sheet('Sheet1')
+        wb.new_sheet('Sheet2')
+        wb.set_cell_contents('Sheet1', 'A1', 'Dallas Taylor')
+        wb.set_cell_contents('Sheet2', 'A1', '=Sheet1!A1 & Sheet1!!A1')
+        wb.rename_sheet('Sheet1', 'Sheet11')
+        contents = wb.get_cell_contents('Sheet2', 'A1')
+        value = wb.get_cell_value('Sheet2', 'A1')
+        assert contents == '=Sheet1!A1 & Sheet1!!A1'
+        assert isinstance(value, CellError)
+        assert(value.get_type() == CellErrorType.PARSE_ERROR)
+
+        wb.new_sheet('Sheet1')
+        wb.set_cell_contents('Sheet1', 'A1', 'Dallas Taylor')
+        wb.set_cell_contents('Sheet2', 'A1', '=Sheet1!A1 &&')
+        wb.rename_sheet('Sheet1', 'Sheet12')
+        contents = wb.get_cell_contents('Sheet2', 'A1')
+        value = wb.get_cell_value('Sheet2', 'A1')
+        assert contents == '=Sheet1!A1 &&'
+        assert isinstance(value, CellError)
+        assert(value.get_type() == CellErrorType.PARSE_ERROR)
 
     def test_move_sheet(self):
         wb = Workbook()
