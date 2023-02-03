@@ -179,7 +179,7 @@ class Workbook:
         self.set_sheet_names(sheet_names) # preserves case
         self.set_sheet_objects(sheet_objects)
 
-        self.update_cell_values(sheet_name)
+        self.update_cell_values(sheet_name.lower())
         return self.num_sheets() - 1, sheet_name
 
     def del_sheet(self, sheet_name: str) -> None:
@@ -209,7 +209,7 @@ class Workbook:
         self.set_sheet_names(sheet_names)
         self.set_sheet_objects(sheet_objects)
         # update all cells dependent on deleted sheet
-        self.update_cell_values(sheet_name)
+        self.update_cell_values(sheet_name.lower())
 
     def get_sheet_extent(self, sheet_name: str) -> Tuple[int, int]:
         '''
@@ -275,11 +275,11 @@ class Workbook:
         self.validate_sheet_existence(sheet_name)
         
         # set cell contents
-        cell = sheet_objects[sheet_name.lower()].set_cell_contents(
+        cell = sheet_objects[sheet_name].set_cell_contents(
             location, contents)
 
         # update other cells
-        self.update_cell_values(sheet_name, location)
+        self.update_cell_values(sheet_name, location.lower())
 
     def get_cell_contents(self, sheet_name: str, location: str)-> Optional[str]:
         '''
@@ -632,7 +632,7 @@ class Workbook:
         self.set_sheet_objects(sheet_objects)
 
         # updates the contents of all cells referencing the cell name
-        self.update_cell_values(sheet_name, renamed_sheet = new_sheet_name)
+        self.update_cell_values(sheet_name.lower(), renamed_sheet = new_sheet_name)
 
 
     def move_sheet(self, sheet_name: str, index: int) -> None:

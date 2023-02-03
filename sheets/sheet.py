@@ -213,7 +213,7 @@ class Sheet:
         cells = self.get_all_cells()
         for cell in cells.values():
             name = self.get_name()
-            adj_list[(name, cell.get_loc())] = cell.get_children()
+            adj_list[(name.lower(), cell.get_loc().lower())] = cell.get_children()
         return adj_list
 
     def save_sheet(self) -> Dict[str, str]:

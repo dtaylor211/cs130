@@ -305,12 +305,12 @@ class TestWorkbook:
         wb = Workbook()
         wb.notify_cells_changed(on_cells_changed)
         wb.new_sheet('Sheet1')
-        # assert test_changed == [[]]
-        # test_changed.pop()
-        # wb.set_cell_contents("Sheet1", "A1", "'123")
-        # assert test_changed == [[('Sheet1', 'A1')]]
-        # wb.set_cell_contents("Sheet1", "C1", "=A1+B1")
-        # assert test_changed == [('Sheet1', 'C1')]
+        assert test_changed == [[]]
+        test_changed.pop()
+        wb.set_cell_contents("Sheet1", "A1", "'123")
+        assert test_changed == [[('sheet1', 'a1')]]
+        wb.set_cell_contents("Sheet1", "C1", "=A1+B1")
+        assert test_changed.pop() == [('sheet1', 'c1')]
 
     def test_rename_sheet(self):
         # test if Sheet1Sheet1 and Sheet1, and we rename Sheet1
