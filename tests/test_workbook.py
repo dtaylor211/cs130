@@ -311,9 +311,11 @@ class TestWorkbook:
         assert test_changed == [[('sheet1', 'a1')]]
         wb.set_cell_contents("Sheet1", "C1", "=A1+B1")
         assert test_changed.pop() == [('sheet1', 'c1')]
+        wb.set_cell_contents("Sheet1", "A1", '=74')
+        assert test_changed.pop() == [('sheet1', 'a1'), ('sheet1', 'c1')]
+        # Need to add better cases to this in the future
 
     def test_rename_sheet(self):
-        # test if Sheet1Sheet1 and Sheet1, and we rename Sheet1
         wb = Workbook()
         wb.new_sheet('Sheet1')
         wb.set_cell_contents('Sheet1', 'A1', '2')
