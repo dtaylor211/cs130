@@ -129,13 +129,13 @@ class Sheet:
         # example: "D14" -> (4, 14)
         # splits into [characters, numbers, ""]
         split_loc = re.split(r'(\d+)', location.upper())
-        (row, col) = split_loc[0], split_loc[1]
-        col_num = int(col)
-        row_num = 0
-        for letter in row:
-            row_num = row_num * 26 + ord(letter) - ord('A') + 1
+        (col, row) = split_loc[0], split_loc[1]
+        row_num = int(row)
+        col_num = 0
+        for letter in col:
+            col_num = col_num * 26 + ord(letter) - ord('A') + 1
 
-        return (row_num, col_num)
+        return (col_num, row_num)
 
     def get_cell_contents(self, location: str) -> Optional[str]:
         '''
