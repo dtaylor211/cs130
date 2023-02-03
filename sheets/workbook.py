@@ -179,7 +179,7 @@ class Workbook:
         self.set_sheet_names(sheet_names) # preserves case
         self.set_sheet_objects(sheet_objects)
 
-        self.update_cell_values(sheet_name.lower())
+        self.update_cell_values(sheet_name)
         return self.num_sheets() - 1, sheet_name
 
     def del_sheet(self, sheet_name: str) -> None:
@@ -209,7 +209,7 @@ class Workbook:
         self.set_sheet_names(sheet_names)
         self.set_sheet_objects(sheet_objects)
         # update all cells dependent on deleted sheet
-        self.update_cell_values(sheet_name.lower())
+        self.update_cell_values(sheet_name)
 
     def get_sheet_extent(self, sheet_name: str) -> Tuple[int, int]:
         '''
@@ -275,11 +275,11 @@ class Workbook:
         self.validate_sheet_existence(sheet_name)
         
         # set cell contents
-        cell = sheet_objects[sheet_name].set_cell_contents(
+        cell = sheet_objects[sheet_name.lower()].set_cell_contents(
             location, contents)
 
         # update other cells
-        self.update_cell_values(sheet_name, location.lower())
+        self.update_cell_values(sheet_name, location)
 
     def get_cell_contents(self, sheet_name: str, location: str)-> Optional[str]:
         '''
@@ -401,7 +401,7 @@ class Workbook:
                         contents=re.sub("'"+updated_sheet+"'"+"!", 
                         renamed_sheet+"!", contents, flags=re.IGNORECASE)
                         # set the new contents with new sheet name
-                        sheet_objects[sheet].set_cell_contents(cell, contents)
+                        sheet_objects[sheet.lower()].set_cell_contents(cell, contents)
                         # may need to move here *******
                         # call helper function to update sheet names in contents
                         self.format_sheet_names(sheet, cell, adj[(sheet, cell)])
@@ -421,19 +421,22 @@ class Workbook:
                 dag_nodes.add(component[0])
             else:
                 for sheet, cell in component:
-                    sheet_objects[sheet].get_cell(cell).set_circular_error()
+                    sheet_objects[sheet.lower()].get_cell(cell).set_circular_error()
                 self.set_sheet_objects(sheet_objects)
         cell_graph.subgraph_from_nodes(dag_nodes)
         # get the topological sort of non-circular nodes needing to be updated
         cell_topological = cell_graph.topological_sort()
         # get cells to notify
         notify_cells = []
+        if updated_cell is not None:
+            notify_cells = updated_cells
+        # print(cell_topological)
         # update cells
         for sheet, cell in cell_topological:
             if (sheet, cell) not in updated_cells:
                 notify_cells.append((sheet, cell))
-                sheet_objects[sheet].set_cell_contents(cell, 
-                    sheet_objects[sheet].get_cell_contents(cell))
+                sheet_objects[sheet.lower()].set_cell_contents(cell, 
+                    sheet_objects[sheet.lower()].get_cell_contents(cell))
         self.set_sheet_objects(sheet_objects)
         for notify_function in self.notify_functions:
             try:
@@ -629,8 +632,7 @@ class Workbook:
         self.set_sheet_objects(sheet_objects)
 
         # updates the contents of all cells referencing the cell name
-        self.update_cell_values(sheet_name.lower(), 
-                                renamed_sheet = new_sheet_name)
+        self.update_cell_values(sheet_name, renamed_sheet = new_sheet_name)
 
 
     def move_sheet(self, sheet_name: str, index: int) -> None:
@@ -770,9 +772,9 @@ class Workbook:
         sheet_objects = self.get_sheet_objects()
 
         for sheet, _ in sheets_in_contents:
-            if not re.search(R'\'[ .?!,:;!@#$%^&*\(\)\-]\'', sheet):
+            if not re.search(R'[ .?!,:;!@#$%^&*\(\)\-]', sheet):
                 curr_contents = self.get_cell_contents(sheet_name, location)
                 contents = re.sub("'"+sheet+"'", sheet, curr_contents)
-                sheet_objects[sheet_name]\
+                sheet_objects[sheet_name.lower()]\
                     .set_cell_contents(location, contents)
         self.set_sheet_objects(sheet_objects)

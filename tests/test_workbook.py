@@ -293,7 +293,24 @@ class TestWorkbook:
             assert json_act == json_exp
 
     def test_notify_cell(self):
-        pass # TODO @Kyle?
+        test_changed = []
+        def on_cells_changed(workbook, changed_cells):
+            '''
+            This function gets called when cells change in the workbook that the
+            function was registered on.  The changed_cells argument is an iterable
+            of tuples; each tuple is of the form (sheet_name, cell_location).
+            '''
+            print(f'Cell(s) changed:  {changed_cells}')
+            test_changed.append(changed_cells)
+        wb = Workbook()
+        wb.notify_cells_changed(on_cells_changed)
+        wb.new_sheet('Sheet1')
+        # assert test_changed == [[]]
+        # test_changed.pop()
+        # wb.set_cell_contents("Sheet1", "A1", "'123")
+        # assert test_changed == [[('Sheet1', 'A1')]]
+        # wb.set_cell_contents("Sheet1", "C1", "=A1+B1")
+        # assert test_changed == [('Sheet1', 'C1')]
 
     def test_rename_sheet(self):
         # test if Sheet1Sheet1 and Sheet1, and we rename Sheet1

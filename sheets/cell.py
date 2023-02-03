@@ -35,7 +35,7 @@ class _CellTreeVisitor(Visitor):
         else:
             cell_sheet = self.sheet
             cell = str(tree.children[0])
-        self.children.add((cell_sheet.lower(), cell.lower()))
+        self.children.add((cell_sheet, cell))
 
 
 class Cell:
