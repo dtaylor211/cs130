@@ -351,7 +351,6 @@ class TestWorkbook:
         assert test_changed[-1] == []
 
     def test_rename_sheet(self):
-        # test if Sheet1Sheet1 and Sheet1, and we rename Sheet1
         wb = Workbook()
         wb.new_sheet('Sheet1')
         wb.set_cell_contents('Sheet1', 'A1', '2')

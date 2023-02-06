@@ -33,7 +33,6 @@ class Workbook:
         self._sheet_objects: Dict[str, Sheet] = {}
         self._evaluator = Evaluator(self, '')
         self.notify_functions = []
-        # make this private?
 
     ########################################################################
     # Getters and Setters
