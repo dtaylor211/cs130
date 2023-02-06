@@ -300,17 +300,55 @@ class TestWorkbook:
             function was registered on.  The changed_cells argument is an iterable
             of tuples; each tuple is of the form (sheet_name, cell_location).
             '''
-            print(f'Cell(s) changed:  {changed_cells}')
             test_changed.append(changed_cells)
         wb = Workbook()
         wb.notify_cells_changed(on_cells_changed)
         wb.new_sheet('Sheet1')
-        assert test_changed == [[]]
-        test_changed.pop()
+        assert test_changed[-1] == []
         wb.set_cell_contents("Sheet1", "A1", "'123")
-        assert test_changed == [[('sheet1', 'a1')]]
+        assert test_changed[-1] == [('Sheet1', 'A1')]
         wb.set_cell_contents("Sheet1", "C1", "=A1+B1")
-        assert test_changed.pop() == [('sheet1', 'c1')]
+        assert test_changed[-1] == [('Sheet1', 'C1')]
+        wb.set_cell_contents("Sheet1", "B1", "5.3")
+        assert test_changed[-1] == [('Sheet1', 'B1'), ('Sheet1', 'C1')]
+        wb.set_cell_contents("Sheet1", "C1", None)
+        assert test_changed[-1] == [('Sheet1', 'C1')]
+        wb.del_sheet('Sheet1')
+        assert test_changed[-1] == []
+        def on_cells_changed2(workbook, changed_cells):
+            '''
+            This function gets called when cells change in the workbook that the
+            function was registered on.  The changed_cells argument is an iterable
+            of tuples; each tuple is of the form (sheet_name, cell_location).
+            '''
+            test_changed.append([wb.get_cell_value(sheet, cell) for 
+                sheet, cell in changed_cells])
+        wb.new_sheet("Test")
+        wb.notify_cells_changed(on_cells_changed2)
+        wb.set_cell_contents("Test", "A1", "1")
+        assert test_changed[-2] == [('Test', 'A1')]
+        assert test_changed[-1] == [Decimal(1)]
+        wb.set_cell_contents("Test", "B1", "=A1")
+        assert test_changed[-2] == [('Test', 'B1')]
+        assert test_changed[-1] == [Decimal(1)]
+        wb.set_cell_contents("Test", "C1", "=A1+B1")
+        assert test_changed[-2] == [('Test', 'C1')]
+        assert test_changed[-1] == [Decimal(2)]
+        wb.set_cell_contents("Test", "A1", "2")
+        assert test_changed[-2] == [('Test', 'A1'), ('Test', 'B1'), 
+                                    ('Test', 'C1')]
+        assert test_changed[-1] == [Decimal(2), Decimal(2), Decimal(4)]
+        def on_cells_changed3(workbook, changed_cells):
+            '''
+            This function gets called when cells change in the workbook that the
+            function was registered on.  The changed_cells argument is an iterable
+            of tuples; each tuple is of the form (sheet_name, cell_location).
+            '''
+            raise ValueError('Whaaaat were raising a random error')
+        wb.notify_cells_changed(on_cells_changed3)
+        wb.set_cell_contents("Test", "C1", "4")
+        assert test_changed[-2] == []
+        assert test_changed[-1] == []
 
     def test_rename_sheet(self):
         # test if Sheet1Sheet1 and Sheet1, and we rename Sheet1

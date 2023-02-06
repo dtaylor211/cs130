@@ -179,7 +179,7 @@ class Workbook:
         self.set_sheet_names(sheet_names) # preserves case
         self.set_sheet_objects(sheet_objects)
 
-        self.update_cell_values(sheet_name.lower())
+        self.update_cell_values(sheet_name)
         return self.num_sheets() - 1, sheet_name
 
     def del_sheet(self, sheet_name: str) -> None:
@@ -209,7 +209,7 @@ class Workbook:
         self.set_sheet_names(sheet_names)
         self.set_sheet_objects(sheet_objects)
         # update all cells dependent on deleted sheet
-        self.update_cell_values(sheet_name.lower())
+        self.update_cell_values(sheet_name)
 
     def get_sheet_extent(self, sheet_name: str) -> Tuple[int, int]:
         '''
@@ -270,16 +270,21 @@ class Workbook:
 
         sheet_objects = self.get_sheet_objects()
         self.get_evaluator().set_working_sheet(sheet_name)
-        sheet_name = sheet_name.lower()
+        sheet_name_lower = sheet_name.lower()
 
-        self.validate_sheet_existence(sheet_name)
+        self.validate_sheet_existence(sheet_name_lower)
         
+        prev_value = sheet_objects[sheet_name_lower].get_cell_value(location)
         # set cell contents
-        cell = sheet_objects[sheet_name].set_cell_contents(
+        cell = sheet_objects[sheet_name_lower].set_cell_contents(
             location, contents)
+        new_value = sheet_objects[sheet_name_lower].get_cell_value(location)
 
         # update other cells
-        self.update_cell_values(sheet_name, location.lower())
+        if new_value == prev_value:
+            self.update_cell_values(sheet_name, location, notify=False)
+        else:
+            self.update_cell_values(sheet_name, location)
 
     def get_cell_contents(self, sheet_name: str, location: str)-> Optional[str]:
         '''
@@ -353,8 +358,9 @@ class Workbook:
         # calls get_cell_value from Sheet
         return sheet_objects[sheet_name].get_cell_value(location)
 
-    def update_cell_values(self, updated_sheet: str, updated_cell: 
-        Optional[str] = None, renamed_sheet: Optional[str] = None) -> None:
+    def update_cell_values(self, updated_sheet: str, updated_cell: Optional[str]
+        = None, renamed_sheet: Optional[str] = None, notify: Optional[bool] = 
+        True) -> None:
         '''
         Updates the contents of all cells. If given a sheet and/or cell,
         only updates cells effected.
@@ -428,15 +434,18 @@ class Workbook:
         cell_topological = cell_graph.topological_sort()
         # get cells to notify
         notify_cells = []
-        if updated_cell is not None:
+        if notify and updated_cell is not None:
             notify_cells = updated_cells
-        # print(cell_topological)
         # update cells
         for sheet, cell in cell_topological:
             if (sheet, cell) not in updated_cells:
-                notify_cells.append((sheet, cell))
-                sheet_objects[sheet.lower()].set_cell_contents(cell, 
-                    sheet_objects[sheet.lower()].get_cell_contents(cell))
+                name = sheet.lower()
+                prev_value = sheet_objects[name].get_cell_value(cell)
+                sheet_objects[name].set_cell_contents(cell, 
+                    sheet_objects[name].get_cell_contents(cell))
+                new_value = sheet_objects[name].get_cell_value(cell)
+                if new_value != prev_value:
+                    notify_cells.append((sheet, cell))
         self.set_sheet_objects(sheet_objects)
         for notify_function in self.notify_functions:
             try:
@@ -632,7 +641,7 @@ class Workbook:
         self.set_sheet_objects(sheet_objects)
 
         # updates the contents of all cells referencing the cell name
-        self.update_cell_values(sheet_name.lower(), renamed_sheet = new_sheet_name)
+        self.update_cell_values(sheet_name, renamed_sheet = new_sheet_name)
 
 
     def move_sheet(self, sheet_name: str, index: int) -> None:
