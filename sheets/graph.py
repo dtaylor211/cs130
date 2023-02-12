@@ -9,13 +9,13 @@ class Graph:
     Stores the adjacency list representing the graph.
     '''
 
-    def __init__(self, adjacency_list: Dict[T,List[T]]):
+    def __init__(self, adjacency_list: Dict[T, List[T]]):
         '''
         Initialize a new Graph
 
         Arguments:
-        - adjacency_list: Dict[T,List[T]] - dictionary representing the directed
-        edges of the graph
+        - adjacency_list: Dict[T, List[T]] - dictionary representing the 
+            directed edges of the graph
 
         '''
 
@@ -25,7 +25,7 @@ class Graph:
             adjacency_list[v] = []
         self._adjacency_list = adjacency_list
 
-    def get_adjacency_list(self):
+    def get_adjacency_list(self) -> Dict[T, List[T]]:
         '''
         Returns the graph's adjacency list.
 
@@ -53,7 +53,7 @@ class Graph:
 
         Returns:
         - List of strongly connected components (list of nodes in the component)
-        in graph
+            in graph
 
         '''
         scc = []
@@ -145,5 +145,6 @@ class Graph:
         sub_adjacency_list = {}
         for k in self._adjacency_list:
             if k in nodes:
-                sub_adjacency_list[k] = [v for v in self._adjacency_list[k] if v in nodes]
+                sub_adjacency_list[k] = [v for v in 
+                                         self._adjacency_list[k] if v in nodes]
         self._adjacency_list = sub_adjacency_list

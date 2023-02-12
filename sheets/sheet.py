@@ -18,7 +18,7 @@ class Sheet:
 
         # dictonary that maps (row, col) tuple -> Cell
         # need to make sure inputted location "D14" is converted to (4, 14)
-        ## location = D14, coords = (4,14)
+        # location = D14, coords = (4,14)
         self._cells: Dict[Tuple[int, int], Cell] = {}
         self._evaluator = evaluator
 
@@ -37,7 +37,7 @@ class Sheet:
 
         return self._name
     
-    def set_name(self, sheet_name: str):
+    def set_name(self, sheet_name: str) -> None:
         '''
         Set the name of the sheet
 
@@ -198,8 +198,8 @@ class Sheet:
 
         return cells[coords].get_value()
 
-    def get_cell_adjacency_list(self) -> Dict[
-        Tuple[str, str], List[Tuple[str, str]]]:
+    def get_cell_adjacency_list(self) -> Dict[Tuple[str, str], 
+                                              List[Tuple[str, str]]]:
         '''
         Gets the adjacency list of cells in the sheet.
 

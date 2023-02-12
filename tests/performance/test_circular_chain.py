@@ -6,13 +6,18 @@ from decimal import Decimal
 from sheets import *
 
 def test_circular_chain():
-    wb = Workbook()
-    (index, name) = wb.new_sheet("Sheet1")
+    '''
+    Stress test for a long chain of references that produces a cycle
 
-    wb.set_cell_contents(name, "A1", "=1")
+    '''
+
+    wb = Workbook()
+    (index, name) = wb.new_sheet('Sheet1')
+
+    wb.set_cell_contents(name, 'A1', '=1')
 
     for i in range(2, 801):
-        wb.set_cell_contents(name, f"A{i}", f"=A{i - 1}")
+        wb.set_cell_contents(name, f'A{i}', f'=A{i - 1}')
 
     wb.set_cell_contents(name, 'A1', '=A800')
     value = wb.get_cell_value(name, 'A1')
@@ -29,5 +34,5 @@ if __name__ == '__main__':
     test_circular_chain()
 
     profiler.disable()
-    stats = Stats(profiler).sort_stats("cumtime")
+    stats = Stats(profiler).sort_stats('cumtime')
     stats.print_stats(10)

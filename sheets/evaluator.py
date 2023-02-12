@@ -44,7 +44,7 @@ class Evaluator(Transformer):
 
         return self._working_sheet
     
-    def set_working_sheet(self, sheet_name: str):
+    def set_working_sheet(self, sheet_name: str) -> None:
         '''
         Set the name of the current working sheet
 
@@ -55,7 +55,7 @@ class Evaluator(Transformer):
 
         self._working_sheet = sheet_name
 
-    def get_workbook(self):
+    def get_workbook(self) -> None:
         '''
         Set the name of the current working sheet
 
@@ -70,7 +70,7 @@ class Evaluator(Transformer):
     # Bases
     ########################################################################
 
-    def NUMBER(self, token: Token):
+    def NUMBER(self, token: Token) -> Decimal:
         '''
         Evaluate a NUMBER type into a Decimal object   
         This method also normalizes the value stored in Decimal
@@ -85,7 +85,7 @@ class Evaluator(Transformer):
 
         return self.__normalize_number(Decimal(token))
 
-    def STRING(self, token: Token):
+    def STRING(self, token: Token) -> str:
         '''
         Evaluate a STRING type  
 
@@ -99,7 +99,7 @@ class Evaluator(Transformer):
 
         return (str(token)[1:-1])
     
-    def CELLREF(self, token: Token):
+    def CELLREF(self, token: Token) -> Token:
         '''
         Evaluate a CELLREF type
 

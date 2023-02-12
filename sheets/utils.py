@@ -22,4 +22,5 @@ def get_loc_from_coords(coords: Tuple[int, int]) -> str:
     while col > 0:
         col_name = chr((col - 1) % 26 + ord('A')) + col_name
         col = (col - 1) // 26
+        
     return col_name.upper() + str(row)

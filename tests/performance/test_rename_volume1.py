@@ -6,14 +6,20 @@ from decimal import Decimal
 from sheets import *
 
 def test_rename_volume1():
-    wb = Workbook()
-    _, name = wb.new_sheet("Sheet1")
-    _, name2 = wb.new_sheet("Sheet2")
+    '''
+    Stress tests for renaming a sheet when a large number of cells in another 
+    sheet reference a cell in the sheet to be renamed
 
-    wb.set_cell_contents(name, "A1", "=1")
+    '''
+
+    wb = Workbook()
+    _, name = wb.new_sheet('Sheet1')
+    _, name2 = wb.new_sheet('Sheet2')
+
+    wb.set_cell_contents(name, 'A1', '=1')
 
     for i in range(1, 201):
-        wb.set_cell_contents(name2, f"A{i}", f"={name}!A1")
+        wb.set_cell_contents(name2, f'A{i}', f'={name}!A1')
 
     wb.rename_sheet(name, name+'1')
     contents = wb.get_cell_contents(name2, 'A1')
@@ -33,5 +39,5 @@ if __name__ == '__main__':
     test_rename_volume1()
 
     profiler.disable()
-    stats = Stats(profiler).sort_stats("cumtime")
+    stats = Stats(profiler).sort_stats('cumtime')
     stats.print_stats(10)

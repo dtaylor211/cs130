@@ -26,7 +26,7 @@ class _CellTreeVisitor(Visitor):
         self.children = set()
         self.sheet = sheet
 
-    def cell(self, tree: Tree):
+    def cell(self, tree: Tree) -> None:
         if len(tree.children) == 2:
             cell_sheet = str(tree.children[0])
             if cell_sheet[0] in QUOTATIONS:
@@ -113,7 +113,7 @@ class Cell:
         return self._parser, self._evaluator
     
     def set_contents_and_value(self, contents: Optional[str], 
-                                                        value: Optional[Any]):
+            value: Optional[Any]) -> None:
         '''
         Set the contents and value fields of the cell
 
@@ -126,7 +126,7 @@ class Cell:
         self._contents = contents
         self._value = value
 
-    def set_contents(self, input_str: Optional[str]):
+    def set_contents(self, input_str: Optional[str]) -> None:
         '''
         Set the contents of the cell.
 
@@ -189,7 +189,7 @@ class Cell:
         
         return self._children
 
-    def empty(self):
+    def empty(self) -> None:
         '''
         Empty the contents of a cell
 
@@ -211,7 +211,7 @@ class Cell:
         
         return CELL_ERRORS[cell_error_type]
 
-    def set_circular_error(self):
+    def set_circular_error(self) -> None:
         '''
         Set the value of a cell to be a circular reference
 

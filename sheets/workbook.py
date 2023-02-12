@@ -406,7 +406,8 @@ class Workbook:
                         contents=re.sub("'"+updated_sheet+"'"+"!", 
                         renamed_sheet+"!", contents, flags=re.IGNORECASE)
                         # set the new contents with new sheet name
-                        sheet_objects[sheet.lower()].set_cell_contents(cell, contents)
+                        sheet_objects[sheet.lower()].set_cell_contents(
+                            cell, contents)
                         # may need to move here *******
                         # call helper function to update sheet names in contents
                         self.format_sheet_names(sheet, cell, adj[(sheet, cell)])
@@ -426,7 +427,8 @@ class Workbook:
                 dag_nodes.add(component[0])
             else:
                 for sheet, cell in component:
-                    sheet_objects[sheet.lower()].get_cell(cell).set_circular_error()
+                    sheet_objects[
+                        sheet.lower()].get_cell(cell).set_circular_error()
                 self.set_sheet_objects(sheet_objects)
         cell_graph.subgraph_from_nodes(dag_nodes)
         # get the topological sort of non-circular nodes needing to be updated
@@ -706,7 +708,6 @@ class Workbook:
 
         '''
         
-        sheet_names = self.list_sheets()
         sheet_objects = self.get_sheet_objects()
         self.validate_sheet_existence(sheet_name)
 
@@ -774,7 +775,8 @@ class Workbook:
         Arguments:
         - sheet_name: str - name of the current cell's sheet
         - location: str - location of the current cell
-        - sheets_in_contents: List[Tuple] -
+        - sheets_in_contents: List[Tuple] - list of the sheets referenced in 
+            the current cell's contents
         '''
 
         sheet_objects = self.get_sheet_objects()
