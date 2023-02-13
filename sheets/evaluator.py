@@ -6,9 +6,6 @@ from typing import *
 from .cell_error import CellError, CellErrorType, CELL_ERRORS
 
 
-QUOTATIONS = ['"', '\"', "\"", "'" "\'", '\'']
-
-
 class Evaluator(Transformer):
     '''
     Evaluate an input string as a formula, based on the described Lark grammar
@@ -281,7 +278,7 @@ class Evaluator(Transformer):
         try:
             if len(args) == 2:
                 working_sheet = args[0]
-                if working_sheet[0] in QUOTATIONS:
+                if working_sheet[0] == "'":
                     working_sheet = working_sheet[1:-1]
                 cell_name = args[1]
             else:
