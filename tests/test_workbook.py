@@ -361,7 +361,6 @@ class TestWorkbook:
         wb.rename_sheet('Sheet1', 'SheEt2')
         sheet_names = wb.list_sheets()
         sheet_objects = wb.get_sheet_objects()
-        print(sheet_objects)
         assert sheet_names == ['SheEt2']
         assert sheet_objects['sheet2'] is not None
         with pytest.raises(KeyError):

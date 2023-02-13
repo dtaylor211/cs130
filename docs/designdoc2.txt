@@ -29,7 +29,7 @@ L3.  [3pts] Approximately how many hours did each teammate spend on the project?
 
      Ben:      11
      Kyle:     11
-     Dallas:   10
+     Dallas:   13
 
 
 Spreadsheet Engine Design (10 pts)
