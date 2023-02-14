@@ -386,7 +386,8 @@ class Workbook:
             updated_cells = [(child_sheet, child_cell) 
             for children in adj.values() 
             for (child_sheet, child_cell) in children 
-            if child_sheet == updated_sheet]
+            if child_sheet == updated_sheet
+            or child_sheet == renamed_sheet]
             # rename references if we have a renamed sheet
             if renamed_sheet is not None:
                 # fix new sheet name
