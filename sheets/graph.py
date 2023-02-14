@@ -59,23 +59,33 @@ class Graph:
         scc = []
         stack = []
         lowlink = {}
+        dfs_stack = []
+        idxs = {}
             
-        # Currently recursive, in future assignments need to make iterative
+        # Iterative
         def strongconnect(k):
-            idx = len(lowlink)
-            lowlink[k] = idx
-            stack_pos = len(stack)
-            stack.append(k)
-            for v in self._adjacency_list[k]:
-                if v not in lowlink:
-                    strongconnect(v)
-                lowlink[k] = min(lowlink[k], lowlink[v])
-            if lowlink[k] == idx:
-                component = stack[stack_pos:]
-                del stack[stack_pos:]
-                scc.append(component)
-                for item in component:
-                    lowlink[item] = len(self._adjacency_list)
+            dfs_stack = [(k, True)]
+            while dfs_stack:
+                k, enter = dfs_stack.pop()
+                if enter and k not in lowlink:
+                    idx = len(lowlink)
+                    idxs[k] = (idx, len(stack))
+                    lowlink[k] = idx
+                    stack.append(k)
+                    dfs_stack.append((k, False))
+                    for v in self._adjacency_list[k]:
+                        if v not in lowlink:
+                            dfs_stack.append((v, True))
+                else:
+                    for v in self._adjacency_list[k]:
+                        lowlink[k] = min(lowlink[k], lowlink[v])
+                    idx, stack_pos = idxs[k]
+                    if lowlink[k] == idx:
+                        component = stack[stack_pos:]
+                        del stack[stack_pos:]
+                        scc.append(component)
+                        for item in component:
+                            lowlink[item] = len(self._adjacency_list)
 
         for k in self._adjacency_list:
             if k not in lowlink:
@@ -99,7 +109,7 @@ class Graph:
             if k not in visited:
                 stack.append((k, True))
             while stack: 
-                (k, enter) = stack.pop()
+                k, enter = stack.pop()
                 if enter and k not in visited:
                     visited.add(k)
                     stack.append((k, False))
