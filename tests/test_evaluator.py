@@ -482,9 +482,29 @@ class TestEvaluator:
         assert contents == "='August Totals'!A1+3"
         value = WB.get_cell_value("June Totals", "B1")
         assert value == Decimal(3)
-        value = WB.get_cell_value("June Totals", "B1")
         WB.set_cell_contents("August Totals", "A1", "1")
         contents = WB.get_cell_contents("June Totals", "B1")
         assert contents == "='August Totals'!A1+3"
         value = WB.get_cell_value("June Totals", "B1")
+        assert value == Decimal(4)
+
+        WB.del_sheet("August Totals")
+        WB.set_cell_contents("June Totals", "B3", "='June Totals'!B1+August!A1")
+        WB.new_sheet("August Totals")
+        WB.new_sheet("August")
+        contents = WB.get_cell_contents("June Totals", "B3")
+        assert contents == "='June Totals'!B1+August!A1"
+        value = WB.get_cell_value("June Totals", "B3")
+        assert value == Decimal(3)
+        WB.set_cell_contents("August Totals", "A1", "1")
+        contents = WB.get_cell_contents("June Totals", "B3")
+        assert contents == "='June Totals'!B1+August!A1"
+        value = WB.get_cell_value("June Totals", "B3")
+        assert value == Decimal(4)
+
+        WB.set_cell_contents("June Totals", "C1", "='September Totals'!A1+3")
+        WB.rename_sheet("August Totals", "September Totals")
+        contents = WB.get_cell_contents("June Totals", "C1")
+        assert contents == "='September Totals'!A1+3"
+        value = WB.get_cell_value("June Totals", "C1")
         assert value == Decimal(4)
