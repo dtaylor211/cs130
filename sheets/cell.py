@@ -1,3 +1,4 @@
+import re
 import enum
 import lark
 from lark import Visitor, Tree
@@ -219,3 +220,36 @@ class Cell:
 
         self._value = CellError(CellErrorType.CIRCULAR_REFERENCE, 
                                 "Cell is in a circular reference.")
+
+    def get_shifted_contents(source_contents: str, 
+        coord_shift: Tuple[int, int]) -> str:
+        '''
+        Shifts source cell contents to be target cell contents.  Handles
+        absolute/mixed/relative referencing.
+
+        Arguments:
+        - source_contents: str - contents of source cell
+        - coord_shift: Tuple[int, int] - diff between source & target cell
+
+        '''
+        # check if source cell contents are None or not formula
+        #   -> simply return contents in current state if so
+        #
+        # Do we need to keep track of source sheet here? (if move to new sheet) 
+        if source_contents is None or source_contents[0] != "=":
+            return source_contents
+
+        # TODO - handle absolute/mixed/relative
+        # re.split(r'\$', '$A$1') -> ['', 'A', '1']
+        # re.split(r'\$', '$A1') -> ['', 'A1']
+        # re.split(r'\$', 'A$1') -> ['A', '1']
+        # re.split(r'\$', '=Sheet1!A$1') -> ['=Sheet1!A', '1']
+        # re.split(r'\$', 'A1') -> ['A1']
+        # re.split(r'\$', '=$A$1+$B$2') -> ['=', 'A', '1+', 'B', '2']
+        # re.split(r'\$', '=Sheet1!$A$1+$B$2') -> ['=Sheet1!', 'A', '1+', 'B', '2']
+        # re.split(r'\$', '=A1+$B$2') -> ['=A1+', 'B', '2']
+        # re.split(r'\$', '=Sheet1!A1+$B$2') -> ['=Sheet1!A1+', 'B', '2']
+
+
+        
+        return
