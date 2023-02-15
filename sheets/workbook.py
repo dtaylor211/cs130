@@ -786,6 +786,28 @@ class Workbook:
 
         '''
 
+        # check if specified sheet name is not found
+        self.validate_sheet_existence(sheet_name)
+        # check valid start/end locations
+        # check valid target area
+        # check each location
+        # don't forget overlap
+
+        # HELPERS:
+        # (1) Get source cell locs from source area (from start/end_loc)
+        #       - check validity of each location
+        # (2) Get target cell locs in target area (from to_loc)
+        #       - check validity of each location
+        #       - check overlap between source & target areas
+        # (3) Transfer contents from source cells to target cells
+        #       - handle formulas to update cell references appropriately (***)
+        #       - handle overlapping of areas (?)
+        # IN copy_cells() ONLY: 
+        # (4) IF MOVE: Set contents of source cells to None
+        #       - children/parents handled by cell updating (?)
+        # IN BOTH move/copy_cells():
+        # (5) Set contents of target cells
+
         pass
 
     def copy_cells(self, sheet_name: str, start_location: str,
@@ -907,3 +929,23 @@ class Workbook:
                 sheet_objects[sheet_name.lower()]\
                     .set_cell_contents(location, contents)
         self.set_sheet_objects(sheet_objects)
+
+    def get_source_cells(self, sheet_name: str, start_location: str,
+            end_location: str, to_location: str, to_sheet: Optional[str] = None
+            ) -> None:
+        pass
+
+    def get_target_cells(self, sheet_name: str, start_location: str,
+            end_location: str, to_location: str, to_sheet: Optional[str] = None
+            ) -> None:
+        pass
+
+    def transfer_contents(self, sheet_name: str, start_location: str,
+            end_location: str, to_location: str, to_sheet: Optional[str] = None
+            ) -> None:
+        pass
+
+    def get_updated_formula(self, sheet_name: str, start_location: str,
+            end_location: str, to_location: str, to_sheet: Optional[str] = None
+            ) -> None:
+        pass
