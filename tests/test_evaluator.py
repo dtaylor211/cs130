@@ -17,7 +17,7 @@ Classes:
     - test_string_literals(object) -> None
     - test_cell_references(object) -> None
     - test_string_concatenation(object) -> None
-    - test_unary operations(object) -> None
+    - test_unary_operations(object) -> None
     - test_addition_subtraction(object) -> None
     - test_multiplication_division(object) -> None
     - test_complex_formula(object) -> None
@@ -253,7 +253,7 @@ class TestEvaluator:
         result = EVALUATOR.transform(tree)
         assert result == Tree('string', ['string1test'])
 
-    def test_unary_operations(self):
+    def test_unary_operations(self) -> None:
         '''
         Test when given a formula with a unary operator (+/-)
 

@@ -62,6 +62,9 @@ PYTHONFILES := $(wildcard *.py)
 
 pylint: $(patsubst %.py,%.pylint,$(PYTHONFILES))
 
+lint-test-context:
+	$(PYLINT) $(PYLINTFLAGS) ./tests/context.py
+
 lint-test-%:
 	$(PYLINT) $(PYLINTFLAGS) ./tests/test_$*.py
 

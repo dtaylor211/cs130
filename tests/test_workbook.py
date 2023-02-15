@@ -1,15 +1,30 @@
 '''
-Test Utils
+Test Workbook
 
-Tests the Utils module found at ../sheets/utils.py with
-valid inputs.
+Tests the Workbook module found at ../sheets/workbook.py.
 
 Classes:
-- TestUtils
+- TestWorkbook
 
     Methods:
-    - test_extent_simple(object) -> None
-    - test_extent_complex(object) -> None
+    - test_empty_workbook(object) -> None
+    - test_new_sheet_name(object) -> None
+    - test_new_sheet_complex(object) -> None
+    - test_del_sheet(object) -> None
+    - test_set_and_extent(object) -> None
+    - test_get_contents_and_value(object) -> None
+    - test_load_workbook(object) -> None
+    - test_save_workbook(object) -> None
+    - test_notify_cell(object) -> None
+    - test_rename_sheet(object) -> None
+    - test_rename_sheet_update(object) -> None
+    - test_rename_sheet_update_complex(object) -> None
+    - test_rename_sheet_apply_quotes(object) -> None
+    - test_rename_sheet_remove_quotes(object) -> None
+    - test_rename_sheet_parse_error(object) -> None
+    - test_move_sheet(object) -> None
+    - test_copy_sheet(object) -> None
+    - test_mutate_returned_attributes(object) -> None
 
 '''
 
@@ -30,7 +45,7 @@ class TestWorkbook:
     
     '''
 
-    def test_empty_workbook(self):
+    def test_empty_workbook(self) -> None:
         '''
         Test empty workbook
 
@@ -40,33 +55,33 @@ class TestWorkbook:
         assert wb1.num_sheets() == 0
         assert wb1.list_sheets() == []
 
-    def test_new_sheet_name(self):
+    def test_new_sheet_name(self) -> None:
         '''
         Test new sheet names
 
         '''
 
         wb1 = Workbook()
-        (index, name) = wb1.new_sheet()
+        index, name = wb1.new_sheet()
         assert index == 0
         assert name == 'Sheet1'
         assert wb1.num_sheets() == 1
         assert wb1.list_sheets() == ['Sheet1']
 
-        (index, name) = wb1.new_sheet()
+        index, name = wb1.new_sheet()
         assert index == 1
         assert name == 'Sheet2'
         assert wb1.num_sheets() == 2
         assert wb1.list_sheets() == ['Sheet1', 'Sheet2']
 
         wb1 = Workbook()
-        (index, name) = wb1.new_sheet('July Totals')
+        index, name = wb1.new_sheet('July Totals')
         assert index == 0
         assert name == 'July Totals'
         assert wb1.num_sheets() == 1
         assert wb1.list_sheets() == ['July Totals']
 
-        (index, name) = wb1.new_sheet('June Totals')
+        index, name = wb1.new_sheet('June Totals')
         assert index == 1
         assert name == 'June Totals'
         assert wb1.num_sheets() == 2
@@ -74,55 +89,55 @@ class TestWorkbook:
 
         wb1 = Workbook()
         with pytest.raises(ValueError):
-            (index, name) = wb1.new_sheet('')
+            index, name = wb1.new_sheet('')
         with pytest.raises(ValueError):
-            (index, name) = wb1.new_sheet('   July Totals')
+            index, name = wb1.new_sheet('   July Totals')
         with pytest.raises(ValueError):
-            (index, name) = wb1.new_sheet('July Totals  ')
+            index, name = wb1.new_sheet('July Totals  ')
         with pytest.raises(ValueError):
-            (index, name) = wb1.new_sheet('July Totals >')
+            index, name = wb1.new_sheet('July Totals >')
         with pytest.raises(ValueError):
-            (index, name) = wb1.new_sheet('July\'s Totals')
+            index, name = wb1.new_sheet('July\'s Totals')
 
-        (index, name) = wb1.new_sheet()
+        index, name = wb1.new_sheet()
         assert name == 'Sheet1'
         with pytest.raises(ValueError):
-            (index, name) = wb1.new_sheet('Sheet1')
+            index, name = wb1.new_sheet('Sheet1')
 
-    def test_new_sheet_complex(self):
+    def test_new_sheet_complex(self) -> None:
         '''
-        Test new sheet
+        Test new sheet with more complex checks to adding new fields
 
         '''
 
         wb1 = Workbook()
-        (index, name) = wb1.new_sheet('Sheet2')
+        index, name = wb1.new_sheet('Sheet2')
         assert index == 0
         assert name == 'Sheet2'
         assert wb1.num_sheets() == 1
         assert wb1.list_sheets() == ['Sheet2']
 
-        (index, name) = wb1.new_sheet('July Totals')
+        index, name = wb1.new_sheet('July Totals')
         assert index == 1
         assert name == 'July Totals'
         assert wb1.num_sheets() == 2
         assert wb1.list_sheets() == ['Sheet2', 'July Totals']
 
-        (index, name) = wb1.new_sheet()
+        index, name = wb1.new_sheet()
         assert index == 2
         assert name == 'Sheet1'
         assert wb1.num_sheets() == 3
         assert wb1.list_sheets() == ['Sheet2', 'July Totals', 'Sheet1']
 
-        (index, name) = wb1.new_sheet()
+        index, name = wb1.new_sheet()
         assert index == 3
         assert name == 'Sheet3'
         assert wb1.num_sheets() == 4
         assert wb1.list_sheets() == ['Sheet2', 'July Totals', 'Sheet1', 'Sheet3']
 
-    def test_del_sheet(self):
+    def test_del_sheet(self) -> None:
         '''
-        Test delete sheet
+        Test deleting a sheet
 
         '''
 
@@ -143,7 +158,7 @@ class TestWorkbook:
         assert wb1.num_sheets() == 0
         assert wb1.list_sheets() == []
 
-    def test_set_and_extent(self):
+    def test_set_and_extent(self) -> None:
         '''
         Test setting sheet and getting extent
 
@@ -171,9 +186,9 @@ class TestWorkbook:
         with pytest.raises(KeyError):
             wb1.set_cell_contents('Sheet2', 'B2', 'blue')
 
-    def test_get_contents_and_value(self):
+    def test_get_contents_and_value(self) -> None:
         '''
-        Test getting contents and value
+        Test getting contents and value of a cell
 
         '''
 
@@ -229,13 +244,10 @@ class TestWorkbook:
         value = wb1.get_cell_value(name, 'A1')
         assert value == Decimal(2)
 
-    ########################################################################
-    # Project 2
-    ########################################################################
-
-    def test_load_workbook(self):
+    def test_load_workbook(self) -> None:
         '''
-        Test loading workbook
+        Test loading a workbook
+
         '''
 
         with open('tests/json_data/wb_data_valid.json', encoding="utf8") as fp:
@@ -293,9 +305,10 @@ class TestWorkbook:
             with pytest.raises(json.JSONDecodeError):
                 wb1 = Workbook.load_workbook(fp)
 
-    def test_save_workbook(self):
+    def test_save_workbook(self) -> None:
         '''
-        Test saving workbook
+        Test saving a workbook
+
         '''
 
         with io.StringIO('') as fp:
@@ -352,7 +365,7 @@ class TestWorkbook:
             }
             assert json_act == json_exp
 
-    def test_notify_cell(self):
+    def test_notify_cell(self) -> None:
         '''
         Test cell notifications
         '''
@@ -414,9 +427,10 @@ class TestWorkbook:
         assert test_changed[-2] == []
         assert test_changed[-1] == []
 
-    def test_rename_sheet(self):
+    def test_rename_sheet(self) -> None:
         '''
-        Test renaming sheet
+        Test renaming a sheet
+
         '''
 
         wb1 = Workbook()
@@ -447,9 +461,10 @@ class TestWorkbook:
         value = wb1.get_cell_value('Sheet4', 'A1')
         assert value == Decimal(2)
 
-    def test_rename_sheet_update_refs(self):
+    def test_rename_sheet_update(self) -> None:
         '''
-        Test updating references on sheet rename
+        Test updating simple references on sheet rename
+
         '''
 
         wb1 = Workbook()
@@ -504,7 +519,15 @@ class TestWorkbook:
         assert contents == '=\'Darth Jar Jar\'!A1'
         assert value == Decimal('0.1')
 
+    def test_rename_sheet_update_complex(self) -> None:
+        '''
+        Test updating complex references on sheet rename
+
+        '''
+
+        wb1 = Workbook()
         wb1.new_sheet('Sheet1')
+        wb1.new_sheet('Sheet5')
         wb1.new_sheet('Sheet1Sheet1')
         wb1.set_cell_contents('Sheet1', 'A1', '2')
         wb1.set_cell_contents('Sheet1Sheet1', 'A1', '1.5')
@@ -536,9 +559,10 @@ class TestWorkbook:
         assert contents == '=September!A1+3'
         assert value == Decimal(5)
 
-    def test_rename_sheet_apply_quotes(self):
+    def test_rename_sheet_apply_quotes(self) -> None:
         '''
-        Test applying quotes on sheet rename
+        Test applying quotes to a sheet name on sheet rename
+
         '''
 
         wb1 = Workbook()
@@ -581,9 +605,10 @@ class TestWorkbook:
         assert contents == '=\'Sheet4?\'!A1 & \'Sheet4?\'!A2 & Sheet5!A1'
         assert value == 'good relations with the wookies, I have'
 
-    def test_rename_sheet_remove_quotes(self):
+    def test_rename_sheet_remove_quotes(self) -> None:
         '''
-        Test removing quote on sheet rename
+        Test removing quotes from a sheet name on sheet rename
+    
         '''
 
         wb1 = Workbook()
@@ -616,9 +641,10 @@ class TestWorkbook:
         assert contents == '=DT!A1 & DT!A1'
         assert value == 'anakin skywalkeranakin skywalker'
 
-    def test_rename_sheet_parse_error(self):
+    def test_rename_sheet_parse_error(self) -> None:
         '''
         Test parse error on rename sheet
+
         '''
 
         wb1 = Workbook()
@@ -653,9 +679,10 @@ class TestWorkbook:
         assert isinstance(value, CellError)
         assert value.get_type() == CellErrorType.PARSE_ERROR
 
-    def test_move_sheet(self):
+    def test_move_sheet(self) -> None:
         '''
-        Test moving sheet
+        Test moving a sheet
+
         '''
 
         wb1 = Workbook()
@@ -673,9 +700,10 @@ class TestWorkbook:
         wb1.move_sheet('Sheet3', 2)
         assert wb1.list_sheets() == ['Sheet1', 'Sheet2', 'Sheet3']
 
-    def test_copy_sheet(self):
+    def test_copy_sheet(self) -> None:
         '''
-        Test copying sheet
+        Test copying a sheet
+
         '''
 
         wb1 = Workbook()
@@ -735,9 +763,10 @@ class TestWorkbook:
         (_, name) = wb1.copy_sheet('Sheet4')
         assert name == 'Sheet4_3'
 
-    def test_mutate_returned_attributes(self):
+    def test_mutate_returned_attributes(self) -> None:
         '''
         Test mutating returned attributes
+
         '''
 
         wb1 = Workbook()

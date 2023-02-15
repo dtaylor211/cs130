@@ -1,8 +1,7 @@
 '''
 Test Sheet
 
-Tests the Sheet module found at ../sheets/sheet.py with
-valid inputs.
+Tests the Sheet module found at ../sheets/sheet.py.
 
 Classes:
 - TestSheet
@@ -15,17 +14,16 @@ Classes:
 
 # pylint: disable=unused-import, import-error
 import context
-import pytest
 from sheets.sheet import Sheet
 
 
 class TestSheet:
     '''
-    (Spread)Sheet tests (Project 1 & 2)
+    Sheet tests
 
     '''
 
-    def test_extent_simple(self):
+    def test_extent_simple(self) -> None:
         '''
         Test simple extents of sheet
 
@@ -49,7 +47,7 @@ class TestSheet:
         sheet.set_cell_contents("A1", "")
         assert sheet.get_extent() == (0, 0)
 
-    def test_extent_complex(self):
+    def test_extent_complex(self) -> None:
         '''
         Test complex extents of sheet
 
@@ -81,4 +79,3 @@ class TestSheet:
 
         sheet.set_cell_contents("E1", "")
         assert sheet.get_extent() == (4, 10)
-        

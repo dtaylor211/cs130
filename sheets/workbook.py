@@ -59,18 +59,14 @@ class Workbook:
 
     '''
 
-    # DEFAULT_SHEET_NUM = 1 - Plan to use in future projects
-
     def __init__(self):
         '''
         Initialize a new empty workbook.
-
-        Contains (lowercase) sheet names (preserves order?)
+        Contains (lowercase) sheet names, in a preserved order
 
         '''
 
         self._sheet_names = []
-
         # dictionary that maps lowercase sheet name to Sheet object
         self._sheet_objects: Dict[str, Sheet] = {}
         self.evaluator = Evaluator(self, '')
@@ -99,9 +95,6 @@ class Workbook:
 
         '''
 
-        # Fixes "mutating the list comes back from list_sheets() shouldn't
-        # mangle the workbook's internal details"
-        # return [name for name in self._sheet_names]
         return list(self._sheet_names)
 
     def __set_sheet_names(self, sheet_names: List[str]) -> None:
@@ -185,20 +178,18 @@ class Workbook:
 
         # check if sheet name is specified
         if sheet_name is not None:
+
             # checking empty string
             if sheet_name == "":
                 raise ValueError("Invalid Sheet name: cannot be empty string")
-
             # check whitespace
             if sheet_name != sheet_name.strip():
                 raise ValueError(
                     "Invalid Sheet name: cannot start/end with whitespace")
-
             # check valid (letters, numbers, spaces, .?!,:;!@#$%^&*()-_)
             if not re.match(R'^[a-zA-Z0-9 .?!,:;!@#$%^&*\(\)\-\_]+$',
                               sheet_name):
                 raise ValueError("Invalid Sheet name: improper characters used")
-
             # check uniqueness
             self.__validate_sheet_uniqueness(sheet_name)
 
@@ -241,7 +232,6 @@ class Workbook:
         self.__validate_sheet_existence(sheet_name)
 
         original_sheet_name = sheet_objects[sheet_name.lower()].get_name()
-
         sheet_names.remove(original_sheet_name)
         del sheet_objects[sheet_name.lower()]
 
@@ -271,8 +261,6 @@ class Workbook:
 
         self.__validate_sheet_existence(sheet_name)
 
-        # get_extent() should be a function of Sheet object
-        # (implemented in spreadsheet.py)
         return sheet_objects[sheet_name.lower()].get_extent()
 
     def set_cell_contents(self, sheet_name: str, location: str,
@@ -394,14 +382,7 @@ class Workbook:
 
         self.__validate_sheet_existence(sheet_name)
 
-        # calls get_cell_value from Sheet
         return sheet_objects[sheet_name].get_cell_value(location)
-
-    # pylint: disable=broad-exception-caught
-
-    # We disable the checks for a general exception here, since we are
-    # specified to not propogate an error that occurs in a given notify
-    # function.
 
     def update_cell_values(self, updated_sheet: str, updated_cell: Optional[str]
         = None, renamed_sheet: Optional[str] = None, notify: Optional[bool] =
@@ -476,86 +457,6 @@ class Workbook:
         # call helper to update and notify cells that need updating
         self.__update_notify_cells(updated_cells, cell_topological, notify,
             updated_cell)
-
-    def __get_topological(self, cell_graph: Graph, updated_cells: List[Tuple],
-        adj: Dict[Tuple, List[Tuple]]) -> None:
-        '''
-        Updates and notifies cells using the topological sort provided.
-
-        Arguments:
-        - updated_cells - list of cells that were changed
-        - cell_topological - list of cells affected by updated_cells in order
-
-        '''
-
-        # get the graph of only cells needing to be updated
-        reachable = cell_graph.get_reachable_nodes(updated_cells)
-        cell_graph.subgraph_from_nodes(reachable)
-
-        # get the acyclic components from the scc
-        components = cell_graph.get_strongly_connected_components()
-        dag_nodes = set()
-
-        sheet_objects = self.get_sheet_objects()
-
-        # if nodes are part of cycle make them a circlular reference
-        # else add them to dag graph
-        for component in components:
-            if len(component) == 1 and component[0] not in adj[component[0]]:
-                dag_nodes.add(component[0])
-
-            else:
-                for sheet, cell in component:
-                    sheet_objects[
-                        sheet.lower()].get_cell(cell).set_circular_error()
-                self.__set_sheet_objects(sheet_objects)
-
-        cell_graph.subgraph_from_nodes(dag_nodes)
-
-        # get the topological sort of non-circular nodes needing to be updated
-        cell_topological = cell_graph.topological_sort()
-        return cell_topological
-
-    def __update_notify_cells(self, updated_cells: List[Tuple], 
-        cell_topological: List[Tuple], notify: bool, updated_cell: Optional[str]
-        ) -> None:
-        '''
-        Updates and notifies cells using the topological sort provided.
-
-        Arguments:
-        - updated_cells - list of cells that were changed
-        - cell_topological - list of cells affected by updated_cells in order
-
-        '''
-
-        sheet_objects = self.get_sheet_objects()
-        
-        # get cells to notify
-        notify_cells = []
-        if notify and updated_cell is not None:
-            notify_cells = updated_cells
-
-        # update cells
-        for sheet, cell in cell_topological:
-            if (sheet, cell) not in updated_cells:
-                name = sheet.lower()
-                prev_value = sheet_objects[name].get_cell_value(cell)
-                sheet_objects[name].set_cell_contents(cell,
-                    sheet_objects[name].get_cell_contents(cell))
-                new_value = sheet_objects[name].get_cell_value(cell)
-                if new_value != prev_value:
-                    notify_cells.append((sheet, cell))
-
-        self.__set_sheet_objects(sheet_objects)
-        for notify_function in self.notify_functions:
-            try:
-                notify_function(self, notify_cells)
-            except Exception:
-                pass
-
-    # pylint: enable=broad-exception-caught
-
-    # We now enable the checks for a broad exception except statement.
 
     @staticmethod
     def load_workbook(fp: TextIO) -> 'Workbook':
@@ -1012,16 +913,84 @@ class Workbook:
                     .set_cell_contents(location, contents)
         self.__set_sheet_objects(sheet_objects)
 
-    # def __get_strongly_connected_components(self, cell_graph):
-    #     '''
-    #     TODO - implement helper
+    def __get_topological(self, cell_graph: Graph, updated_cells: List[Tuple],
+        adj: Dict[Tuple, List[Tuple]]) -> None:
+        '''
+        Updates and notifies cells using the topological sort provided.
 
-    #     Arguments:
-    #     -
+        Arguments:
+        - updated_cells - list of cells that were changed
+        - cell_topological - list of cells affected by updated_cells in order
 
-    #     Returns:
-    #     -
+        '''
 
-    #     '''
+        # get the graph of only cells needing to be updated
+        reachable = cell_graph.get_reachable_nodes(updated_cells)
+        cell_graph.subgraph_from_nodes(reachable)
 
-    #     pass
+        # get the acyclic components from the scc
+        components = cell_graph.get_strongly_connected_components()
+        dag_nodes = set()
+
+        sheet_objects = self.get_sheet_objects()
+
+        # if nodes are part of cycle make them a circlular reference
+        # else add them to dag graph
+        for component in components:
+            if len(component) == 1 and component[0] not in adj[component[0]]:
+                dag_nodes.add(component[0])
+
+            else:
+                for sheet, cell in component:
+                    sheet_objects[
+                        sheet.lower()].get_cell(cell).set_circular_error()
+                self.__set_sheet_objects(sheet_objects)
+
+        cell_graph.subgraph_from_nodes(dag_nodes)
+
+        # get the topological sort of non-circular nodes needing to be updated
+        cell_topological = cell_graph.topological_sort()
+        return cell_topological
+
+    # pylint: disable=broad-exception-caught
+
+    # We disable the checks for a general exception here, since we are
+    # specified to not propogate an error that occurs in a given notify
+    # function, and we are unsure of exception types
+
+    def __update_notify_cells(self, updated_cells: List[Tuple],
+        cell_topological: List[Tuple], notify: bool, updated_cell: Optional[str]
+        ) -> None:
+        '''
+        Updates and notifies cells using the topological sort provided.
+
+        Arguments:
+        - updated_cells - list of cells that were changed
+        - cell_topological - list of cells affected by updated_cells in order
+
+        '''
+
+        sheet_objects = self.get_sheet_objects()
+
+        # get cells to notify
+        notify_cells = []
+        if notify and updated_cell is not None:
+            notify_cells = updated_cells
+
+        # update cells
+        for sheet, cell in cell_topological:
+            if (sheet, cell) not in updated_cells:
+                name = sheet.lower()
+                prev_value = sheet_objects[name].get_cell_value(cell)
+                sheet_objects[name].set_cell_contents(cell,
+                    sheet_objects[name].get_cell_contents(cell))
+                new_value = sheet_objects[name].get_cell_value(cell)
+                if new_value != prev_value:
+                    notify_cells.append((sheet, cell))
+
+        self.__set_sheet_objects(sheet_objects)
+        for notify_function in self.notify_functions:
+            try:
+                notify_function(self, notify_cells)
+            except Exception:
+                pass
