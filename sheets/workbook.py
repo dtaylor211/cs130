@@ -434,8 +434,7 @@ class Workbook:
             updated_cells = [(child_sheet, child_cell)
             for children in adj.values()
             for (child_sheet, child_cell) in children
-            if child_sheet == updated_sheet
-            or child_sheet == renamed_sheet]
+            if child_sheet in (updated_sheet, renamed_sheet)]
             # rename references if we have a renamed sheet
             if renamed_sheet is not None:
                 # fix new sheet name
@@ -464,12 +463,30 @@ class Workbook:
 
                         # call helper function to update sheet names in contents
                         self.__format_sheet_names(sheet, cell,
-                                                  adj[(sheet, cell)])
+                                                    adj[(sheet, cell)])
 
                 self.__set_sheet_objects(sheet_objects)
-
         else:
             updated_cells = [(updated_sheet, updated_cell)]
+
+        # call helper to get the topological sort of cells to update
+        cell_topological = self.__get_topological(cell_graph, updated_cells,
+            adj)
+
+        # call helper to update and notify cells that need updating
+        self.__update_notify_cells(updated_cells, cell_topological, notify,
+            updated_cell)
+
+    def __get_topological(self, cell_graph: Graph, updated_cells: List[Tuple],
+        adj: Dict[Tuple, List[Tuple]]) -> None:
+        '''
+        Updates and notifies cells using the topological sort provided.
+
+        Arguments:
+        - updated_cells - list of cells that were changed
+        - cell_topological - list of cells affected by updated_cells in order
+
+        '''
 
         # get the graph of only cells needing to be updated
         reachable = cell_graph.get_reachable_nodes(updated_cells)
@@ -478,6 +495,8 @@ class Workbook:
         # get the acyclic components from the scc
         components = cell_graph.get_strongly_connected_components()
         dag_nodes = set()
+
+        sheet_objects = self.get_sheet_objects()
 
         # if nodes are part of cycle make them a circlular reference
         # else add them to dag graph
@@ -495,7 +514,22 @@ class Workbook:
 
         # get the topological sort of non-circular nodes needing to be updated
         cell_topological = cell_graph.topological_sort()
+        return cell_topological
 
+    def __update_notify_cells(self, updated_cells: List[Tuple], 
+        cell_topological: List[Tuple], notify: bool, updated_cell: Optional[str]
+        ) -> None:
+        '''
+        Updates and notifies cells using the topological sort provided.
+
+        Arguments:
+        - updated_cells - list of cells that were changed
+        - cell_topological - list of cells affected by updated_cells in order
+
+        '''
+
+        sheet_objects = self.get_sheet_objects()
+        
         # get cells to notify
         notify_cells = []
         if notify and updated_cell is not None:
