@@ -40,7 +40,7 @@ class TestEvaluatorInvalid:
 
     '''
 
-    def test_parse_error(self):
+    def test_parse_error(self) -> None:
         '''
         Test when given a formula with a parse error
 
@@ -135,7 +135,7 @@ class TestEvaluatorInvalid:
         assert isinstance(value, CellError)
         assert value.get_type() == CellErrorType.CIRCULAR_REFERENCE
 
-    def test_bad_reference(self):
+    def test_bad_reference(self) -> None:
         '''
         Test when given a formula with a bad reference error
 
@@ -190,7 +190,7 @@ class TestEvaluatorInvalid:
         assert isinstance(value, CellError)
         assert value.get_type() == CellErrorType.BAD_REFERENCE
 
-    def test_bad_name(self):
+    def test_bad_name(self) -> None:
         '''
         Test when given a formula with a bad name
 
@@ -200,7 +200,7 @@ class TestEvaluatorInvalid:
         bad_names_optional = False
         assert bad_names_optional is False
 
-    def test_type_error(self):
+    def test_type_error(self) -> None:
         '''
         Test when given a formula with a type error
 
@@ -250,7 +250,7 @@ class TestEvaluatorInvalid:
         assert result_value.get_type() == CellErrorType.TYPE_ERROR
         assert isinstance(result_value, CellError)
 
-    def test_divide_by_zero(self):
+    def test_divide_by_zero(self) -> None:
         '''
         Test when given a formula with a divide by zero error
 
