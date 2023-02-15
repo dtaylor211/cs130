@@ -1,3 +1,29 @@
+'''
+Cell Error
+
+This module holds the basic functionality of an individual cell error.
+
+See the Cell module for implementation.
+
+Global Variables:
+- CELL_ERRORS (Dict[int, str]) - dictionary mapping an int to the string
+    literal for that error type
+
+Classes:
+- CellErrorType (Enum)
+
+   enum.Enum class that enumerates the 6 error types.
+   For more information, see the CellErrorType class
+
+- CellError
+
+    Methods:
+    - get_type(object) -> CellErrorType
+    - get_detail(object) -> str
+    - get_exception(object) -> Optional[Exception]
+
+'''
+
 import enum
 from typing import Optional
 

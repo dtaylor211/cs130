@@ -31,9 +31,10 @@ Classes:
 
 
 import re
-from lark import Tree, Transformer, Lark, Token
 from decimal import Decimal, DecimalException, InvalidOperation
 from typing import List
+
+from lark import Tree, Transformer, Token
 
 from .cell_error import CellError, CellErrorType, CELL_ERRORS
 
@@ -88,7 +89,12 @@ class Evaluator(Transformer):
     # Bases
     ########################################################################
 
-    # pylint: disable=function-naming-style
+    # pylint: disable=invalid-name
+
+    # we disable snake case checkers here for the following bases, as they
+    # must use uppercase to match the Lark grammar and all variables are
+    # pre-existing and are thus previously checked
+
     def NUMBER(self, token: Token) -> Decimal:
         '''
         Evaluate a NUMBER type into a Decimal object   
@@ -136,19 +142,18 @@ class Evaluator(Transformer):
     # Expressions
     ########################################################################
 
-    def expr(self, args: List) -> Tree:
-        '''
-        Evaluate an expression, such as add_expr or str_concat
+    # pylint: enable=invalid-name
 
-        Arguments:
-        - args: List - list with Tree and/or Token objects
+    # we enable the checking for snake-cases again
 
-        Returns:
-        - the evaluated result of the expression
+    # pylint: disable=broad-exception-caught
 
-        '''
-
-        return eval(args[0])
+    # We disable the checking for broad exceptions for the next few functions.
+    # Although this is dangerous, we explicitly handle all exceptions in the
+    # function __process_exceptions. Even if an unspecified exception occurs
+    # in the following code, the message will be propagated through the result,
+    # and the value of the formula will evaluate to a CellError with a None
+    # error type
 
     def add_expr(self, args: List) -> Tree:
         '''
@@ -270,20 +275,20 @@ class Evaluator(Transformer):
         '''
 
         try:
-            s1 = self.transform(args[0]).children[-1]
-            s2 = self.transform(args[-1]).children[-1]
+            str1 = self.transform(args[0]).children[-1]
+            str2 = self.transform(args[-1]).children[-1]
 
             # Check for propogating errors
-            if isinstance(s1, CellError):
-                return Tree('cell_error', [s1])
-            if isinstance(s2, CellError):
-                return Tree('cell_error', [s2])
+            if isinstance(str1, CellError):
+                return Tree('cell_error', [str1])
+            if isinstance(str2, CellError):
+                return Tree('cell_error', [str2])
 
             # Check for compatible types, deal with empty case
-            s1 = '' if s1 is None else str(s1)
-            s2 = '' if s2 is None else str(s2)
+            str1 = '' if str1 is None else str(str1)
+            str2 = '' if str2 is None else str(str2)
 
-            return Tree('string', [s1+s2])
+            return Tree('string', [str1+str2])
 
         except Exception as e:
             return self.__process_exceptions(e, 'string concatenation')
@@ -335,6 +340,10 @@ class Evaluator(Transformer):
         except Exception as e:
             return self.__process_exceptions(e, 'cell operations')
 
+    # pylint: enable=broad-exception-caught
+
+    # We enable the checks for catching broad exceptions.
+
     def parens(self, args: List) -> Tree:
         '''
         Evaluate an expression enclosed in parenthesis
@@ -362,9 +371,9 @@ class Evaluator(Transformer):
         '''
 
         x = args[0]
-        e_type = [i for i in CELL_ERRORS if CELL_ERRORS[i]==x.upper()]
-        c = CellErrorType(e_type[0])
-        return Tree('cell_error', [CellError(c, '', None)])
+        e_type = [i[0] for i in list(CELL_ERRORS.items()) if i[-1]==x.upper()]
+        e_type = CellErrorType(e_type[0])
+        return Tree('cell_error', [CellError(e_type, '', None)])
 
     ########################################################################
     # Exception Processing
@@ -386,7 +395,7 @@ class Evaluator(Transformer):
 
         error_type = None
 
-        if isinstance(ex, DecimalException) or isinstance(ex, InvalidOperation):
+        if isinstance(ex, (DecimalException, InvalidOperation)):
             detail = f'Attempting to perform {detail} on incompatible or '\
                 'incorrect types'
             error_type = CellErrorType.TYPE_ERROR

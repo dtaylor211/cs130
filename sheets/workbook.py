@@ -397,6 +397,12 @@ class Workbook:
         # calls get_cell_value from Sheet
         return sheet_objects[sheet_name].get_cell_value(location)
 
+    # pylint: disable=broad-exception-caught
+
+    # We disable the checks for a general exception here, since we are
+    # specified to not propogate an error that occurs in a given notify
+    # function.
+
     def update_cell_values(self, updated_sheet: str, updated_cell: Optional[str]
         = None, renamed_sheet: Optional[str] = None, notify: Optional[bool] =
         True) -> None:
@@ -425,9 +431,9 @@ class Workbook:
         # get cells to update if only given a sheet
         if updated_cell is None:
             # get the cells in the sheet
-            updated_cells = [(child_sheet, child_cell) 
-            for children in adj.values() 
-            for (child_sheet, child_cell) in children 
+            updated_cells = [(child_sheet, child_cell)
+            for children in adj.values()
+            for (child_sheet, child_cell) in children
             if child_sheet == updated_sheet
             or child_sheet == renamed_sheet]
             # rename references if we have a renamed sheet
@@ -510,9 +516,12 @@ class Workbook:
         for notify_function in self.notify_functions:
             try:
                 notify_function(self, notify_cells)
-            except:
-                # TODO - needs to be fixed cannot except random
+            except Exception:
                 pass
+
+    # pylint: enable=broad-exception-caught
+
+    # We now enable the checks for a broad exception except statement.
 
     @staticmethod
     def load_workbook(fp: TextIO) -> 'Workbook':

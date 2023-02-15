@@ -19,6 +19,7 @@ Classes:
 
 '''
 
+
 from typing import Dict, List, Set, TypeVar
 
 
@@ -88,9 +89,8 @@ class Graph:
         scc = []
         stack = []
         lowlink = {}
-        dfs_stack = []
         idxs = {}
-            
+
         # Iterative
         def strongconnect(k):
             dfs_stack = [(k, True)]
@@ -102,12 +102,12 @@ class Graph:
                     lowlink[k] = idx
                     stack.append(k)
                     dfs_stack.append((k, False))
-                    for v in self._adjacency_list[k]:
-                        if v not in lowlink:
-                            dfs_stack.append((v, True))
+                    for val in self._adjacency_list[k]:
+                        if val not in lowlink:
+                            dfs_stack.append((val, True))
                 else:
-                    for v in self._adjacency_list[k]:
-                        lowlink[k] = min(lowlink[k], lowlink[v])
+                    for val in self._adjacency_list[k]:
+                        lowlink[k] = min(lowlink[k], lowlink[val])
                     idx, stack_pos = idxs[k]
                     if lowlink[k] == idx:
                         component = stack[stack_pos:]
@@ -140,7 +140,7 @@ class Graph:
 
             if k not in visited:
                 stack.append((k, True))
-            while stack: 
+            while stack:
                 k, enter = stack.pop()
                 if enter and k not in visited:
                     visited.add(k)
