@@ -54,3 +54,6 @@ test-performance-rename-chain:
     if [ $${ans} = y ] || [ $${ans} = Y ]; then \
         snakeviz program.prof; \
     fi
+
+lint-all:
+	pylint ./sheets
