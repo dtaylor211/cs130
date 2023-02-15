@@ -206,7 +206,7 @@ class Workbook:
         else:
             curr_sheet_num = 1
             sheet_name = "Sheet1"
-            while sheet_name.lower() in sheet_objects.keys():
+            while sheet_name.lower() in sheet_objects:
                 curr_sheet_num += 1
                 sheet_name = "Sheet" + str(curr_sheet_num)
 
@@ -434,8 +434,7 @@ class Workbook:
             updated_cells = [(child_sheet, child_cell)
             for children in adj.values()
             for (child_sheet, child_cell) in children
-            if child_sheet == updated_sheet
-            or child_sheet == renamed_sheet]
+            if child_sheet in (updated_sheet, renamed_sheet)]
             # rename references if we have a renamed sheet
             if renamed_sheet is not None:
                 # fix new sheet name
@@ -576,7 +575,7 @@ class Workbook:
             if not isinstance(sheet["cell-contents"], dict):
                 raise TypeError("Cell-contents is not proper type (dictionary))")
             if "cell-contents" not in sheet:
-                KeyError("Missing: 'cell-contents'")
+                raise KeyError("Missing: 'cell-contents'")
             cell_contents = sheet["cell-contents"]
 
             new_wb.new_sheet(sheet_name)
@@ -785,7 +784,7 @@ class Workbook:
         og_sheet_name = sheet_objects[sheet_name.lower()].get_name()
         copy_num = 1
         sheet_copy_name = og_sheet_name + "_" + str(copy_num)
-        while sheet_copy_name.lower() in sheet_objects.keys():
+        while sheet_copy_name.lower() in sheet_objects:
             copy_num += 1
             sheet_copy_name = og_sheet_name + "_" + str(copy_num)
 
@@ -935,7 +934,7 @@ class Workbook:
 
         sheet_objects = self.get_sheet_objects()
 
-        if sheet_name.lower() not in sheet_objects.keys():
+        if sheet_name.lower() not in sheet_objects:
             raise KeyError(f"Specified sheet name '{sheet_name}' is not found")
 
     def __validate_sheet_uniqueness(self, sheet_name: str) -> None:
@@ -952,7 +951,7 @@ class Workbook:
 
         sheet_objects = self.get_sheet_objects()
 
-        if sheet_name.lower() in sheet_objects.keys():
+        if sheet_name.lower() in sheet_objects:
             raise ValueError(f"Sheet name '{sheet_name}' already exists")
 
     def __format_sheet_names(self, sheet_name: str, location: str,

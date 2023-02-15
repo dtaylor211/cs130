@@ -460,6 +460,13 @@ class TestWorkbook:
         assert contents == '=Sheet98!A1 & \"Sheet1!\"'
         assert value == 'ayoSheet1!'
 
+        wb.set_cell_contents('Sheet98', 'C1', '=September!A1+3')
+        wb.rename_sheet('Sheet99', 'September')
+        contents = wb.get_cell_contents('Sheet98', 'C1')
+        value = wb.get_cell_value('Sheet98', 'C1')
+        assert contents == '=September!A1+3'
+        assert value == Decimal(5)
+
     def test_rename_sheet_apply_quotes(self):
         wb = Workbook()
         wb.new_sheet('Sheet1')
@@ -652,4 +659,3 @@ class TestWorkbook:
         del sheet_objects['sheet1']
         new_sheet_objects = wb.get_sheet_objects()
         assert new_sheet_objects['sheet1'] is not None
-        

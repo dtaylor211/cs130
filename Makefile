@@ -62,8 +62,12 @@ PYTHONFILES := $(wildcard *.py)
 
 pylint: $(patsubst %.py,%.pylint,$(PYTHONFILES))
 
+lint-test-%:
+	$(PYLINT) $(PYLINTFLAGS) ./tests/test_$*.py
+
 lint-%:
 	$(PYLINT) $(PYLINTFLAGS) ./sheets/$*.py
 
 lint-all:
-	pylint ./sheets
+	$(PYLINT) $(PYLINTFLAGS) ./sheets
+

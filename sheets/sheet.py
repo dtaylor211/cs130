@@ -153,7 +153,7 @@ class Sheet:
 
         cells = self.get_all_cells()
         coords = get_coords_from_loc(location)
-        if coords not in cells.keys():
+        if coords not in cells:
             return None
 
         return cells[coords].get_contents()
@@ -170,7 +170,7 @@ class Sheet:
 
         cells = self.get_all_cells()
         coords = get_coords_from_loc(location)
-        if coords not in cells.keys():
+        if coords not in cells:
             cell = Cell(location, self.get_evaluator())
             cells[coords] = cell
 
@@ -195,7 +195,7 @@ class Sheet:
 
         cells = self.get_all_cells()
         coords = get_coords_from_loc(location)
-        if coords not in cells.keys():
+        if coords not in cells:
             return None
 
         return cells[coords].get_value()

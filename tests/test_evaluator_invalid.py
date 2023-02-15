@@ -1,11 +1,39 @@
-import context
+'''
+Test Evaluator Invalid
+
+Tests the Evaluator module found at ../sheets/evaluator.py with invalid
+inputs.
+
+GLOBAL_VARIABLES:
+- WB (Workbook) - the Workbook used for this test suite
+
+Classes:
+- TestEvaluatorInvalid
+
+    Methods:
+    - test_parse_errors(object) -> None
+    - test_string_literals(object) -> None
+    - test_cell_references(object) -> None
+    - test_string_concatenation(object) -> None
+    - test_unary operations(object) -> None
+    - test_addition_subtraction(object) -> None
+    - test_multiplication_division(object) -> None
+    - test_complex_formula(object) -> None
+    - test_reference_same_sheet(object) -> None
+    - test_reference_other_sheet(object) -> None
+
+'''
+
+
+from decimal import Decimal
 
 import pytest
 from lark import Lark, Tree
-from decimal import Decimal
 
+import context
 from sheets.workbook import Workbook
 from sheets.cell_error import CellError, CellErrorType
+
 
 WB = Workbook()
 WB.new_sheet('Test')
@@ -17,6 +45,11 @@ class TestEvaluatorInvalid:
     '''
 
     def test_parse_errors(self):
+        '''
+        Test when given a formula with a parse error
+
+        '''
+
         WB.set_cell_contents('Test', 'A1', '=1E+4')
         result_contents = WB.get_cell_contents('Test','A1')
         result_value = WB.get_cell_value('Test', 'A1')
