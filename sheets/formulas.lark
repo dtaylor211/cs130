@@ -57,7 +57,7 @@ ERROR_VALUE: ("#ERROR!"i | "#CIRCREF!"i | "#REF!"i | "#NAME?"i | "#VALUE!"i | "#
 
 // Lexer rules for different kinds of terminals
 
-CELLREF: /[A-Za-z]+[1-9][0-9]*/
+CELLREF: /[$]?[A-Za-z]+[$]?[1-9][0-9]*/
 
 // Unquoted sheet names cannot contain spaces, and are otherwise very simple.
 SHEET_NAME: /[A-Za-z_][A-Za-z0-9_]*/
