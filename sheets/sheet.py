@@ -1,9 +1,37 @@
-import re
+'''
+Sheet
+
+This module is where all operations on an individual sheet takes place.
+
+See the Cell module for more detailed commentary.
+See the Workbook module for implementation.
+
+Classes:
+- Sheet
+
+    Methods:
+    - get_name(object) -> str
+    - set_name(object, str) -> None
+    - get_all_cells(object) -> Dict[Tuple[int, int], Cell]
+    - get_evaluator(object) -> Evaluator
+    - get_extent(object) -> Tuple[int, int]
+    - get_cell(object, str) -> Optional[Cell]
+    - get_cell_contents(object, str) -> Optional[str]
+    - set_cell_contents(object, str, Optional[str]) -> None
+    - get_cell_value(object, str) -> Any
+    - get_cell_adjacency_list(object) -> Dict[Tuple[str, str],
+        List[Tuple[str, str]]]
+    - save_sheet(object) -> Dict[str, str]
+
+'''
+
+
 from typing import Dict, List, Tuple, Optional, Any
 
 from .cell import Cell
 from .evaluator import Evaluator
-from .utils import get_loc_from_coords
+from .utils import get_loc_from_coords, get_coords_from_loc
+
 
 class Sheet:
     '''
@@ -12,9 +40,12 @@ class Sheet:
     '''
 
     def __init__(self, sheet_name, evaluator):
-        ''' Initialize a new spreadsheet '''
-        
-        self._name = sheet_name 
+        '''
+        Initialize a new spreadsheet
+
+        '''
+
+        self._name = sheet_name
 
         # dictonary that maps (row, col) tuple -> Cell
         # need to make sure inputted location "D14" is converted to (4, 14)
@@ -36,13 +67,13 @@ class Sheet:
         '''
 
         return self._name
-    
+
     def set_name(self, sheet_name: str) -> None:
         '''
         Set the name of the sheet
 
         Arguments:
-        - sheet_name: str 
+        - sheet_name: str
 
         '''
 
@@ -56,9 +87,9 @@ class Sheet:
         - string of sheet name
 
         '''
-        
+
         return self._cells
-    
+
     def get_evaluator(self) -> Evaluator:
         '''
         Get the Evaluator for a sheet
@@ -69,7 +100,7 @@ class Sheet:
         '''
 
         return self._evaluator
-    
+
     ########################################################################
     # Base Functionality
     ########################################################################
@@ -106,36 +137,7 @@ class Sheet:
         '''
 
         cells = self.get_all_cells()
-        return cells[self.__get_coords_from_loc(location)]
-
-    def __get_coords_from_loc(self, location: str) -> Tuple[int, int]:
-        '''
-        Get the coordinate tuple from a location
-
-        raise ValueError is cell location isn't available
-        need to check A-Z (max 4) then 1-9999 for valid lcoation
-
-        Arguments:
-        - location: str - location formatted as "B12"
-
-        Returns:
-        - tuple containing the coordinates (col, row) 
-
-        '''
-        
-        if not re.match(r"^[A-Z]{1,4}[1-9][0-9]{0,3}$", location.upper()):
-            raise ValueError("Cell location is invalid")
-
-        # example: "D14" -> (4, 14)
-        # splits into [characters, numbers, ""]
-        split_loc = re.split(r'(\d+)', location.upper())
-        (col, row) = split_loc[0], split_loc[1]
-        row_num = int(row)
-        col_num = 0
-        for letter in col:
-            col_num = col_num * 26 + ord(letter) - ord('A') + 1
-
-        return (col_num, row_num)
+        return cells[get_coords_from_loc(location)]
 
     def get_cell_contents(self, location: str) -> Optional[str]:
         '''
@@ -150,10 +152,10 @@ class Sheet:
         '''
 
         cells = self.get_all_cells()
-        coords = self.__get_coords_from_loc(location)
+        coords = get_coords_from_loc(location)
         if coords not in cells.keys():
             return None
-        
+
         return cells[coords].get_contents()
 
     def set_cell_contents(self, location: str, contents: Optional[str]) -> None:
@@ -167,7 +169,7 @@ class Sheet:
         '''
 
         cells = self.get_all_cells()
-        coords = self.__get_coords_from_loc(location)
+        coords = get_coords_from_loc(location)
         if coords not in cells.keys():
             cell = Cell(location, self.get_evaluator())
             cells[coords] = cell
@@ -192,20 +194,20 @@ class Sheet:
         '''
 
         cells = self.get_all_cells()
-        coords = self.__get_coords_from_loc(location)
+        coords = get_coords_from_loc(location)
         if coords not in cells.keys():
             return None
 
         return cells[coords].get_value()
 
-    def get_cell_adjacency_list(self) -> Dict[Tuple[str, str], 
+    def get_cell_adjacency_list(self) -> Dict[Tuple[str, str],
                                               List[Tuple[str, str]]]:
         '''
         Gets the adjacency list of cells in the sheet.
 
         Returns:
-        - dictionary of coordinate tuples as keys and a list of 
-            coordinate tuples as values
+        - Dict of coordinate tuples as keys and a list of coordinate
+            tuples as values
 
         '''
 
@@ -221,8 +223,10 @@ class Sheet:
         Saves Sheet in proper dictionary formatting for JSON export
 
         Returns:
-        - dictionary with sheet name and nested dictionary for cell contents
+        - Dict with sheet name and nested dictionary for cell contents
+
         '''
+
         cell_contents = {}
 
         for coords, cell in self.get_all_cells().items():

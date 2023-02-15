@@ -54,3 +54,16 @@ test-performance-rename-chain:
     if [ $${ans} = y ] || [ $${ans} = Y ]; then \
         snakeviz program.prof; \
     fi
+
+PYLINT = pylint --rcfile=./.pylintrc
+PYLINTFLAGS = -rn
+
+PYTHONFILES := $(wildcard *.py)
+
+pylint: $(patsubst %.py,%.pylint,$(PYTHONFILES))
+
+lint-%:
+	$(PYLINT) $(PYLINTFLAGS) ./sheets/$*.py
+
+lint-all:
+	pylint ./sheets

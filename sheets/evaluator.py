@@ -1,7 +1,39 @@
+'''
+Evaluator
+
+This module holds the functionality for evaluating a parsed formula based on the
+described Lark grammar found at formulas.Lark.
+
+See the Workbook, Sheet, and Cell modules for implementation.
+
+Classes:
+- Evaluator
+
+    Attributes:
+    - workbook (Workbook)
+
+    Methods:
+    - get_working_sheet(object) -> str
+    - set_working_sheet(object, str) -> None
+    - NUMBER(object, Token) -> Decimal
+    - STRING(object, Token) -> str
+    - CELLREF(object, Token) -> Token
+    - expr(object, List) -> Tree
+    - add_expr(object, List) -> Tree
+    - mul_expr(object, List) -> Tree
+    - unary_op(object, List) -> Tree
+    - concat_expr(object, List) -> Tree
+    - cell(object, List) -> Tree
+    - parens(object, List) -> Tree
+    - error(object, List) -> Tree
+
+'''
+
+
 import re
 from lark import Tree, Transformer, Lark, Token
 from decimal import Decimal, DecimalException, InvalidOperation
-from typing import *
+from typing import List
 
 from .cell_error import CellError, CellErrorType, CELL_ERRORS
 
@@ -9,7 +41,7 @@ from .cell_error import CellError, CellErrorType, CELL_ERRORS
 class Evaluator(Transformer):
     '''
     Evaluate an input string as a formula, based on the described Lark grammar
-    in ./formulas.lark
+    in formulas.lark
 
     '''
 
@@ -23,7 +55,7 @@ class Evaluator(Transformer):
         '''
 
         Transformer.__init__(self)
-        self._workbook = workbook
+        self.workbook = workbook
         self._working_sheet = sheet_name
 
     ########################################################################
@@ -40,7 +72,7 @@ class Evaluator(Transformer):
         '''
 
         return self._working_sheet
-    
+
     def set_working_sheet(self, sheet_name: str) -> None:
         '''
         Set the name of the current working sheet
@@ -52,21 +84,11 @@ class Evaluator(Transformer):
 
         self._working_sheet = sheet_name
 
-    def get_workbook(self) -> None:
-        '''
-        Set the name of the current working sheet
-
-        Arguments:
-        - sheet_name: str - string sheet name
-
-        '''
-
-        return self._workbook
-
     ########################################################################
     # Bases
     ########################################################################
 
+    # pylint: disable=function-naming-style
     def NUMBER(self, token: Token) -> Decimal:
         '''
         Evaluate a NUMBER type into a Decimal object   
@@ -94,8 +116,8 @@ class Evaluator(Transformer):
         
         '''
 
-        return (str(token)[1:-1])
-    
+        return str(token)[1:-1]
+
     def CELLREF(self, token: Token) -> Token:
         '''
         Evaluate a CELLREF type
@@ -133,13 +155,14 @@ class Evaluator(Transformer):
         Evaluate an addition/subtraction expression within the Tree
 
         Arguments:
-        - args: List - list with Tree and/or Token objects of format [x, +/-, y]
+        - args: List - list with Tree and/or Token objects of format
+            [x, +/-, y]
 
         Returns:
         - Tree holding the result as a Decimal object
 
         '''
-      
+
         try:
             operator = args[1]
             x = args[0].children[-1]
@@ -168,13 +191,14 @@ class Evaluator(Transformer):
         Throw a ZeroDivisionError if trying to divide by 0
 
         Arguments:
-        - args: List - list with Tree and/or Token objects of format [x, *//, y]
+        - args: List - list with Tree and/or Token objects of format
+            [x, *//, y]
 
         Returns:
         - Tree holding the result as a Decimal object
-        
+
         '''
-        
+
         try:
 
             operator = args[1]
@@ -194,23 +218,25 @@ class Evaluator(Transformer):
             # Check for division by zero
             if y == Decimal(0) and operator == '/':
                 raise ZeroDivisionError
-            
+
             result = x * y if operator == '*' else x / y
             return Tree('number', [self.__normalize_number(Decimal(result))])
 
         except Exception as e:
-            return self.__process_exceptions(e, detail='multiplication/division')    
+            return self.__process_exceptions(e,
+                                             detail='multiplication/division')
 
     def unary_op(self, args: List) -> Tree:
         '''
         Evaluate an unary operation expression within the Tree
 
         Arguments:
-        - args: List - list with Tree and/or Token objects of format [+/-, x]
+        - args: List - list with Tree and/or Token objects of format
+            [+/-, x]
 
         Returns:
         - Tree holding the result as a Decimal object
-        
+
         '''
 
         try:
@@ -235,13 +261,14 @@ class Evaluator(Transformer):
         Evaluate a string concatenation expression within the Tree
 
         Arguments:
-        - args: List - list with Tree and/or Token objects of format [s1, &, s2]
+        - args: List - list with Tree and/or Token objects of format
+            [s1, &, s2]
 
         Returns:
         - Tree holding the result as a String object
 
         '''
-        
+
         try:
             s1 = self.transform(args[0]).children[-1]
             s2 = self.transform(args[-1]).children[-1]
@@ -268,7 +295,8 @@ class Evaluator(Transformer):
         Throw a KeyError if the cell location in the cell_ref is out of bounds
 
         Arguments:
-        - args: List - list of Tree and/or Token objects of format [sheet, cell]
+        - args: List - list of Tree and/or Token objects of format
+            [sheet, cell]
 
         Returns:
         - Tree holding the resulting cell as a Cell object
@@ -288,9 +316,8 @@ class Evaluator(Transformer):
             # Check that cell location is within bounds
             if not re.match(r"^[A-Z]{1,4}[1-9][0-9]{0,3}$", cell_name.upper()):
                 raise KeyError('Cell location out of bounds')
-            
-            workbook = self.get_workbook()
-            result = workbook.get_cell_value(working_sheet, cell_name)
+
+            result = self.workbook.get_cell_value(working_sheet, cell_name)
 
             # Check for propogating errors
             if isinstance(result, CellError):
@@ -298,7 +325,7 @@ class Evaluator(Transformer):
 
             # Deal with empty cases
             return Tree('cell_ref', [result])
-        
+
         except KeyError as k:
             if k.args[0] == 'Cell location out of bounds':
                 detail = 'cell'
@@ -307,7 +334,7 @@ class Evaluator(Transformer):
 
         except Exception as e:
             return self.__process_exceptions(e, 'cell operations')
-        
+
     def parens(self, args: List) -> Tree:
         '''
         Evaluate an expression enclosed in parenthesis
@@ -321,7 +348,7 @@ class Evaluator(Transformer):
         '''
 
         return args[0] # removes the outer brackets
-    
+
     def error(self, args: List) -> Tree:
         '''
         Evaluate an error expression
@@ -341,7 +368,7 @@ class Evaluator(Transformer):
 
     ########################################################################
     # Exception Processing
-    ########################################################################       
+    ########################################################################
 
     def __process_exceptions(self, ex: Exception, detail: str = '') -> Tree:
         '''
@@ -354,7 +381,7 @@ class Evaluator(Transformer):
 
         Returns:
         - Tree holding the exception as a CellError object
-        
+
         '''
 
         error_type = None
@@ -375,12 +402,12 @@ class Evaluator(Transformer):
         else:
             detail = f'Unknown error occurred while performing {detail}'
 
-        return Tree('cell_error', 
+        return Tree('cell_error',
             [CellError(error_type, detail=detail, exception = ex)])
-    
+
     ########################################################################
     # Helper Functions
-    ######################################################################## 
+    ########################################################################
 
     def __normalize_number(self, num: Decimal) -> Decimal:
         '''
