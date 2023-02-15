@@ -322,7 +322,13 @@ class Evaluator(Transformer):
             if not re.match(r"^[A-Z]{1,4}[1-9][0-9]{0,3}$", cell_name.upper()):
                 raise KeyError('Cell location out of bounds')
 
+            print('made it')
             result = self.workbook.get_cell_value(working_sheet, cell_name)
+            print(result)
+
+            # Check if referencing non-existing cell
+            # if result is None:
+            #     return Tree('cell_ref', [Decimal(0)])
 
             # Check for propogating errors
             if isinstance(result, CellError):

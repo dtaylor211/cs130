@@ -147,6 +147,7 @@ class TestEvaluator:
         WB.set_cell_contents('Test', 'a5', 'DarthJarJar')
         WB.set_cell_contents('Test', 'A6', '12.0000000')
         WB.set_cell_contents('Test', 'A7', '\'    123')
+        WB.set_cell_contents('Test', 'A8', '=A9')
 
         tree = PARSER.parse('=A1')
         result = EVALUATOR.transform(tree)
@@ -191,6 +192,10 @@ class TestEvaluator:
         tree = PARSER.parse('=A7')
         result = EVALUATOR.transform(tree)
         assert result == Tree('cell_ref', ['    123'])
+
+        tree = PARSER.parse('=A8')
+        result = EVALUATOR.transform(tree)
+        assert result == Tree('cell_ref', [Decimal(0)])
 
     def test_string_concatenation(self) -> None:
         '''
