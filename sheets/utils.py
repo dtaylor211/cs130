@@ -1,4 +1,20 @@
+'''
+Utils
+
+This module holds utility functions for the Sheets package
+
+See the Workbook and Sheet modules for implementation.
+
+Methods:
+- get_loc_from_coords(Tuple[int, int]) -> str
+- get_coords_from_loc(str) -> Tuple[int, int]
+
+'''
+
+
+import re
 from typing import Tuple
+
 
 def get_loc_from_coords(coords: Tuple[int, int]) -> str:
     '''
@@ -13,7 +29,7 @@ def get_loc_from_coords(coords: Tuple[int, int]) -> str:
     - str of cell location
 
     '''
-    
+
     col, row = coords
     if col < 1 or row < 1 or col > 9999 or row > 9999:
         raise ValueError("Invalid coordinates")
@@ -22,5 +38,34 @@ def get_loc_from_coords(coords: Tuple[int, int]) -> str:
     while col > 0:
         col_name = chr((col - 1) % 26 + ord('A')) + col_name
         col = (col - 1) // 26
-        
+
     return col_name.upper() + str(row)
+
+def get_coords_from_loc(location: str) -> Tuple[int, int]:
+    '''
+    Get the coordinate tuple from a location
+
+    raise ValueError is cell location isn't available
+    need to check A-Z (max 4) then 1-9999 for valid lcoation
+
+    Arguments:
+    - location: str - location formatted as "B12"
+
+    Returns:
+    - tuple containing the coordinates (col, row)
+
+    '''
+
+    if not re.match(r"^[A-Z]{1,4}[1-9][0-9]{0,3}$", location.upper()):
+        raise ValueError("Cell location is invalid")
+
+    # example: "D14" -> (4, 14)
+    # splits into [characters, numbers, ""]
+    split_loc = re.split(r'(\d+)', location.upper())
+    (col, row) = split_loc[0], split_loc[1]
+    row_num = int(row)
+    col_num = 0
+    for letter in col:
+        col_num = col_num * 26 + ord(letter) - ord('A') + 1
+
+    return (col_num, row_num)
