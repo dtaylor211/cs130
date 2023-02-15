@@ -9,40 +9,36 @@ See the Sheet and Cell modules for more detailed commentary.
 Classes:
 - Workbook
 
-Attributes:
-- notify_functions (Callable[['Workbook', Iterable[Tuple[str, str]]], None])
+    Attributes:
+    - notify_functions (Callable[['Workbook', Iterable[Tuple[str, str]]], None])
+    - evaluator (Evaluator)
 
-Methods:
-- list_sheets(object) -> List[str]
-- set_sheet_names(object, List[str]) -> None
-- get_sheet_objects(object) -> Dict[str, Sheet]
-- set_sheet_objects(object, Dict[str, Sheet]) -> None
-- get_evaluator(object) -> Evaluator
-- num_sheets(object) -> int
-- new_sheet(object, Optional[str]) -> Tuple[int, str]
-- del_sheet(object, str) -> None
-- get_sheet_extent(object, str) -> Tuple[int, int]
-- set_cell_contents(object, str, str, Optional[str]) -> None
-- get_cell_contents(object, str, str) -> Optional[str]
-- get_cell_value(object, str, str) -> Any
-- update_cell_values(object, str, Optional[str], Optional[str],
-    Optional[bool]) -> None
-- save_workbook(object, TextIO) -> None
-- notify_cells_changed(object, Callable[[Workbook,
-    Iterable[Tuple[str, str]]], None]) -> None
-- rename_sheet(object, str, str) -> None
-- move_sheet(object, str, int) -> None
-- copy_sheet(object, str) -> Tuple[int, str]
-- move_cells(object, str, str, str, str, Optional[str]) -> None
-- copy_cells(object, str, str, str, str, Optional[str]) -> None
-- validate_sheet_existence(object, str) -> None
-- validate_sheet_uniqueness(object, str) -> None
-- format_sheet_names(object, str, str, List[Tuple]) -> None
+    Methods:
+    - list_sheets(object) -> List[str]
+    - get_sheet_objects(object) -> Dict[str, Sheet]
+    - num_sheets(object) -> int
+    - new_sheet(object, Optional[str]) -> Tuple[int, str]
+    - del_sheet(object, str) -> None
+    - get_sheet_extent(object, str) -> Tuple[int, int]
+    - set_cell_contents(object, str, str, Optional[str]) -> None
+    - get_cell_contents(object, str, str) -> Optional[str]
+    - get_cell_value(object, str, str) -> Any
+    - update_cell_values(object, str, Optional[str], Optional[str],
+        Optional[bool]) -> None
+    - save_workbook(object, TextIO) -> None
+    - notify_cells_changed(object, Callable[[Workbook,
+        Iterable[Tuple[str, str]]], None]) -> None
+    - rename_sheet(object, str, str) -> None
+    - move_sheet(object, str, int) -> None
+    - copy_sheet(object, str) -> Tuple[int, str]
+    - move_cells(object, str, str, str, str, Optional[str]) -> None
+    - copy_cells(object, str, str, str, str, Optional[str]) -> None
 
-Static Methods:
-- load_workbook(TextIO) -> Workbook
+    Static Methods:
+    - load_workbook(TextIO) -> Workbook
 
 '''
+
 
 import re
 import json
@@ -52,6 +48,7 @@ from .sheet import Sheet
 from .evaluator import Evaluator
 from .graph import Graph
 from .utils import get_loc_from_coords
+
 
 class Workbook:
     '''
@@ -76,7 +73,7 @@ class Workbook:
 
         # dictionary that maps lowercase sheet name to Sheet object
         self._sheet_objects: Dict[str, Sheet] = {}
-        self._evaluator = Evaluator(self, '')
+        self.evaluator = Evaluator(self, '')
         self.notify_functions = []
 
     ########################################################################
@@ -107,9 +104,12 @@ class Workbook:
         # return [name for name in self._sheet_names]
         return list(self._sheet_names)
 
-    def set_sheet_names(self, sheet_names: List[str]) -> None:
+    def __set_sheet_names(self, sheet_names: List[str]) -> None:
         '''
         Set the sheet names list
+
+        Private method, as the user should not be able to manually set the
+        list of sheet names
 
         Arguments:
         - sheet_names: List[str] - new list of sheet names
@@ -129,9 +129,12 @@ class Workbook:
 
         return dict(self._sheet_objects)
 
-    def set_sheet_objects(self, sheet_objects: Dict[str, Sheet]) -> None:
+    def __set_sheet_objects(self, sheet_objects: Dict[str, Sheet]) -> None:
         '''
         Set the sheet objects dictionary to given dictionary
+
+        Private method, as the user should not be able to manually set the
+        dict of sheet objects
 
         Arguments:
         - sheet_objects: Dict[str, Sheet] - new dictionary of sheet objects
@@ -139,17 +142,6 @@ class Workbook:
         '''
 
         self._sheet_objects = sheet_objects
-
-    def get_evaluator(self) -> Evaluator:
-        '''
-        Get the current Evaluator corresponding to this workbook
-
-        Returns:
-        - the current Evaluator
-
-        '''
-
-        return self._evaluator
 
     ########################################################################
     # Base Functionality
@@ -208,7 +200,7 @@ class Workbook:
                 raise ValueError("Invalid Sheet name: improper characters used")
 
             # check uniqueness
-            self.validate_sheet_uniqueness(sheet_name)
+            self.__validate_sheet_uniqueness(sheet_name)
 
         # sheet name not specified -> generate ununused "Sheet" + "#" name
         else:
@@ -221,10 +213,10 @@ class Workbook:
         # update list of sheet names and sheet dictionary
         sheet_names.append(sheet_name)
         sheet_objects[sheet_name.lower()] = Sheet(
-            sheet_name, self.get_evaluator())
+            sheet_name, self.evaluator)
 
-        self.set_sheet_names(sheet_names) # preserves case
-        self.set_sheet_objects(sheet_objects)
+        self.__set_sheet_names(sheet_names) # preserves case
+        self.__set_sheet_objects(sheet_objects)
 
         self.update_cell_values(sheet_name)
         return self.num_sheets() - 1, sheet_name
@@ -246,15 +238,15 @@ class Workbook:
         sheet_names = self.list_sheets()
         sheet_objects = self.get_sheet_objects()
 
-        self.validate_sheet_existence(sheet_name)
+        self.__validate_sheet_existence(sheet_name)
 
         original_sheet_name = sheet_objects[sheet_name.lower()].get_name()
 
         sheet_names.remove(original_sheet_name)
         del sheet_objects[sheet_name.lower()]
 
-        self.set_sheet_names(sheet_names)
-        self.set_sheet_objects(sheet_objects)
+        self.__set_sheet_names(sheet_names)
+        self.__set_sheet_objects(sheet_objects)
         # update all cells dependent on deleted sheet
         self.update_cell_values(sheet_name)
 
@@ -277,7 +269,7 @@ class Workbook:
 
         sheet_objects = self.get_sheet_objects()
 
-        self.validate_sheet_existence(sheet_name)
+        self.__validate_sheet_existence(sheet_name)
 
         # get_extent() should be a function of Sheet object
         # (implemented in spreadsheet.py)
@@ -316,10 +308,10 @@ class Workbook:
         '''
 
         sheet_objects = self.get_sheet_objects()
-        self.get_evaluator().set_working_sheet(sheet_name)
+        self.evaluator.set_working_sheet(sheet_name)
         sheet_name_lower = sheet_name.lower()
 
-        self.validate_sheet_existence(sheet_name_lower)
+        self.__validate_sheet_existence(sheet_name_lower)
 
         prev_value = sheet_objects[sheet_name_lower].get_cell_value(location)
         # set cell contents
@@ -361,10 +353,10 @@ class Workbook:
         '''
 
         sheet_objects = self.get_sheet_objects()
-        self.get_evaluator().set_working_sheet(sheet_name)
+        self.evaluator.set_working_sheet(sheet_name)
         sheet_name = sheet_name.lower()
 
-        self.validate_sheet_existence(sheet_name)
+        self.__validate_sheet_existence(sheet_name)
 
         return sheet_objects[sheet_name].get_cell_contents(location)
 
@@ -400,7 +392,7 @@ class Workbook:
         sheet_objects = self.get_sheet_objects()
         sheet_name = sheet_name.lower()
 
-        self.validate_sheet_existence(sheet_name)
+        self.__validate_sheet_existence(sheet_name)
 
         # calls get_cell_value from Sheet
         return sheet_objects[sheet_name].get_cell_value(location)
@@ -465,9 +457,10 @@ class Workbook:
                             cell, contents)
 
                         # call helper function to update sheet names in contents
-                        self.format_sheet_names(sheet, cell, adj[(sheet, cell)])
+                        self.__format_sheet_names(sheet, cell,
+                                                  adj[(sheet, cell)])
 
-                self.set_sheet_objects(sheet_objects)
+                self.__set_sheet_objects(sheet_objects)
 
         else:
             updated_cells = [(updated_sheet, updated_cell)]
@@ -490,7 +483,7 @@ class Workbook:
                 for sheet, cell in component:
                     sheet_objects[
                         sheet.lower()].get_cell(cell).set_circular_error()
-                self.set_sheet_objects(sheet_objects)
+                self.__set_sheet_objects(sheet_objects)
 
         cell_graph.subgraph_from_nodes(dag_nodes)
 
@@ -513,7 +506,7 @@ class Workbook:
                 if new_value != prev_value:
                     notify_cells.append((sheet, cell))
 
-        self.set_sheet_objects(sheet_objects)
+        self.__set_sheet_objects(sheet_objects)
         for notify_function in self.notify_functions:
             try:
                 notify_function(self, notify_cells)
@@ -677,7 +670,7 @@ class Workbook:
 
         sheet_names = self.list_sheets()
         sheet_objects = self.get_sheet_objects()
-        self.validate_sheet_existence(sheet_name)
+        self.__validate_sheet_existence(sheet_name)
 
         # assume new_sheet_name is not None
         # checking empty string
@@ -693,21 +686,21 @@ class Workbook:
             raise ValueError("Invalid Sheet name: improper characters used")
 
         # check uniqueness
-        self.validate_sheet_uniqueness(new_sheet_name)
+        self.__validate_sheet_uniqueness(new_sheet_name)
 
         # Update sheet_names (list preserving order & case of sheet names)
         # old_sheet_name used to retrieve proper casing
         old_sheet_name = sheet_objects[sheet_name.lower()].get_name()
         old_sheet_idx = sheet_names.index(old_sheet_name)
         sheet_names[old_sheet_idx] = new_sheet_name
-        self.set_sheet_names(sheet_names)
+        self.__set_sheet_names(sheet_names)
 
         # Update sheet_objects dict (delete old key, add key with new name)
         sheet = sheet_objects[sheet_name.lower()]
         sheet.set_name(new_sheet_name)
         sheet_objects[new_sheet_name.lower()] = sheet
         del sheet_objects[sheet_name.lower()]
-        self.set_sheet_objects(sheet_objects)
+        self.__set_sheet_objects(sheet_objects)
 
         # updates the contents of all cells referencing the cell name
         self.update_cell_values(sheet_name, renamed_sheet = new_sheet_name)
@@ -736,7 +729,7 @@ class Workbook:
 
         sheet_names = self.list_sheets()
         sheet_objects = self.get_sheet_objects()
-        self.validate_sheet_existence(sheet_name)
+        self.__validate_sheet_existence(sheet_name)
 
         if index < 0 or index >= self.num_sheets():
             raise IndexError("Provided index is outside valid range")
@@ -745,7 +738,7 @@ class Workbook:
         sheet_name = sheet_objects[sheet_name.lower()].get_name()
         sheet_names.remove(sheet_name)
         sheet_names.insert(index, sheet_name)
-        self.set_sheet_names(sheet_names)
+        self.__set_sheet_names(sheet_names)
 
     def copy_sheet(self, sheet_name: str) -> Tuple[int, str]:
         '''
@@ -777,7 +770,7 @@ class Workbook:
         '''
 
         sheet_objects = self.get_sheet_objects()
-        self.validate_sheet_existence(sheet_name)
+        self.__validate_sheet_existence(sheet_name)
 
         # generate sheet name for copy
         og_sheet_name = sheet_objects[sheet_name.lower()].get_name()
@@ -917,10 +910,10 @@ class Workbook:
         pass
 
     ########################################################################
-    # Helpers
+    # Private Helpers
     ########################################################################
 
-    def validate_sheet_existence(self, sheet_name: str) -> None:
+    def __validate_sheet_existence(self, sheet_name: str) -> None:
         '''
         Validate whether the given sheet name already exists within the workbook
 
@@ -936,7 +929,7 @@ class Workbook:
         if sheet_name.lower() not in sheet_objects.keys():
             raise KeyError(f"Specified sheet name '{sheet_name}' is not found")
 
-    def validate_sheet_uniqueness(self, sheet_name: str) -> None:
+    def __validate_sheet_uniqueness(self, sheet_name: str) -> None:
         '''
         Validate that the given sheet name does not already exist within the
         workbook
@@ -953,7 +946,7 @@ class Workbook:
         if sheet_name.lower() in sheet_objects.keys():
             raise ValueError(f"Sheet name '{sheet_name}' already exists")
 
-    def format_sheet_names(self, sheet_name: str, location: str,
+    def __format_sheet_names(self, sheet_name: str, location: str,
         sheets_in_contents: List[Tuple]) -> None:
         '''
         Set the cell's contents to be properly formatted so that sheet names
@@ -974,18 +967,18 @@ class Workbook:
                 contents = re.sub("'"+sheet+"'", sheet, curr_contents)
                 sheet_objects[sheet_name.lower()]\
                     .set_cell_contents(location, contents)
-        self.set_sheet_objects(sheet_objects)
+        self.__set_sheet_objects(sheet_objects)
 
-    def get_strongly_connected_components(self, cell_graph):
-        '''
-        TODO - implement helper
+    # def __get_strongly_connected_components(self, cell_graph):
+    #     '''
+    #     TODO - implement helper
 
-        Arguments:
-        -
+    #     Arguments:
+    #     -
 
-        Returns:
-        -
+    #     Returns:
+    #     -
 
-        '''
+    #     '''
 
-        pass
+    #     pass
