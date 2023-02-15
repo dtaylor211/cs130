@@ -55,5 +55,15 @@ test-performance-rename-chain:
         snakeviz program.prof; \
     fi
 
+PYLINT = pylint
+PYLINTFLAGS = -rn
+
+PYTHONFILES := $(wildcard *.py)
+
+pylint: $(patsubst %.py,%.pylint,$(PYTHONFILES))
+
+pylint-%:
+	$(PYLINT) $(PYLINTFLAGS) ./sheets/$*.py
+
 lint-all:
 	pylint ./sheets
