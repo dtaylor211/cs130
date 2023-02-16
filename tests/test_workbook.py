@@ -187,8 +187,11 @@ class TestWorkbook:
         assert test_changed[-1] == [('Sheet1', 'C1')]
         wb1.set_cell_contents('Sheet1', 'B1', '5.3')
         assert test_changed[-1] == [('Sheet1', 'B1'), ('Sheet1', 'C1')]
-        wb1.set_cell_contents('Sheet1', 'C1', None)
-        assert test_changed[-1] == [('Sheet1', 'C1')]
+        wb1.move_cells('Sheet1', 'C1', 'C1', 'C2')
+        assert test_changed[-2] == [('Sheet1', 'C1')]
+        assert test_changed[-1] == [('Sheet1', 'C2')]
+        wb1.set_cell_contents('Sheet1', 'C2', None)
+        assert test_changed[-1] == [('Sheet1', 'C2')]
         wb1.del_sheet('Sheet1')
         assert test_changed[-1] == []
         def on_cells_changed2(workbook, changed_cells):
