@@ -787,9 +787,14 @@ class Workbook:
             end_location, to_location, source_cells) # Dict[locs, contents]
 
         # Set contents of source cells (not in target area) to None
-        source_set = set(source_cells)
-        target_set = set(target_cells.keys())
-        source_target_set_diff = source_set.difference(target_set)
+        if to_sheet is None:
+            to_sheet = sheet_name
+            source_set = set(source_cells)
+            target_set = set(target_cells.keys())
+            source_target_set_diff = source_set.difference(target_set)
+        else:
+            self.__validate_sheet_existence(to_sheet)
+            source_target_set_diff = source_cells
         for loc in list(source_target_set_diff):
             self.set_cell_contents(sheet_name, loc, None)
 

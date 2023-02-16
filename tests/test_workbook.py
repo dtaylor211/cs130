@@ -618,25 +618,337 @@ class TestWorkbook:
 
         '''
 
-        pass
+        wb1 = Workbook()
+        wb1.new_sheet('Sheet1')
+        wb1.set_cell_contents('Sheet1', 'A1', '1')
+        wb1.copy_cells('Sheet1', 'A1', 'A1', 'A2')
+        contents = wb1.get_cell_contents('Sheet1', 'A2')
+        value = wb1.get_cell_value('Sheet1', 'A2')
+        assert contents == '1'
+        assert value == Decimal('1')
 
-    def test_move_cells_overlap(self) -> None:
+        contents = wb1.get_cell_contents('Sheet1', 'A1')
+        value = wb1.get_cell_value('Sheet1', 'A1')
+        assert contents == '1'
+        assert value == Decimal('1')
+
+        wb1.copy_cells('shEEt1', 'A2', 'A2', 'A3')
+        contents = wb1.get_cell_contents('Sheet1', 'A3')
+        value = wb1.get_cell_value('Sheet1', 'A3')
+        assert contents == '1'
+        assert value == Decimal('1')
+
+        contents = wb1.get_cell_contents('Sheet1', 'A2')
+        value = wb1.get_cell_value('Sheet1', 'A2')
+        assert contents == '1'
+        assert value == Decimal('1')
+
+    def test_move_cells_overlap_basic(self) -> None:
         '''
         Test moving a group of cells in the same sheet where the source area
         and target area are overlapping
 
         '''
 
-        pass
+        wb1 = Workbook()
+        wb1.new_sheet('Sheet1')
+        wb1.set_cell_contents('Sheet1', 'A1', '1')
+        wb1.set_cell_contents('Sheet1', 'A2', '1')
+        wb1.set_cell_contents('Sheet1', 'A3', '1')
+        wb1.set_cell_contents('Sheet1', 'B1', '2')
+        wb1.set_cell_contents('Sheet1', 'B2', '2')
+        wb1.set_cell_contents('Sheet1', 'B3', '2')
 
-    def test_copy_cells_overlap(self) -> None:
+        wb1.move_cells('Sheet1', 'A1', 'A3', 'B2')
+
+        contents = wb1.get_cell_contents('Sheet1', 'B1')
+        value = wb1.get_cell_value('Sheet1', 'B1')
+        assert contents == '2'
+        assert value == Decimal('2')
+        contents = wb1.get_cell_contents('Sheet1', 'B2')
+        value = wb1.get_cell_value('Sheet1', 'B2')
+        assert contents == '1'
+        assert value == Decimal('1')
+        contents = wb1.get_cell_contents('Sheet1', 'B3')
+        value = wb1.get_cell_value('Sheet1', 'B3')
+        assert contents == '1'
+        assert value == Decimal('1')
+        contents = wb1.get_cell_contents('Sheet1', 'B4')
+        value = wb1.get_cell_value('Sheet1', 'B4')
+        assert contents == '1'
+        assert value == Decimal('1')
+
+        contents = wb1.get_cell_contents('Sheet1', 'A1')
+        value = wb1.get_cell_value('Sheet1', 'A1')
+        assert contents is None
+        assert value is None
+        contents = wb1.get_cell_contents('Sheet1', 'A2')
+        value = wb1.get_cell_value('Sheet1', 'A2')
+        assert contents is None
+        assert value is None
+        contents = wb1.get_cell_contents('Sheet1', 'A3')
+        value = wb1.get_cell_value('Sheet1', 'A3')
+        assert contents is None
+        assert value is None
+
+    def test_copy_cells_overlap_basic(self) -> None:
         '''
         Test copying a group of cells in the same sheet where the source area
         and target area are overlapping
 
         '''
 
-        pass
+        wb1 = Workbook()
+        wb1.new_sheet('Sheet1')
+        wb1.set_cell_contents('Sheet1', 'A1', '1')
+        wb1.set_cell_contents('Sheet1', 'A2', '1')
+        wb1.set_cell_contents('Sheet1', 'A3', '1')
+        wb1.set_cell_contents('Sheet1', 'B1', '2')
+        wb1.set_cell_contents('Sheet1', 'B2', '2')
+        wb1.set_cell_contents('Sheet1', 'B3', '2')
+
+        wb1.copy_cells('Sheet1', 'A1', 'A3', 'B2')
+
+        contents = wb1.get_cell_contents('Sheet1', 'B1')
+        value = wb1.get_cell_value('Sheet1', 'B1')
+        assert contents == '2'
+        assert value == Decimal('2')
+        contents = wb1.get_cell_contents('Sheet1', 'B2')
+        value = wb1.get_cell_value('Sheet1', 'B2')
+        assert contents == '1'
+        assert value == Decimal('1')
+        contents = wb1.get_cell_contents('Sheet1', 'B3')
+        value = wb1.get_cell_value('Sheet1', 'B3')
+        assert contents == '1'
+        assert value == Decimal('1')
+        contents = wb1.get_cell_contents('Sheet1', 'B4')
+        value = wb1.get_cell_value('Sheet1', 'B4')
+        assert contents == '1'
+        assert value == Decimal('1')
+
+        contents = wb1.get_cell_contents('Sheet1', 'A1')
+        value = wb1.get_cell_value('Sheet1', 'A1')
+        assert contents == '1'
+        assert value == Decimal('1')
+        contents = wb1.get_cell_contents('Sheet1', 'A2')
+        value = wb1.get_cell_value('Sheet1', 'A2')
+        assert contents == '1'
+        assert value == Decimal('1')
+        contents = wb1.get_cell_contents('Sheet1', 'A3')
+        value = wb1.get_cell_value('Sheet1', 'A3')
+        assert contents == '1'
+        assert value == Decimal('1')
+
+    def test_move_cells_overlap_complex(self) -> None:
+        '''
+        Test copying a group of cells in the same sheet where the source area
+        and target area are overlapping
+
+        '''
+
+        wb1 = Workbook()
+        # Relative references
+        wb1.new_sheet('Sheet1')
+        wb1.set_cell_contents('Sheet1', 'A1', '1')
+        wb1.set_cell_contents('Sheet1', 'B1', '=A1')
+        wb1.set_cell_contents('Sheet1', 'A2', '2')
+        wb1.set_cell_contents('Sheet1', 'B2', '=A2+B1')
+
+        wb1.move_cells('Sheet1', 'A1', 'B2', 'B2')
+
+        contents = wb1.get_cell_contents('Sheet1', 'B2')
+        value = wb1.get_cell_value('Sheet1', 'B2')
+        assert contents == '1'
+        assert value == Decimal('1')
+        contents = wb1.get_cell_contents('Sheet1', 'C2')
+        value = wb1.get_cell_value('Sheet1', 'C2')
+        assert contents == '=B2'
+        assert value == Decimal('1')
+        contents = wb1.get_cell_contents('Sheet1', 'B3')
+        value = wb1.get_cell_value('Sheet1', 'B3')
+        assert contents == '2'
+        assert value == Decimal('2')
+        contents = wb1.get_cell_contents('Sheet1', 'C3')
+        value = wb1.get_cell_value('Sheet1', 'C3')
+        assert contents == '=B3+C2'
+        assert value == Decimal('3')
+
+        contents = wb1.get_cell_contents('Sheet1', 'A1')
+        value = wb1.get_cell_value('Sheet1', 'A1')
+        assert contents is None
+        assert value is None
+        contents = wb1.get_cell_contents('Sheet1', 'B1')
+        value = wb1.get_cell_value('Sheet1', 'B1')
+        assert contents is None
+        assert value is None
+        contents = wb1.get_cell_contents('Sheet1', 'A2')
+        value = wb1.get_cell_value('Sheet1', 'A2')
+        assert contents is None
+        assert value is None
+
+        # With absolute reference
+        wb1.new_sheet('Sheet2')
+        wb1.set_cell_contents('Sheet2', 'A1', '1')
+        wb1.set_cell_contents('Sheet2', 'B1', '=$A$1')
+        wb1.set_cell_contents('Sheet2', 'A2', '2')
+        wb1.set_cell_contents('Sheet2', 'B2', '=A2+B1')
+
+        wb1.move_cells('Sheet2', 'A1', 'B2', 'B2')
+
+        contents = wb1.get_cell_contents('Sheet2', 'B2')
+        value = wb1.get_cell_value('Sheet2', 'B2')
+        assert contents == '1'
+        assert value == Decimal('1')
+        contents = wb1.get_cell_contents('Sheet2', 'C2')
+        value = wb1.get_cell_value('Sheet2', 'C2')
+        assert contents == '=$A$1'
+        assert value == Decimal('0')
+        contents = wb1.get_cell_contents('Sheet2', 'B3')
+        value = wb1.get_cell_value('Sheet2', 'B3')
+        assert contents == '2'
+        assert value == Decimal('2')
+        contents = wb1.get_cell_contents('Sheet2', 'C3')
+        value = wb1.get_cell_value('Sheet2', 'C3')
+        assert contents == '=B3+C2'
+        assert value == Decimal('2')
+
+        contents = wb1.get_cell_contents('Sheet2', 'A1')
+        value = wb1.get_cell_value('Sheet2', 'A1')
+        assert contents is None
+        assert value is None
+        contents = wb1.get_cell_contents('Sheet2', 'B1')
+        value = wb1.get_cell_value('Sheet2', 'B1')
+        assert contents is None
+        assert value is None
+        contents = wb1.get_cell_contents('Sheet2', 'A2')
+        value = wb1.get_cell_value('Sheet2', 'A2')
+        assert contents is None
+        assert value is None
+
+        # With mixed reference
+        wb1.new_sheet('Sheet3')
+        wb1.set_cell_contents('Sheet3', 'A1', '1')
+        wb1.set_cell_contents('Sheet3', 'A2', '=A$1')
+        wb1.set_cell_contents('Sheet3', 'B1', '2')
+        wb1.set_cell_contents('Sheet3', 'B2', '=A2+B1')
+
+        wb1.move_cells('Sheet3', 'A1', 'B2', 'B2')
+
+        contents = wb1.get_cell_contents('Sheet3', 'B2')
+        value = wb1.get_cell_value('Sheet3', 'B2')
+        assert contents == '1'
+        assert value == Decimal('1')
+        contents = wb1.get_cell_contents('Sheet3', 'C2')
+        value = wb1.get_cell_value('Sheet3', 'C2')
+        assert contents == '=B$1'
+        assert value == Decimal('0')
+        contents = wb1.get_cell_contents('Sheet3', 'B3')
+        value = wb1.get_cell_value('Sheet3', 'B3')
+        assert contents == '2'
+        assert value == Decimal('2')
+        contents = wb1.get_cell_contents('Sheet3', 'C3')
+        value = wb1.get_cell_value('Sheet3', 'C3')
+        assert contents == '=B3+C2'
+        assert value == Decimal('2')
+
+        contents = wb1.get_cell_contents('Sheet3', 'A1')
+        value = wb1.get_cell_value('Sheet3', 'A1')
+        assert contents is None
+        assert value is None
+        contents = wb1.get_cell_contents('Sheet3', 'B1')
+        value = wb1.get_cell_value('Sheet3', 'B1')
+        assert contents is None
+        assert value is None
+        contents = wb1.get_cell_contents('Sheet3', 'A2')
+        value = wb1.get_cell_value('Sheet3', 'A2')
+        assert contents is None
+        assert value is None
+
+    def test_copy_cells_overlap_complex(self) -> None:
+        '''
+        Test copying a group of cells in the same sheet where the source area
+        and target area are overlapping
+
+        '''
+
+        wb1 = Workbook()
+        # Relative references
+        wb1.new_sheet('Sheet1')
+        wb1.set_cell_contents('Sheet1', 'A1', '=A2+B1')
+        wb1.set_cell_contents('Sheet1', 'B1', '=B2')
+        wb1.set_cell_contents('Sheet1', 'A2', '2')
+        wb1.set_cell_contents('Sheet1', 'B2', '1')
+
+        wb1.copy_cells('Sheet1', 'A1', 'B2', 'B2')
+
+        contents = wb1.get_cell_contents('Sheet1', 'B2')
+        value = wb1.get_cell_value('Sheet1', 'B2')
+        assert contents == '=B3+C2'
+        assert value == Decimal('3')
+        contents = wb1.get_cell_contents('Sheet1', 'C2')
+        value = wb1.get_cell_value('Sheet1', 'C2')
+        assert contents == '=C3'
+        assert value == Decimal('1')
+        contents = wb1.get_cell_contents('Sheet1', 'B3')
+        value = wb1.get_cell_value('Sheet1', 'B3')
+        assert contents == '2'
+        assert value == Decimal('2')
+        contents = wb1.get_cell_contents('Sheet1', 'C3')
+        value = wb1.get_cell_value('Sheet1', 'C3')
+        assert contents == '1'
+        assert value == Decimal('1')
+
+        contents = wb1.get_cell_contents('Sheet1', 'A1')
+        value = wb1.get_cell_value('Sheet1', 'A1')
+        assert contents == "=A2+B1"
+        assert value == Decimal('5')
+        contents = wb1.get_cell_contents('Sheet1', 'B1')
+        value = wb1.get_cell_value('Sheet1', 'B1')
+        assert contents == "=B2"
+        assert value == Decimal('3')
+        contents = wb1.get_cell_contents('Sheet1', 'A2')
+        value = wb1.get_cell_value('Sheet1', 'A2')
+        assert contents == "2"
+        assert value == Decimal('2')
+
+        # With mixed reference
+        wb1.new_sheet('Sheet2')
+        wb1.set_cell_contents('Sheet2', 'A1', '=A2+B1')
+        wb1.set_cell_contents('Sheet2', 'B1', '=$B2')
+        wb1.set_cell_contents('Sheet2', 'A2', '2')
+        wb1.set_cell_contents('Sheet2', 'B2', '1')
+
+        wb1.copy_cells('Sheet2', 'A1', 'B2', 'B2')
+
+        contents = wb1.get_cell_contents('Sheet2', 'B2')
+        value = wb1.get_cell_value('Sheet2', 'B2')
+        assert contents == '=B3+C2'
+        assert value == Decimal('4')
+        contents = wb1.get_cell_contents('Sheet2', 'C2')
+        value = wb1.get_cell_value('Sheet2', 'C2')
+        assert contents == '=$B3'
+        assert value == Decimal('2')
+        contents = wb1.get_cell_contents('Sheet2', 'B3')
+        value = wb1.get_cell_value('Sheet2', 'B3')
+        assert contents == '2'
+        assert value == Decimal('2')
+        contents = wb1.get_cell_contents('Sheet2', 'C3')
+        value = wb1.get_cell_value('Sheet2', 'C3')
+        assert contents == '1'
+        assert value == Decimal('1')
+
+        contents = wb1.get_cell_contents('Sheet2', 'A1')
+        value = wb1.get_cell_value('Sheet2', 'A1')
+        assert contents == "=A2+B1"
+        assert value == Decimal('6')
+        contents = wb1.get_cell_contents('Sheet2', 'B1')
+        value = wb1.get_cell_value('Sheet2', 'B1')
+        assert contents == "=$B2"
+        assert value == Decimal('4')
+        contents = wb1.get_cell_contents('Sheet2', 'A2')
+        value = wb1.get_cell_value('Sheet2', 'A2')
+        assert contents == "2"
+        assert value == Decimal('2')
 
     def test_move_cells_diff_sheets(self) -> None:
         '''
@@ -644,7 +956,32 @@ class TestWorkbook:
 
         '''
 
-        pass
+        wb1 = Workbook()
+        wb1.new_sheet('Sheet1')
+        wb1.new_sheet('Sheet2')
+        wb1.set_cell_contents('Sheet1', 'A1', '1')
+        wb1.move_cells('Sheet1', 'A1', 'A1', 'A2', "Sheet2")
+        contents = wb1.get_cell_contents('Sheet2', 'A2')
+        value = wb1.get_cell_value('Sheet2', 'A2')
+        assert contents == '1'
+        assert value == Decimal('1')
+
+        contents = wb1.get_cell_contents('Sheet1', 'A1')
+        value = wb1.get_cell_value('Sheet1', 'A1')
+        assert contents is None
+        assert value is None
+
+        wb1.new_sheet('Sheet3')
+        wb1.move_cells('shEEt2', 'A2', 'A2', 'A3', 'Sheet3')
+        contents = wb1.get_cell_contents('Sheet3', 'A3')
+        value = wb1.get_cell_value('Sheet3', 'A3')
+        assert contents == '1'
+        assert value == Decimal('1')
+
+        contents = wb1.get_cell_contents('Sheet2', 'A2')
+        value = wb1.get_cell_value('Sheet2', 'A2')
+        assert contents is None
+        assert value is None
 
     def test_copy_cells_diff_sheets(self) -> None:
         '''
@@ -652,7 +989,36 @@ class TestWorkbook:
 
         '''
 
-        pass
+        wb1 = Workbook()
+        wb1.new_sheet('Sheet1')
+        wb1.new_sheet('Sheet2')
+        wb1.set_cell_contents('Sheet1', 'A1', '1')
+        wb1.copy_cells('Sheet1', 'A1', 'A1', 'A2', 'Sheet2')
+        contents = wb1.get_cell_contents('Sheet2', 'A2')
+        value = wb1.get_cell_value('Sheet2', 'A2')
+        assert contents == '1'
+        assert value == Decimal('1')
+
+        contents = wb1.get_cell_contents('Sheet1', 'A1')
+        value = wb1.get_cell_value('Sheet1', 'A1')
+        assert contents == '1'
+        assert value == Decimal('1')
+
+        wb1.new_sheet('Sheet3')
+        wb1.copy_cells('shEEt2', 'A2', 'A2', 'A3', 'Sheet3')
+        contents = wb1.get_cell_contents('Sheet3', 'A3')
+        value = wb1.get_cell_value('Sheet3', 'A3')
+        assert contents == '1'
+        assert value == Decimal('1')
+        contents = wb1.get_cell_contents('Sheet1', 'A3')
+        value = wb1.get_cell_value('Sheet1', 'A3')
+        assert contents is None
+        assert value is None
+
+        contents = wb1.get_cell_contents('Sheet2', 'A2')
+        value = wb1.get_cell_value('Sheet2', 'A2')
+        assert contents == '1'
+        assert value == Decimal('1')
 
     def test_move_cells_with_references(self) -> None:
         '''
@@ -667,17 +1033,42 @@ class TestWorkbook:
         #   '=Sheet1!A1 & "Sheet1!A2"'
         # '=Sheet1!A1 + A3'
 
-        # move below test to one with cell references, just using to check work
-        # wb1.set_cell_contents('Sheet1', 'A1', 'test')
-        # wb1.set_cell_contents('Sheet1', 'B1', 'test2')
-        # wb1.set_cell_contents('Sheet1', 'A2', '=\'Sheet1\'!A$1 & "pass!A1"')
-        # wb1.move_cells('Sheet1', 'A1', 'A2', 'B2')
-        # contents = wb1.get_cell_contents('Sheet1', 'B3')
-        # value = wb1.get_cell_value('Sheet1', 'B3')
-        # assert contents ==  '=\'Sheet1\'!B$1 & "pass!A1"'
-        # assert value == 'test2pass!A1'
+        wb1 = Workbook()
+        wb1.new_sheet('Sheet1')
+        wb1.set_cell_contents('Sheet1', 'A50', '=50')
+        wb1.set_cell_contents('Sheet1', 'B51', '=60')
+        wb1.set_cell_contents('Sheet1', 'C52', '=70')
+        wb1.set_cell_contents('Sheet1', 'A1', '=A50+B51')
+        wb1.move_cells('Sheet1', 'A1', 'A1', 'B2')
+        contents = wb1.get_cell_contents('Sheet1', 'B2')
+        value = wb1.get_cell_value('Sheet1', 'B2')
+        assert contents == '=B51+C52'
+        assert value == Decimal('130')
 
-        pass
+        contents = wb1.get_cell_contents('Sheet1', 'A1')
+        value = wb1.get_cell_value('Sheet1', 'A1')
+        assert contents is None
+        assert value is None
+
+        wb1.move_cells('shEEt1', 'B2', 'B2', 'C3')
+        contents = wb1.get_cell_contents('Sheet1', 'C3')
+        value = wb1.get_cell_value('Sheet1', 'C3')
+        assert contents == '=C52+D53'
+        assert value == Decimal('70')
+
+        contents = wb1.get_cell_contents('Sheet1', 'B2')
+        value = wb1.get_cell_value('Sheet1', 'B2')
+        assert contents is None
+        assert value is None
+
+        wb1.set_cell_contents('Sheet2', 'A1', 'test')
+        wb1.set_cell_contents('Sheet2', 'B1', 'test2')
+        wb1.set_cell_contents('Sheet2', 'A2', '=\'Sheet1\'!A$1 & "pass!A1"')
+        wb1.move_cells('Sheet2', 'A1', 'A2', 'B2')
+        contents = wb1.get_cell_contents('Sheet2', 'B3')
+        value = wb1.get_cell_value('Sheet2', 'B3')
+        assert contents ==  '=\'Sheet2\'!B$1 & "pass!A1"'
+        assert value == 'test2pass!A1'
 
     def test_copy_cells_with_references(self) -> None:
         '''
@@ -685,7 +1076,33 @@ class TestWorkbook:
 
         '''
 
-        pass
+        wb1 = Workbook()
+        wb1.new_sheet('Sheet1')
+        wb1.set_cell_contents('Sheet1', 'A50', '=50')
+        wb1.set_cell_contents('Sheet1', 'B51', '=60')
+        wb1.set_cell_contents('Sheet1', 'C52', '=70')
+        wb1.set_cell_contents('Sheet1', 'A1', '=A50+B51')
+        wb1.copy_cells('Sheet1', 'A1', 'A1', 'B2')
+        contents = wb1.get_cell_contents('Sheet1', 'B2')
+        value = wb1.get_cell_value('Sheet1', 'B2')
+        assert contents == '=B51+C52'
+        assert value == Decimal('130')
+
+        contents = wb1.get_cell_contents('Sheet1', 'A1')
+        value = wb1.get_cell_value('Sheet1', 'A1')
+        assert contents == '=A50+B51'
+        assert value == Decimal('110')
+
+        wb1.move_cells('shEEt1', 'B2', 'B2', 'C3')
+        contents = wb1.get_cell_contents('Sheet1', 'C3')
+        value = wb1.get_cell_value('Sheet1', 'C3')
+        assert contents == '=C52+D53'
+        assert value == Decimal('70')
+
+        contents = wb1.get_cell_contents('Sheet1', 'B2')
+        value = wb1.get_cell_value('Sheet1', 'B2')
+        assert contents == '=B51+C52'
+        assert value == Decimal('130')
 
     def test_move_cells_target_oob(self) -> None:
         '''
@@ -693,11 +1110,39 @@ class TestWorkbook:
         the valid area of the spreadsheet (no changes should be made)
 
         '''
-
         # If the target area would extend outside the valid area of the
         # spreadsheet (i.e. beyond cell ZZZZ9999), a ValueError is raised, and
         # no changes are made to the spreadsheet.
-        pass
+        wb1 = Workbook()
+        wb1.new_sheet('Sheet1')
+        wb1.set_cell_contents('Sheet1', 'A1', '1')
+        wb1.set_cell_contents('Sheet1', 'B1', '1')
+        wb1.set_cell_contents('Sheet1', 'A2', '1')
+        wb1.set_cell_contents('Sheet1', 'B2', '1')
+
+        with pytest.raises(ValueError):
+            wb1.move_cells('Sheet1', 'A1', 'B2', 'A9999')
+
+        contents = wb1.get_cell_contents('Sheet1', 'A1')
+        value = wb1.get_cell_value('Sheet1', 'A1')
+        assert contents == '1'
+        assert value == Decimal('1')
+        contents = wb1.get_cell_contents('Sheet1', 'B1')
+        value = wb1.get_cell_value('Sheet1', 'B1')
+        assert contents == '1'
+        assert value == Decimal('1')
+        contents = wb1.get_cell_contents('Sheet1', 'A2')
+        value = wb1.get_cell_value('Sheet1', 'A2')
+        assert contents == '1'
+        assert value == Decimal('1')
+        contents = wb1.get_cell_contents('Sheet1', 'B2')
+        value = wb1.get_cell_value('Sheet1', 'B2')
+        assert contents == '1'
+        assert value == Decimal('1')
+        contents = wb1.get_cell_contents('Sheet1', 'A9999')
+        value = wb1.get_cell_value('Sheet1', 'A9999')
+        assert contents is None
+        assert value is None
 
     def test_copy_cells_target_oob(self) -> None:
         '''
@@ -706,7 +1151,20 @@ class TestWorkbook:
 
         '''
 
-        pass
+        wb1 = Workbook()
+        wb1.new_sheet('Sheet1')
+        wb1.set_cell_contents('Sheet1', 'A1', '1')
+        wb1.set_cell_contents('Sheet1', 'B1', '1')
+        wb1.set_cell_contents('Sheet1', 'A2', '1')
+        wb1.set_cell_contents('Sheet1', 'B2', '1')
+
+        with pytest.raises(ValueError):
+            wb1.copy_cells('Sheet1', 'A1', 'B2', 'A9999')
+
+        contents = wb1.get_cell_contents('Sheet1', 'A9999')
+        value = wb1.get_cell_value('Sheet1', 'A9999')
+        assert contents is None
+        assert value is None
 
     def test_move_copy_with_error(self) -> None:
         '''
