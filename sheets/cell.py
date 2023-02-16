@@ -250,6 +250,30 @@ class Cell:
         # re.split(r'\$', '=A1+$B$2') -> ['=A1+', 'B', '2']
         # re.split(r'\$', '=Sheet1!A1+$B$2') -> ['=Sheet1!A1+', 'B', '2']
 
+        refs = re.findall(r"\$?[A-Z]{1-4}\$?[1-9][0-9]{0,3}", 
+            "=Sheet1!A1+$B$2*C$3-$D4") # -> ['A1', '$B$2', 'C$3', '$D4']
+        # re.split(r"\$?[A-Z]{1-4}\$?[1-9][0-9]{0,3}", "=Sheet1!A1+$B$2*C$3-$D4")
+        #   -> ['=Sheet1!', '+', '*', '-', '']
 
+        refs = re.findall(r"\$?[A-Z]{1-4}\$?[1-9][0-9]{0,3}", source_contents)
+        pieces = re.split(r"\$?[A-Z]{1-4}\$?[1-9][0-9]{0,3}", source_contents)
+        
+        # coord_shift = (col_shift, row_shift)
+        for ref in refs:
+            ref_split = re.split(r'\$', ref)
+            if len(ref_split) == 3: # absolute
+            # re.split(r'\$', '$A$1') -> ['', 'A', '1']
+                ref = ref
+            elif len(ref_split) == 2: # mixed
+            # re.split(r'\$', '$A1') -> ['', 'A1'] 
+            # OR
+            # re.split(r'\$', 'A$1') -> ['A', '1'] 
+                coords  
+            elif len(ref_split) == 1: # relative
+            # re.split(r'\$', 'A1') -> ['A1']
+                pass
+
+        # piece back together
+            
         
         return
