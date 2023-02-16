@@ -796,19 +796,20 @@ class Workbook:
 
         source_sheet = sheet_objects[sheet_name.lower()] 
         source_cells = source_sheet.get_source_cells(start_location,
-            end_location) # Dict[locs, contents]
+            end_location) # List[locs]
 
         if to_sheet is None:
             to_sheet = sheet_name
         else:
             self.__validate_sheet_existence(to_sheet)
             # do we need to make new sheet if to_sheet does not exist?
-        target_sheet = sheet_objects[to_sheet.lower()]
-        target_cells = target_sheet.get_target_cells(sheet_name, start_location, 
+        # target_sheet = sheet_objects[to_sheet.lower()]
+        # changed below to source_sheet instead of target
+        target_cells = source_sheet.get_target_cells(start_location, 
             end_location, to_location, source_cells) # Dict[locs, contents]
 
         # Set contents of source cells (not in target area) to None
-        source_set = set(source_cells.keys())
+        source_set = set(source_cells)
         target_set = set(target_cells.keys())
         source_target_set_diff = source_set.difference(target_set)
         for loc in list(source_target_set_diff):
@@ -882,14 +883,15 @@ class Workbook:
 
         source_sheet = sheet_objects[sheet_name.lower()] 
         source_cells = source_sheet.get_source_cells(start_location,
-            end_location) # Dict[locs, contents]
+            end_location) # List[locs]
 
         if to_sheet is None:
             to_sheet = sheet_name
         else:
             self.__validate_sheet_existence(to_sheet)
-        target_sheet = sheet_objects[to_sheet.lower()]
-        target_cells = target_sheet.get_target_cells(sheet_name, start_location, 
+        # target_sheet = sheet_objects[to_sheet.lower()]
+        # changed below to source_sheet instead of target
+        target_cells = source_sheet.get_target_cells(start_location, 
             end_location, to_location, source_cells) # Dict[locs, contents]
 
         # Set contents of target cells (within same sheet if to_sheet is None)

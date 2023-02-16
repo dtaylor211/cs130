@@ -313,7 +313,9 @@ class Evaluator(Transformer):
                 working_sheet = args[0]
                 if working_sheet[0] == "'":
                     working_sheet = working_sheet[1:-1]
-                cell_name = args[1]
+                print('c', args[1])
+                cell_name = args[1].strip('$')
+                print(cell_name)
             else:
                 working_sheet = self.get_working_sheet()
                 cell_name = args[0]
@@ -322,13 +324,7 @@ class Evaluator(Transformer):
             if not re.match(r"^[A-Z]{1,4}[1-9][0-9]{0,3}$", cell_name.upper()):
                 raise KeyError('Cell location out of bounds')
 
-            print('made it')
             result = self.workbook.get_cell_value(working_sheet, cell_name)
-            print(result)
-
-            # Check if referencing non-existing cell
-            # if result is None:
-            #     return Tree('cell_ref', [Decimal(0)])
 
             # Check for propogating errors
             if isinstance(result, CellError):

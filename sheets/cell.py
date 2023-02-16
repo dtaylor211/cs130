@@ -21,7 +21,7 @@ Classes:
     - set_contents(object, Optional[str]) -> None
     - get_children(object) -> List[Tuple[str, str]]]
     - empty(object) -> None
-    - get_string_from_error(object, CellErrorType) -> str
+    - get_string_from_error(object, CellErrorType) -> str *
     - set_circular_error(object) -> None
 
 '''
@@ -240,19 +240,19 @@ class Cell:
 
         self.set_contents_and_value(None, None)
 
-    def get_string_from_error(self, cell_error_type: CellErrorType) -> str:
-        '''
-        Get the string representation of an error from its CellErrorType
+    # def get_string_from_error(self, cell_error_type: CellErrorType) -> str:
+    #     '''
+    #     Get the string representation of an error from its CellErrorType
 
-        Arguments:
-        - cell_error_type: CellErrorType - type of the error to get string of
+    #     Arguments:
+    #     - cell_error_type: CellErrorType - type of the error to get string of
 
-        Returns:
-        - string of error type
+    #     Returns:
+    #     - string of error type
 
-        '''
+    #     '''
 
-        return CELL_ERRORS[cell_error_type]
+    #     return CELL_ERRORS[cell_error_type]
 
     def set_circular_error(self) -> None:
         '''
@@ -263,56 +263,55 @@ class Cell:
         self._value = CellError(CellErrorType.CIRCULAR_REFERENCE,
                                 "Cell is in a circular reference.")
 
-    def get_shifted_contents(source_contents: str, 
-        coord_shift: Tuple[int, int]) -> str:
+    def get_shifted_contents(self, coord_shift: Tuple[int, int]) -> str:
         '''
         Shifts source cell contents to be target cell contents.  Handles
         absolute/mixed/relative referencing.
 
         Arguments:
-        - source_contents: str - contents of source cell
+        - source_contents: str - contents of source cell **TODO
         - coord_shift: Tuple[int, int] - diff between source & target cell
 
         '''
         # check if source cell contents are None or not formula
         #   -> simply return contents in current state if so
-        #
-        # Do we need to keep track of source sheet here? (if move to new sheet) 
+        source_contents = self.get_contents()
         if source_contents is None or source_contents[0] != "=":
             return source_contents
 
+        # Handler for regex substitution
         def subberoo(s):
             # print(s.groups())
             # print('check')
-            col, row = s.groups()[1:-1]
+            beg, col, row, end = s.groups()
             # print(col, row)
-            if row[0] == '$':
-                row_shift = 0
-                row = row[1:]
-                # print(row)
-                dol_row = '$'
-            else:
-                row_shift = coord_shift[1]
-                dol_row = ''
 
+            # Check for absolute col ref
             if col[0] == '$':
-                col_shift=0
-                col= col[1:]
-                # print(col)
-                dol_col = '$'
+                c_shift=0
+                col = col[1:]
+                c_mark = '$'
             else:
-                col_shift= coord_shift[0]
-                dol_col = ''
-            a = col+row
-            # print('yo',a.upper())
-            # print(re.match(r"^[A-Z]{1,4}[1-9][0-9]{0,3}$", a.upper()))
-            x, y = get_coords_from_loc(str(col+row))
-            x += col_shift
-            y += row_shift
-            loc = get_loc_from_coords((x,y))
-            sp = re.split(r'(\d+)', loc.upper())
-            return f'{s.groups()[0]}{dol_col}{sp[0]}{dol_row}{sp[1]}{s.groups()[-1]}'
+                c_shift= coord_shift[0]
+                c_mark = ''
 
-        sub = re.sub(r'([\ \-\+\\\*\=\&\!])(\$?[A-Za-z])+(\$?[1-9][0-9]*)([^!]|$)', subberoo, source_contents)
-        
+            # Check for absolute row ref
+            if row[0] == '$':
+                r_shift = 0
+                row = row[1:]
+                r_mark = '$'
+            else:
+                r_shift = coord_shift[1]
+                r_mark = ''
+
+            x, y = get_coords_from_loc(col+row)
+            x += c_shift
+            y += r_shift
+            loc = get_loc_from_coords((x,y))
+            split = re.split(r'(\d+)', loc.upper())
+            return f'{beg}{c_mark}{split[0]}{r_mark}{split[1]}{end}'
+
+        sub = re.sub(r'([\ \-\+\\\*=&!])(\$?[A-Za-z])+(\$?[1-9][0-9]*)([^!]|$)',
+                      subberoo, source_contents)
+
         return sub

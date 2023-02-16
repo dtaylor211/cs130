@@ -28,6 +28,7 @@ Classes:
 
 '''
 
+
 from decimal import Decimal
 import io
 import json
@@ -781,3 +782,23 @@ class TestWorkbook:
         del sheet_objects['sheet1']
         new_sheet_objects = wb1.get_sheet_objects()
         assert new_sheet_objects['sheet1'] is not None
+
+    def test_move_cells_same_sheet(self) -> None:
+        '''
+        Test moving a group of cells in the same sheet
+
+        '''
+
+        wb1 = Workbook()
+        wb1.new_sheet('Sheet1')
+        wb1.set_cell_contents('Sheet1', 'A1', '1')
+        wb1.move_cells('Sheet1', 'A1', 'A1', 'A2')
+        contents = wb1.get_cell_contents('Sheet1', 'A2')
+        value = wb1.get_cell_value('Sheet1', 'A2')
+        assert contents == '1'
+        assert value == Decimal('1')
+
+        contents = wb1.get_cell_contents('Sheet1', 'A1')
+        value = wb1.get_cell_value('Sheet1', 'A1')
+        assert contents == None
+        assert value == None
