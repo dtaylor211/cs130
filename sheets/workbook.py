@@ -425,26 +425,31 @@ class Workbook:
                 # get the adjacency list of the cell parents graph
                 parent_adj = cell_graph.get_adjacency_list()
 
-                # go through cells that reference the cells on sheet
+                # get the cells that references to cells on sheet
+                ref_cells = set()
                 for ref in updated_cells:
-                    for (sheet, cell) in parent_adj[ref]:
-                        # get cell contents
-                        contents = self.get_cell_contents(sheet, cell)
+                    for cell in parent_adj[ref]:
+                        ref_cells.add(cell)
 
-                        # replace sheet name with new name
-                        contents=re.sub(R"([=\+\-*/& ])"+updated_sheet+"!",
-                                        R"\1"+renamed_sheet+"!",
-                                        contents, flags=re.IGNORECASE)
-                        contents=re.sub("'"+updated_sheet+"'"+"!",
-                        renamed_sheet+"!", contents, flags=re.IGNORECASE)
+                # go through cells that reference the cells on sheet
+                for (sheet, cell) in ref_cells:
+                    # get cell contents
+                    contents = self.get_cell_contents(sheet, cell)
 
-                        # set the new contents with new sheet name
-                        sheet_objects[sheet.lower()].set_cell_contents(
-                            cell, contents)
+                    # replace sheet name with new name
+                    contents=re.sub(R"([=\+\-*/& ])"+updated_sheet+"!",
+                                    R"\1"+renamed_sheet+"!",
+                                    contents, flags=re.IGNORECASE)
+                    contents=re.sub("'"+updated_sheet+"'"+"!",
+                    renamed_sheet+"!", contents, flags=re.IGNORECASE)
 
-                        # call helper function to update sheet names in contents
-                        self.__format_sheet_names(sheet, cell,
-                                                    adj[(sheet, cell)])
+                    # set the new contents with new sheet name
+                    sheet_objects[sheet.lower()].set_cell_contents(
+                        cell, contents)
+
+                    # call helper function to update sheet names in contents
+                    self.__format_sheet_names(sheet, cell,
+                                                adj[(sheet, cell)])
 
                 self.__set_sheet_objects(sheet_objects)
         else:
