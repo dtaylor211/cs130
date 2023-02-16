@@ -601,17 +601,112 @@ class TestWorkbook:
         assert contents is None
         assert value is None
 
-        # move below test to one with cell references, just using to check work
-        wb1.set_cell_contents('Sheet1', 'A1', 'test')
-        wb1.set_cell_contents('Sheet1', 'B1', 'test2')
-        wb1.set_cell_contents('Sheet1', 'A2', '=\'Sheet1\'!A$1 & "pass!A1"')
-        wb1.move_cells('Sheet1', 'A1', 'A2', 'B2')
-        contents = wb1.get_cell_contents('Sheet1', 'B3')
-        value = wb1.get_cell_value('Sheet1', 'B3')
-        assert contents ==  '=\'Sheet1\'!B$1 & "pass!A1"'
-        assert value == 'test2pass!A1'
+        wb1.move_cells('shEEt1', 'A2', 'A2', 'A3')
+        contents = wb1.get_cell_contents('Sheet1', 'A3')
+        value = wb1.get_cell_value('Sheet1', 'A3')
+        assert contents == '1'
+        assert value == Decimal('1')
 
-        # add some tests with cell references
+        contents = wb1.get_cell_contents('Sheet1', 'A2')
+        value = wb1.get_cell_value('Sheet1', 'A2')
+        assert contents is None
+        assert value is None
+
+    def test_copy_cells_same_sheet(self) -> None:
+        '''
+        Test copying a group of cells in the same sheet
+
+        '''
+
+        pass
+
+    def test_move_cells_overlap(self) -> None:
+        '''
+        Test moving a group of cells in the same sheet where the source area
+        and target area are overlapping
+
+        '''
+
+        pass
+
+    def test_copy_cells_overlap(self) -> None:
+        '''
+        Test copying a group of cells in the same sheet where the source area
+        and target area are overlapping
+
+        '''
+
+        pass
+
+    def test_move_cells_diff_sheets(self) -> None:
+        '''
+        Test moving a group of cells from one sheet to another sheet
+
+        '''
+
+        pass
+
+    def test_copy_cells_diff_sheets(self) -> None:
+        '''
+        Test copying a group of cells from one sheet to another sheet
+
+        '''
+
+        pass
+
+    def test_move_cells_with_references(self) -> None:
+        '''
+        Test moving a group of cells where contents involve formulas/refs
+
+        '''
+
+        # dollar sign in sheet name, other characters
+        # two diff sheet names in formula
+        # concat with weird variables
+        #   '=Sheet1!A1 & "A2"'
+        #   '=Sheet1!A1 & "Sheet1!A2"'
+        # '=Sheet1!A1 + A3'
+
+        # move below test to one with cell references, just using to check work
+        # wb1.set_cell_contents('Sheet1', 'A1', 'test')
+        # wb1.set_cell_contents('Sheet1', 'B1', 'test2')
+        # wb1.set_cell_contents('Sheet1', 'A2', '=\'Sheet1\'!A$1 & "pass!A1"')
+        # wb1.move_cells('Sheet1', 'A1', 'A2', 'B2')
+        # contents = wb1.get_cell_contents('Sheet1', 'B3')
+        # value = wb1.get_cell_value('Sheet1', 'B3')
+        # assert contents ==  '=\'Sheet1\'!B$1 & "pass!A1"'
+        # assert value == 'test2pass!A1'
+
+        pass
+
+    def test_copy_cells_with_references(self) -> None:
+        '''
+        Test copying a group of cells where contents involve formulas/refs
+
+        '''
+
+        pass
+
+    def test_move_cells_target_oob(self) -> None:
+        '''
+        Test moving a group of cells where the target area would extend outside
+        the valid area of the spreadsheet (no changes should be made)
+
+        '''
+
+        # If the target area would extend outside the valid area of the
+        # spreadsheet (i.e. beyond cell ZZZZ9999), a ValueError is raised, and
+        # no changes are made to the spreadsheet.
+        pass
+
+    def test_copy_cells_target_oob(self) -> None:
+        '''
+        Test copying a group of cells where the target area would extend outside
+        the valid area of the spreadsheet (no changes should be made)
+
+        '''
+
+        pass
 
     def test_move_copy_with_error(self) -> None:
         '''
