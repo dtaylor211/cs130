@@ -427,8 +427,6 @@ class TestEvaluatorInvalid:
         '''
         Test when given a formula where multiple errors could propagate
 
-        TODO - need to add more to these tests
-
         '''
 
         WB.set_cell_contents('Test', 'A1', '=B1')
@@ -437,3 +435,20 @@ class TestEvaluatorInvalid:
         value = WB.get_cell_value('Test', 'C1')
         assert isinstance(value, CellError)
         assert value.get_type() == CellErrorType.CIRCULAR_REFERENCE
+
+        WB.set_cell_contents('Test', 'A1', '1')
+        WB.set_cell_contents('Test', 'A2', '=AA99 +&* A2')
+        value = WB.get_cell_value('Test', 'A2')
+        assert isinstance(value, CellError)
+        assert value.get_type() == CellErrorType.PARSE_ERROR
+
+        WB.set_cell_contents('Test', 'A1', '=Sheet99!A1 / 0')
+        value = WB.get_cell_value('Test', 'A1')
+        assert isinstance(value, CellError)
+        assert value.get_type() == CellErrorType.BAD_REFERENCE
+
+        WB.set_cell_contents('Test', 'A1', 'word')
+        WB.set_cell_contents('Test', 'A2', '=A1 / 0')
+        value = WB.get_cell_value('Test', 'A2')
+        assert isinstance(value, CellError)
+        assert value.get_type() == CellErrorType.TYPE_ERROR

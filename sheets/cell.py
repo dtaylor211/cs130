@@ -193,6 +193,7 @@ class Cell:
                 visitor.visit(tree)
                 self._children = list(visitor.children)
                 evaluator = evaluator.transform(tree).children[0]
+                print(evaluator)
                 # Handle when referencing an empty cell only
                 evaluator = 0 if evaluator is None else evaluator
                 self.set_contents_and_value(contents, evaluator)
