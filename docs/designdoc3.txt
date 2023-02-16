@@ -21,15 +21,16 @@ L1.  [2pts] Enumerate all teammates here.
 
 L2.  [2pts] What did each teammate focus on during this project?
 
-     Ben:      Functionality of copy/move cells
-     Kyle:     Iterative graph function
-     Dallas:   Linter
+     Ben:      Functionality of copy/move cells, testing
+     Kyle:     Iterative graph function, relative/absolute cell references
+     Dallas:   Linter, relative/absolute cell references, invalid cell 
+               references, testing
 
 L3.  [3pts] Approximately how many hours did each teammate spend on the project?
 
      Ben:      11
      Kyle:     11
-     Dallas:   10
+     Dallas:   15
 
 Spreadsheet Engine Design (9 pts)
 ----------------------------------
@@ -39,15 +40,41 @@ D1.  [3pts] Moving and copying regions of a sheet are very similar operations,
      of the similarity of these two operations to reduce the amount of code
      required to provide this functionality?
 
+     We took advantage of this by creating helper functions (used by sheets)
+     called get_source_cells() and get_target_cells().  For both moving and 
+     copying, it is necessary to have access to the source cells in the source
+     area and the target cells in the target/destination area.  Furthermore, 
+     get_target_cells() calls get_shifted_contents() for each cell in order
+     to apply shifts to formulas appropriately.  With all that said, these two
+     helper functions handle most of the overlapping logic between moving
+     and copying cells.  The only difference between the two is that 
+     move_cells() has an extra few lines that sets the contents of the source 
+     cells (not in the target area) to None.  Overall, we were able to reduce 
+     the amount of code appropriately.
+
 
 D2.  [3pts] Similarly, moving/copying regions of a sheet, and renaming a sheet,
      both involve formula updates.  Was your team able to factor out common
      aspects of these two operations to reduce the amount of code required to
      implement these operations?  If so, what did you do?  If not, why not?
 
+     We did not address this specifically since our moving/copying cells
+     calls set_cell_contents() which subsequently calls update_cell_values().
+     Our rename_sheet() implementation also calls update_cell_values().  The 
+     logic for updating formulas with moving/copying is held in 
+     get_shifted_contents() (using regex) while the set_cell_contents() takes 
+     in an optional argument for the new (renamed) sheet name and updates the 
+     formula appropriately using regex.
+
 
 D3.  [3pts] How does your implementation address the challenges of moving or
      copying a region of cells where the source and target regions overlap?
+
+     We keep track of the locations/contents for source cells and target cells
+     which means we don't have to worry about contents being inaccurately 
+     changed before being copied.  Furthermore, we use .difference() to help 
+     us determine the set of source cells that don't overlap with target cells
+     before setting the source cell contents to None (for move_cells()).
 
 
 Static Code Analysis / Code Linting (16pts)
@@ -58,18 +85,30 @@ L1.  [5pts] The Project 3 spec includes an example of a subtle implementation
      Briefly describe the cause of the buggy behavior, and what is the
      recommended approach for avoiding the buggy behavior.
 
+     TODO
+
 
 L2.  [4pts] What code-linter did your team use on your project?  Why did you
      choose it?  Was this the first CS130 project in which you used a linter?
+
+     We used pylint because of the stronge recommedation based on its ability
+     to catch both style issues and buggy usage issues.  This was the first
+     CS130 project in which we used a linter of any kind.
 
 
 L3.  [3pts] How did you automate the execution of your code linter?  Did
      everyone in your team find it easy to run?
 
+     We creating make targets for difference executions of our code linter.  We
+     found this extremely easy to run.
+
 
 L4.  [4pts] Did the use of the linter improve your overall code quality and
      correctness?  Give some specific details in your answer.  Were there any
      serious issues (e.g. buggy language idioms) you were unaware of?
+
+     Yes, the linter certainly improved our overall code quality and 
+     correctness.  For example, TODO - DALLAS.
 
 
 Performance Improvement (18 pts)
