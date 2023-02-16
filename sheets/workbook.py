@@ -421,42 +421,39 @@ class Workbook:
                 # fix new sheet name
                 if re.search(R'[ .?!,:;!@#$%^&*\(\)\-]', renamed_sheet):
                     renamed_sheet = "'"+renamed_sheet+"'"
-
                 # get the adjacency list of the cell parents graph
                 parent_adj = cell_graph.get_adjacency_list()
+                # get the cells that references to cells on sheet
+                ref_cells = set()
+                for ref in updated_cells:
+                    for cell in parent_adj[ref]:
+                        ref_cells.add(cell)
 
                 # go through cells that reference the cells on sheet
-                for ref in updated_cells:
-                    for (sheet, cell) in parent_adj[ref]:
-                        # get cell contents
-                        contents = self.get_cell_contents(sheet, cell)
+                for (sheet, cell) in ref_cells:
+                    # get cell contents
+                    contents = self.get_cell_contents(sheet, cell)
+                    # replace sheet name with new name
+                    contents=re.sub(R"([=\+\-*/& ])"+updated_sheet+"!",
+                                    R"\1"+renamed_sheet+"!",
+                                    contents, flags=re.IGNORECASE)
+                    contents=re.sub("'"+updated_sheet+"'"+"!",
+                    renamed_sheet+"!", contents, flags=re.IGNORECASE)
 
-                        # replace sheet name with new name
-                        contents=re.sub(R"([=\+\-*/& ])"+updated_sheet+"!",
-                                        R"\1"+renamed_sheet+"!",
-                                        contents, flags=re.IGNORECASE)
-                        contents=re.sub("'"+updated_sheet+"'"+"!",
-                        renamed_sheet+"!", contents, flags=re.IGNORECASE)
-
-                        # set the new contents with new sheet name
-                        sheet_objects[sheet.lower()].set_cell_contents(
-                            cell, contents)
-
-                        # call helper function to update sheet names in contents
-                        self.__format_sheet_names(sheet, cell,
-                                                    adj[(sheet, cell)])
-
+                    # set the new contents with new sheet name
+                    sheet_objects[sheet.lower()].set_cell_contents(
+                        cell, contents)
+                    # call helper function to update sheet names in contents
+                    self.__format_sheet_names(sheet, cell,
+                                                adj[(sheet, cell)])
                 self.__set_sheet_objects(sheet_objects)
         else:
             updated_cells = [(updated_sheet, updated_cell)]
 
-        # call helper to get the topological sort of cells to update
-        cell_topological = self.__get_topological(cell_graph, updated_cells,
-            adj)
-
         # call helper to update and notify cells that need updating
-        self.__update_notify_cells(updated_cells, cell_topological, notify,
-            updated_cell)
+        self.__update_notify_cells(updated_cells,
+            self.__get_topological(cell_graph, updated_cells, adj),
+            notify, updated_cell)
 
     @staticmethod
     def load_workbook(fp: TextIO) -> 'Workbook':

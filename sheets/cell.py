@@ -193,9 +193,8 @@ class Cell:
                 visitor.visit(tree)
                 self._children = list(visitor.children)
                 evaluator = evaluator.transform(tree).children[0]
-                print(evaluator)
                 # Handle when referencing an empty cell only
-                evaluator = 0 if evaluator is None else evaluator
+                evaluator = Decimal('0') if evaluator is None else evaluator
                 self.set_contents_and_value(contents, evaluator)
 
             elif inp.upper() in list(CELL_ERRORS.values()):
@@ -300,10 +299,12 @@ class Cell:
             x, y = get_coords_from_loc(col+row)
             x += c_shift
             y += r_shift
+
             try:
                 loc = get_loc_from_coords((x,y))
             except ValueError:
                 return f'{beg}#REF!{end}'
+
             split = re.split(r'(\d+)', loc.upper())
             return f'{beg}{c_mark}{split[0]}{r_mark}{split[1]}{end}'
 

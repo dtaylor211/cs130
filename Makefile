@@ -61,6 +61,22 @@ test-performance-rename-chain:
         snakeviz program.prof; \
     fi
 
+test-performance-copy:
+	python -m cProfile -o program.prof \
+		./tests/performance/test_copy.py
+	@read -p "Visualize Data? [y/N] " ans && ans=$${ans:-N} ; \
+    if [ $${ans} = y ] || [ $${ans} = Y ]; then \
+        snakeviz program.prof; \
+    fi
+
+test-performance-move:
+	python -m cProfile -o program.prof \
+		./tests/performance/test_move.py
+	@read -p "Visualize Data? [y/N] " ans && ans=$${ans:-N} ; \
+    if [ $${ans} = y ] || [ $${ans} = Y ]; then \
+        snakeviz program.prof; \
+    fi
+
 pylint: $(patsubst %.py,%.pylint,$(PYTHONFILES))
 
 lint-test-context:
@@ -74,6 +90,15 @@ lint-test-all:
 	$(PYLINT) $(PYLINTFLAGS) ./tests/test_evaluator.py
 	$(PYLINT) $(PYLINTFLAGS) ./tests/test_evaluator_invalid.py
 	$(PYLINT) $(PYLINTFLAGS) ./tests/test_utils.py
+
+lint-test-performance-all:
+	$(PYLINT) $(PYLINTFLAGS) ./tests/performance/test_circular_chain.py
+	$(PYLINT) $(PYLINTFLAGS) ./tests/performance/test_reference_chain.py
+	$(PYLINT) $(PYLINTFLAGS) ./tests/performance/test_rename_volume1.py
+	$(PYLINT) $(PYLINTFLAGS) ./tests/performance/test_rename_volume2.py
+	$(PYLINT) $(PYLINTFLAGS) ./tests/performance/test_rename_chain.py
+	$(PYLINT) $(PYLINTFLAGS) ./tests/performance/test_move.py
+	$(PYLINT) $(PYLINTFLAGS) ./tests/performance/test_copy.py
 
 lint-test-%:
 	$(PYLINT) $(PYLINTFLAGS) ./tests/test_$*.py
