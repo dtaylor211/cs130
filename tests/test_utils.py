@@ -72,5 +72,33 @@ class TestUtils:
 
         '''
 
+        with pytest.raises(ValueError):
+            get_loc_from_coords((0, 0))
+        with pytest.raises(ValueError):
+            get_loc_from_coords((0, 1))
+        with pytest.raises(ValueError):
+            get_loc_from_coords((1, 0))
+        with pytest.raises(ValueError):
+            get_loc_from_coords((10000, 0))
+        with pytest.raises(ValueError):
+            get_loc_from_coords((0, 10000))
+        with pytest.raises(ValueError):
+            get_loc_from_coords((10000, 10000))
+
         loc = get_loc_from_coords((1, 1))
         assert loc == 'A1'
+
+        loc = get_loc_from_coords((1, 5))
+        assert loc == 'A5'
+
+        loc = get_loc_from_coords((27, 15))
+        assert loc == 'AA15'
+
+        loc = get_loc_from_coords((27, 16))
+        assert loc == 'AA16'
+
+        loc = get_loc_from_coords((705, 750))
+        assert loc == 'AAC750'
+
+        loc = get_loc_from_coords((705, 751))
+        assert loc == 'AAC751'
