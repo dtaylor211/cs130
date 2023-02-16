@@ -47,7 +47,7 @@ from typing import Optional, List, Tuple, Any, Dict, Callable, Iterable, TextIO
 from .sheet import Sheet
 from .evaluator import Evaluator
 from .graph import Graph
-from .utils import get_loc_from_coords
+from .utils import get_loc_from_coords, get_coords_from_loc
 
 
 class Workbook:
@@ -790,8 +790,34 @@ class Workbook:
             to or None
 
         '''
+        # could make another helper
+        self.__validate_sheet_existence(sheet_name)
+        sheet_objects = self.get_sheet_objects()
 
-        pass
+        source_sheet = sheet_objects[sheet_name.lower()] 
+        source_cells = source_sheet.get_source_cells(start_location,
+            end_location) # Dict[locs, contents]
+
+        if to_sheet is None:
+            to_sheet = sheet_name
+        else:
+            self.__validate_sheet_existence(to_sheet)
+            # do we need to make new sheet if to_sheet does not exist?
+        target_sheet = sheet_objects[to_sheet.lower()]
+        target_cells = target_sheet.get_target_cells(sheet_name, start_location, 
+            end_location, to_location, source_cells) # Dict[locs, contents]
+
+        # Set contents of source cells (not in target area) to None
+        source_set = set(source_cells.keys())
+        target_set = set(target_cells.keys())
+        source_target_set_diff = source_set.difference(target_set)
+        for loc in list(source_target_set_diff):
+            self.set_cell_contents(sheet_name, loc, None)
+
+        # Set contents of target cells (within same sheet if to_sheet is None)
+        for loc, contents in target_cells.items():
+            self.set_cell_contents(to_sheet, loc, contents)
+
 
     def copy_cells(self, sheet_name: str, start_location: str,
             end_location: str, to_location: str, to_sheet: Optional[str] = None
@@ -851,7 +877,24 @@ class Workbook:
 
         '''
 
-        pass
+        self.__validate_sheet_existence(sheet_name)
+        sheet_objects = self.get_sheet_objects()
+
+        source_sheet = sheet_objects[sheet_name.lower()] 
+        source_cells = source_sheet.get_source_cells(start_location,
+            end_location) # Dict[locs, contents]
+
+        if to_sheet is None:
+            to_sheet = sheet_name
+        else:
+            self.__validate_sheet_existence(to_sheet)
+        target_sheet = sheet_objects[to_sheet.lower()]
+        target_cells = target_sheet.get_target_cells(sheet_name, start_location, 
+            end_location, to_location, source_cells) # Dict[locs, contents]
+
+        # Set contents of target cells (within same sheet if to_sheet is None)
+        for loc, contents in target_cells.items():
+            self.set_cell_contents(to_sheet, loc, contents)
 
     ########################################################################
     # Private Helpers
@@ -901,6 +944,7 @@ class Workbook:
         - location: str - location of the current cell
         - sheets_in_contents: List[Tuple] - list of the sheets referenced in
             the current cell's contents
+
         '''
 
         sheet_objects = self.get_sheet_objects()

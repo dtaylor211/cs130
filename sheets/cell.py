@@ -27,6 +27,7 @@ Classes:
 '''
 
 
+import re
 from decimal import Decimal, DecimalException
 from typing import Optional, List, Tuple, Any
 
@@ -35,6 +36,7 @@ from lark import Visitor, Tree
 
 from .evaluator import Evaluator
 from .cell_error import CellError, CellErrorType, CELL_ERRORS
+from .utils import get_loc_from_coords, get_coords_from_loc
 
 
 RESTRICTED_VALUES = [
@@ -260,3 +262,57 @@ class Cell:
 
         self._value = CellError(CellErrorType.CIRCULAR_REFERENCE,
                                 "Cell is in a circular reference.")
+
+    def get_shifted_contents(source_contents: str, 
+        coord_shift: Tuple[int, int]) -> str:
+        '''
+        Shifts source cell contents to be target cell contents.  Handles
+        absolute/mixed/relative referencing.
+
+        Arguments:
+        - source_contents: str - contents of source cell
+        - coord_shift: Tuple[int, int] - diff between source & target cell
+
+        '''
+        # check if source cell contents are None or not formula
+        #   -> simply return contents in current state if so
+        #
+        # Do we need to keep track of source sheet here? (if move to new sheet) 
+        if source_contents is None or source_contents[0] != "=":
+            return source_contents
+
+        def subberoo(s):
+            # print(s.groups())
+            # print('check')
+            col, row = s.groups()[1:-1]
+            # print(col, row)
+            if row[0] == '$':
+                row_shift = 0
+                row = row[1:]
+                # print(row)
+                dol_row = '$'
+            else:
+                row_shift = coord_shift[1]
+                dol_row = ''
+
+            if col[0] == '$':
+                col_shift=0
+                col= col[1:]
+                # print(col)
+                dol_col = '$'
+            else:
+                col_shift= coord_shift[0]
+                dol_col = ''
+            a = col+row
+            # print('yo',a.upper())
+            # print(re.match(r"^[A-Z]{1,4}[1-9][0-9]{0,3}$", a.upper()))
+            x, y = get_coords_from_loc(str(col+row))
+            x += col_shift
+            y += row_shift
+            loc = get_loc_from_coords((x,y))
+            sp = re.split(r'(\d+)', loc.upper())
+            return f'{s.groups()[0]}{dol_col}{sp[0]}{dol_row}{sp[1]}{s.groups()[-1]}'
+
+        sub = re.sub(r'([\ \-\+\\\*\=\&\!])(\$?[A-Za-z])+(\$?[1-9][0-9]*)([^!]|$)', subberoo, source_contents)
+        
+        return sub
