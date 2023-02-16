@@ -313,9 +313,7 @@ class Evaluator(Transformer):
                 working_sheet = args[0]
                 if working_sheet[0] == "'":
                     working_sheet = working_sheet[1:-1]
-                print('c', args[1])
-                cell_name = args[1].strip('$')
-                print(cell_name)
+                cell_name = args[1].replace('$', '')
             else:
                 working_sheet = self.get_working_sheet()
                 cell_name = args[0]

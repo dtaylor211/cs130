@@ -9,6 +9,7 @@ test-evaluator:
 	pytest -q ./tests/test_evaluator_invalid.py
 
 test:
+	pytest -q ./tests/test_workbook_basic.py
 	pytest -q ./tests/test_workbook.py
 	pytest -q ./tests/test_sheet.py
 	pytest -q ./tests/test_utils.py

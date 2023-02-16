@@ -21,7 +21,6 @@ Classes:
     - set_contents(object, Optional[str]) -> None
     - get_children(object) -> List[Tuple[str, str]]]
     - empty(object) -> None
-    - get_string_from_error(object, CellErrorType) -> str *
     - set_circular_error(object) -> None
 
 '''
@@ -205,8 +204,8 @@ class Cell:
                 self.set_contents_and_value(contents, CellError(e_type, '',
                     None))
 
-            # Otherwise set to NUMBER type - works for now, will need to change
-            # if we can have other cell types
+            # Otherwise set to NUMBER type, if this fails throws
+            # Decimal Exception
             else:
                 temp_value = Decimal(inp)
                 if temp_value in RESTRICTED_VALUES:
@@ -240,20 +239,6 @@ class Cell:
 
         self.set_contents_and_value(None, None)
 
-    # def get_string_from_error(self, cell_error_type: CellErrorType) -> str:
-    #     '''
-    #     Get the string representation of an error from its CellErrorType
-
-    #     Arguments:
-    #     - cell_error_type: CellErrorType - type of the error to get string of
-
-    #     Returns:
-    #     - string of error type
-
-    #     '''
-
-    #     return CELL_ERRORS[cell_error_type]
-
     def set_circular_error(self) -> None:
         '''
         Set the value of a cell to be a circular reference
@@ -273,18 +258,25 @@ class Cell:
         - coord_shift: Tuple[int, int] - diff between source & target cell
 
         '''
-        # check if source cell contents are None or not formula
-        #   -> simply return contents in current state if so
+
         source_contents = self.get_contents()
+        source_value = self.get_value()
+
+        # check if source cell contents are None or not formula, return
         if source_contents is None or source_contents[0] != "=":
             return source_contents
 
+        # check if source cell value is a Parse Error, return
+        if isinstance(source_value, CellError) and source_value.get_type() == \
+            CellErrorType.PARSE_ERROR:
+            return source_contents
+        
+        # remove strings for case we have '= ... & "sheet!A1"
+        split = source_contents.split('\"')
+
         # Handler for regex substitution
         def subberoo(s):
-            # print(s.groups())
-            # print('check')
             beg, col, row, end = s.groups()
-            # print(col, row)
 
             # Check for absolute col ref
             if col[0] == '$':
@@ -307,11 +299,20 @@ class Cell:
             x, y = get_coords_from_loc(col+row)
             x += c_shift
             y += r_shift
-            loc = get_loc_from_coords((x,y))
+            try:
+                loc = get_loc_from_coords((x,y))
+            except ValueError:
+                return f'{beg}#REF!{end}'
             split = re.split(r'(\d+)', loc.upper())
             return f'{beg}{c_mark}{split[0]}{r_mark}{split[1]}{end}'
 
-        sub = re.sub(r'([\ \-\+\\\*=&!])(\$?[A-Za-z])+(\$?[1-9][0-9]*)([^!]|$)',
-                      subberoo, source_contents)
+        sub = ''
+        for i in range(len(split)):
+            if i % 2 == 0:
+                sub += re.sub(
+                    r'([\ \-\+\\\*=&!])(\$?[A-Za-z]+)(\$?[1-9][0-9]*)([^!]|$)',
+                    subberoo, split[i])
+            else:
+                sub += f'"{split[i]}"'
 
         return sub
