@@ -104,7 +104,7 @@ class TestSheet:
         source_cells = sheet.get_source_cells('A1', 'B3')
         result_list = ['A1', 'A2', 'A3', 'B1', 'B2', 'B3']
         assert source_cells == result_list
-        
+
         source_cells = sheet.get_source_cells('B3', 'A1')
         assert source_cells == result_list
 

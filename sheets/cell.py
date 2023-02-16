@@ -271,13 +271,13 @@ class Cell:
         if isinstance(source_value, CellError) and source_value.get_type() == \
             CellErrorType.PARSE_ERROR:
             return source_contents
-        
+
         # remove strings for case we have '= ... & "sheet!A1"
         split = source_contents.split('\"')
 
         # Handler for regex substitution
-        def subberoo(s):
-            beg, col, row, end = s.groups()
+        def subberoo(match):
+            beg, col, row, end = match.groups()
 
             # Check for absolute col ref
             if col[0] == '$':
@@ -307,13 +307,13 @@ class Cell:
             split = re.split(r'(\d+)', loc.upper())
             return f'{beg}{c_mark}{split[0]}{r_mark}{split[1]}{end}'
 
-        sub = ''
-        for i in range(len(split)):
+        new_contents = ''
+        for i, substring in enumerate(split):
             if i % 2 == 0:
-                sub += re.sub(
+                new_contents += re.sub(
                     r'([\ \-\+\\\*=&!])(\$?[A-Za-z]+)(\$?[1-9][0-9]*)([^!]|$)',
-                    subberoo, split[i])
+                    subberoo, substring)
             else:
-                sub += f'"{split[i]}"'
+                new_contents += f'"{substring}"'
 
-        return sub
+        return new_contents

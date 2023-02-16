@@ -1,3 +1,8 @@
+PYLINT = pylint --rcfile=./.pylintrc
+PYLINTFLAGS = -rn
+
+PYTHONFILES := $(wildcard *.py)
+
 setup: requirements.txt
 	pip install -r requirements.txt
 
@@ -56,15 +61,19 @@ test-performance-rename-chain:
         snakeviz program.prof; \
     fi
 
-PYLINT = pylint --rcfile=./.pylintrc
-PYLINTFLAGS = -rn
-
-PYTHONFILES := $(wildcard *.py)
-
 pylint: $(patsubst %.py,%.pylint,$(PYTHONFILES))
 
 lint-test-context:
 	$(PYLINT) $(PYLINTFLAGS) ./tests/context.py
+
+lint-test-all:
+	$(PYLINT) $(PYLINTFLAGS) ./tests/context.py
+	$(PYLINT) $(PYLINTFLAGS) ./tests/test_workbook.py
+	$(PYLINT) $(PYLINTFLAGS) ./tests/test_workbook_basic.py
+	$(PYLINT) $(PYLINTFLAGS) ./tests/test_sheet.py
+	$(PYLINT) $(PYLINTFLAGS) ./tests/test_evaluator.py
+	$(PYLINT) $(PYLINTFLAGS) ./tests/test_evaluator_invalid.py
+	$(PYLINT) $(PYLINTFLAGS) ./tests/test_utils.py
 
 lint-test-%:
 	$(PYLINT) $(PYLINTFLAGS) ./tests/test_$*.py

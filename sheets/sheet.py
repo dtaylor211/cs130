@@ -238,7 +238,7 @@ class Sheet:
             "cell-contents": cell_contents
         }
 
-    def get_source_cells(self, start_location: str, 
+    def get_source_cells(self, start_location: str,
         end_location: str) -> List[str]:
         '''
         Gets the list of source cell locations using start/end locations.
@@ -263,18 +263,15 @@ class Sheet:
 
         # List[str] = List[cell location]
         # get_loc_from_coords raises ValueError for invalid coords
-        # source_cells: Dict[str, str] = {}
         source_cells: List[str] = []
         for col in range(top_left_col, bottom_right_col + 1):
             for row in range(top_left_row, bottom_right_row + 1):
-                coords = (col, row)
-                loc = get_loc_from_coords(coords)
-                # source_cells[loc] = self.get_cell_contents(loc)
+                loc = get_loc_from_coords((col, row))
                 source_cells.append(loc)
 
         return source_cells
 
-    def get_target_cells(self, start_location: str, end_location: str, 
+    def get_target_cells(self, start_location: str, end_location: str,
             to_location: str, source_cells: List[str]) -> Dict[str, str]:
         '''
         Gets list of target cell location and contents (considering shift)
@@ -289,36 +286,35 @@ class Sheet:
 
         '''
 
-        # we only need to pass in the top left of coords
-        # we cannot call this on a target sheet, must be called from source sheet
-        
-        all_cells = self.get_all_cells()
         target_top_left = get_coords_from_loc(to_location)
 
-        start_col, start_row = get_coords_from_loc(start_location)
-        end_col, end_row = get_coords_from_loc(end_location)
-        top_left_coords = (min(start_col, end_col), min(start_row, end_row))
+        start_coords = get_coords_from_loc(start_location)
+        end_coords = get_coords_from_loc(end_location)
+        top_left_coords = (
+            min(start_coords[0], end_coords[0]),
+            min(start_coords[1], end_coords[1])
+        )
 
-        col_diff = target_top_left[0] - top_left_coords[0]
-        row_diff = target_top_left[1] - top_left_coords[1]
-        coord_shift = (col_diff, row_diff)
+        diff_coords = (
+            target_top_left[0] - top_left_coords[0],
+            target_top_left[1] - top_left_coords[1]
+        )
 
         target_cells: Dict[str, str] = {}
-        # for source_loc, source_contents in source_cells.items():
+
         for source_loc in source_cells:
             source_coords = get_coords_from_loc(source_loc)
-            target_col = source_coords[0] + col_diff
-            target_row = source_coords[1] + row_diff
-            target_coords = (target_col, target_row)
-            target_loc = get_loc_from_coords(target_coords) # checks boundaries
-            
-            # target_cell = Cell(target_loc, self._evaluator)
+            target_coords = (
+                source_coords[0] + diff_coords[0],
+                source_coords[1] + diff_coords[1]
+            )
+
             try:
-                target_cell = all_cells[source_coords]
-                target_contents = target_cell.get_shifted_contents(coord_shift)
-            except KeyError as e:
+                target_contents = self.get_all_cells()[source_coords]\
+                    .get_shifted_contents(diff_coords)
+            except KeyError:
                 target_contents = None
-            
-            target_cells[target_loc] = target_contents
+
+            target_cells[get_loc_from_coords(target_coords)] = target_contents
 
         return target_cells

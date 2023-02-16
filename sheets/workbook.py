@@ -47,7 +47,7 @@ from typing import Optional, List, Tuple, Any, Dict, Callable, Iterable, TextIO
 from .sheet import Sheet
 from .evaluator import Evaluator
 from .graph import Graph
-from .utils import get_loc_from_coords, get_coords_from_loc
+from .utils import get_loc_from_coords
 
 
 class Workbook:
@@ -738,42 +738,22 @@ class Workbook:
             end_location: str, to_location: str, to_sheet: Optional[str] = None
             ) -> None:
         '''
-        Move cells from one location to another, possibly moving them to
-        another sheet.  All formulas in the area being moved will also have
-        all relative and mixed cell-references updated by the relative
-        distance each formula is being copied.
+        Move cells from one location to another, possibly to another sheet.
+        All formulas being moved will have all relative/mixed cell-references
+        updated by relative distance.
 
-        Cells in the source area (that are not also in the target area) will
-        become empty due to the move operation.
-
-        The start_location and end_location specify the corners of an area of
-        cells in the sheet to be moved.  The to_location specifies the
-        top-left corner of the target area to move the cells to.
-
-        Both corners are included in the area being moved; for example,
-        copying cells A1-A3 to B1 would be done by passing
-        start_location="A1", end_location="A3", and to_location="B1".
+        Cells in the source area (and not target area) are set to empty.
 
         The start_location value does not necessarily have to be the top left
         corner of the area to move, nor does the end_location value have to be
         the bottom right corner of the area; they are simply two corners of
         the area to move.
 
-        This function works correctly even when the destination area overlaps
-        the source area.
-
-        The sheet name matches are case-insensitive; the text must match but
-        the case does not have to.
-
-        If to_sheet is None then the cells are being moved to another
-        location within the source sheet.
-
         If any specified sheet name is not found, a KeyError is raised.
         If any cell location is invalid, a ValueError is raised.
 
         If the target area would extend outside the valid area of the
-        spreadsheet (i.e. beyond cell ZZZZ9999), a ValueError is raised, and
-        no changes are made to the spreadsheet.
+        spreadsheet , a ValueError is raised, and no changes are made.
 
         If a formula being moved contains a relative or mixed cell-reference
         that will become invalid after updating the cell-reference, then the
@@ -787,14 +767,14 @@ class Workbook:
         - to_location: str - location of top left corner of area where cells
             are to be moved to
         - to_sheet: Optional[str] - either string of new sheet to move cells
-            to or None
+            to or None (moving cells to source sheet)
 
         '''
-        # could make another helper
+
         self.__validate_sheet_existence(sheet_name)
         sheet_objects = self.get_sheet_objects()
 
-        source_sheet = sheet_objects[sheet_name.lower()] 
+        source_sheet = sheet_objects[sheet_name.lower()]
         source_cells = source_sheet.get_source_cells(start_location,
             end_location) # List[locs]
 
@@ -802,10 +782,8 @@ class Workbook:
             to_sheet = sheet_name
         else:
             self.__validate_sheet_existence(to_sheet)
-            # do we need to make new sheet if to_sheet does not exist?
-        # target_sheet = sheet_objects[to_sheet.lower()]
-        # changed below to source_sheet instead of target
-        target_cells = source_sheet.get_target_cells(start_location, 
+
+        target_cells = source_sheet.get_target_cells(start_location,
             end_location, to_location, source_cells) # Dict[locs, contents]
 
         # Set contents of source cells (not in target area) to None
@@ -824,42 +802,23 @@ class Workbook:
             end_location: str, to_location: str, to_sheet: Optional[str] = None
             ) -> None:
         '''
-        Copy cells from one location to another, possibly copying them to
-        another sheet.  All formulas in the area being copied will also have
-        all relative and mixed cell-references updated by the relative
-        distance each formula is being copied.
+        Copy cells from one location to another, possibly to another sheet.
+        All formulas being copied will have relative/mixed cell-references
+        updated by the relative distance.
 
         Cells in the source area (that are not also in the target area) are
         left unchanged by the copy operation.
-
-        The start_location and end_location specify the corners of an area of
-        cells in the sheet to be copied.  The to_location specifies the
-        top-left corner of the target area to copy the cells to.
-
-        Both corners are included in the area being copied; for example,
-        copying cells A1-A3 to B1 would be done by passing
-        start_location="A1", end_location="A3", and to_location="B1".
 
         The start_location value does not necessarily have to be the top left
         corner of the area to copy, nor does the end_location value have to be
         the bottom right corner of the area; they are simply two corners of
         the area to copy.
 
-        This function works correctly even when the destination area overlaps
-        the source area.
-
-        The sheet name matches are case-insensitive; the text must match but
-        the case does not have to.
-
-        If to_sheet is None then the cells are being copied to another
-        location within the source sheet.
-
         If any specified sheet name is not found, a KeyError is raised.
         If any cell location is invalid, a ValueError is raised.
 
         If the target area would extend outside the valid area of the
-        spreadsheet (i.e. beyond cell ZZZZ9999), a ValueError is raised, and
-        no changes are made to the spreadsheet.
+        spreadsheet, a ValueError is raised, and no changes are made.
 
         If a formula being copied contains a relative or mixed cell-reference
         that will become invalid after updating the cell-reference, then the
@@ -881,7 +840,7 @@ class Workbook:
         self.__validate_sheet_existence(sheet_name)
         sheet_objects = self.get_sheet_objects()
 
-        source_sheet = sheet_objects[sheet_name.lower()] 
+        source_sheet = sheet_objects[sheet_name.lower()]
         source_cells = source_sheet.get_source_cells(start_location,
             end_location) # List[locs]
 
@@ -889,9 +848,8 @@ class Workbook:
             to_sheet = sheet_name
         else:
             self.__validate_sheet_existence(to_sheet)
-        # target_sheet = sheet_objects[to_sheet.lower()]
-        # changed below to source_sheet instead of target
-        target_cells = source_sheet.get_target_cells(start_location, 
+
+        target_cells = source_sheet.get_target_cells(start_location,
             end_location, to_location, source_cells) # Dict[locs, contents]
 
         # Set contents of target cells (within same sheet if to_sheet is None)
