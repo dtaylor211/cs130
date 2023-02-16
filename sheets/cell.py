@@ -7,6 +7,7 @@ from typing import Optional, List, Tuple, Any
 
 from .evaluator import Evaluator
 from .cell_error import CellError, CellErrorType, CELL_ERRORS
+from .utils import get_loc_from_coords, get_coords_from_loc
 
 
 RESTRICTED_VALUES = [
@@ -239,41 +240,38 @@ class Cell:
         if source_contents is None or source_contents[0] != "=":
             return source_contents
 
-        # TODO - handle absolute/mixed/relative
-        # re.split(r'\$', '$A$1') -> ['', 'A', '1']
-        # re.split(r'\$', '$A1') -> ['', 'A1']
-        # re.split(r'\$', 'A$1') -> ['A', '1']
-        # re.split(r'\$', '=Sheet1!A$1') -> ['=Sheet1!A', '1']
-        # re.split(r'\$', 'A1') -> ['A1']
-        # re.split(r'\$', '=$A$1+$B$2') -> ['=', 'A', '1+', 'B', '2']
-        # re.split(r'\$', '=Sheet1!$A$1+$B$2') -> ['=Sheet1!', 'A', '1+', 'B', '2']
-        # re.split(r'\$', '=A1+$B$2') -> ['=A1+', 'B', '2']
-        # re.split(r'\$', '=Sheet1!A1+$B$2') -> ['=Sheet1!A1+', 'B', '2']
+        def subberoo(s):
+            # print(s.groups())
+            # print('check')
+            col, row = s.groups()[1:-1]
+            # print(col, row)
+            if row[0] == '$':
+                row_shift = 0
+                row = row[1:]
+                # print(row)
+                dol_row = '$'
+            else:
+                row_shift = coord_shift[1]
+                dol_row = ''
 
-        refs = re.findall(r"\$?[A-Z]{1-4}\$?[1-9][0-9]{0,3}", 
-            "=Sheet1!A1+$B$2*C$3-$D4") # -> ['A1', '$B$2', 'C$3', '$D4']
-        # re.split(r"\$?[A-Z]{1-4}\$?[1-9][0-9]{0,3}", "=Sheet1!A1+$B$2*C$3-$D4")
-        #   -> ['=Sheet1!', '+', '*', '-', '']
+            if col[0] == '$':
+                col_shift=0
+                col= col[1:]
+                # print(col)
+                dol_col = '$'
+            else:
+                col_shift= coord_shift[0]
+                dol_col = ''
+            a = col+row
+            # print('yo',a.upper())
+            # print(re.match(r"^[A-Z]{1,4}[1-9][0-9]{0,3}$", a.upper()))
+            x, y = get_coords_from_loc(str(col+row))
+            x += col_shift
+            y += row_shift
+            loc = get_loc_from_coords((x,y))
+            sp = re.split(r'(\d+)', loc.upper())
+            return f'{s.groups()[0]}{dol_col}{sp[0]}{dol_row}{sp[1]}{s.groups()[-1]}'
 
-        refs = re.findall(r"\$?[A-Z]{1-4}\$?[1-9][0-9]{0,3}", source_contents)
-        pieces = re.split(r"\$?[A-Z]{1-4}\$?[1-9][0-9]{0,3}", source_contents)
+        sub = re.sub(r'([\ \-\+\\\*\=\&\!])(\$?[A-Za-z])+(\$?[1-9][0-9]*)([^!]|$)', subberoo, source_contents)
         
-        # coord_shift = (col_shift, row_shift)
-        for ref in refs:
-            ref_split = re.split(r'\$', ref)
-            if len(ref_split) == 3: # absolute
-            # re.split(r'\$', '$A$1') -> ['', 'A', '1']
-                ref = ref
-            elif len(ref_split) == 2: # mixed
-            # re.split(r'\$', '$A1') -> ['', 'A1'] 
-            # OR
-            # re.split(r'\$', 'A$1') -> ['A', '1'] 
-                coords  
-            elif len(ref_split) == 1: # relative
-            # re.split(r'\$', 'A1') -> ['A1']
-                pass
-
-        # piece back together
-            
-        
-        return
+        return sub
