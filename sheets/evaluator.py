@@ -317,13 +317,11 @@ class Evaluator(Transformer):
             else:
                 working_sheet = self.get_working_sheet()
                 cell_name = args[0].replace('$', '')
-            print(working_sheet)
             # Check that cell location is within bounds
             if not re.match(r"^[A-Z]{1,4}[1-9][0-9]{0,3}$", cell_name.upper()):
                 raise KeyError('Cell location out of bounds')
 
             result = self.workbook.get_cell_value(working_sheet, cell_name)
-            print('r', result)
             # Check for propogating errors
             if isinstance(result, CellError):
                 return Tree('cell_error', [result])
