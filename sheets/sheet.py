@@ -168,6 +168,10 @@ class Sheet:
 
         '''
 
+        evaluator = self.get_evaluator()
+        if evaluator is not None:
+            evaluator.set_working_sheet(self.get_name())
+
         cells = self.get_all_cells()
         coords = get_coords_from_loc(location)
         if coords not in cells:

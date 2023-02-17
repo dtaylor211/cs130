@@ -296,7 +296,7 @@ class Workbook:
         '''
 
         sheet_objects = self.get_sheet_objects()
-        self.evaluator.set_working_sheet(sheet_name)
+        # self.evaluator.set_working_sheet(sheet_name)
         sheet_name_lower = sheet_name.lower()
 
         self.__validate_sheet_existence(sheet_name_lower)

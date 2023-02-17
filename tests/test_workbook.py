@@ -656,17 +656,21 @@ class TestWorkbook:
 
         wb1.set_cell_contents('Sheet1', 'A2', '5')
         wb1.set_cell_contents('Sheet2', 'B2', '4')
-        wb1.set_cell_contents('Sheet2', 'B3', '=(Sheet2!$B$2 / Sheet3!B3)')
+        wb1.set_cell_contents('Sheet2', 'B4', '2')
+        wb1.set_cell_contents('Sheet2', 'B3', '=(Sheet2!$B$2 / Sheet3!B3) + B4')
         wb1.set_cell_contents('Sheet3', 'A1', '2')
         wb1.set_cell_contents('Sheet3', 'B3', '1')
+        value = wb1.get_cell_value('Sheet2', 'B3')
+        print(wb1.get_cell_contents('Sheet2', 'B3'))
+        assert value == Decimal('6')
 
         # try with no space after parens
         
         wb1.move_cells('Sheet2', 'B3', 'B3', 'A1', 'Sheet1')
         contents = wb1.get_cell_contents('Sheet1', 'A1')
         value = wb1.get_cell_value('Sheet1', 'A1')
-        assert contents == '=(Sheet2!$B$2 / Sheet3!A1)'
-        assert value == Decimal('2')
+        assert contents == '=(Sheet2!$B$2 / Sheet3!A1) + A2'
+        assert value == Decimal('7')
 
     def test_copy_cells_diff_sheets(self) -> None:
         '''
