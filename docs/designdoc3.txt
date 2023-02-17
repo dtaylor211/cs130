@@ -74,7 +74,8 @@ D3.  [3pts] How does your implementation address the challenges of moving or
      which means we don't have to worry about contents being inaccurately 
      changed before being copied.  Furthermore, we use .difference() to help 
      us determine the set of source cells that don't overlap with target cells
-     before setting the source cell contents to None (for move_cells()).
+     before setting the source cell contents to None (for move_cells()).  This 
+     ensures that we do not call update_cell_values() more than necessary.
 
 
 Static Code Analysis / Code Linting (16pts)
@@ -85,21 +86,32 @@ L1.  [5pts] The Project 3 spec includes an example of a subtle implementation
      Briefly describe the cause of the buggy behavior, and what is the
      recommended approach for avoiding the buggy behavior.
 
-     TODO
+     If the totals dictionary is not given after counts() has been called with 
+     some dictionary, then it will try to reaccess that same dictionary instead 
+     of making a new one.  Basically, when counts() is evaluated with a 
+     dictionary it saves it as the default dictionary.  The recommended approach 
+     for avoiding this buggy behavior would be to use an immutable placeholder:
+     
+          def counts(s: str, totals: Dict[str, int] = None) -> Dict[str, int]:
+               if totals is None:
+                    totals = {}
+               ...
 
 
 L2.  [4pts] What code-linter did your team use on your project?  Why did you
      choose it?  Was this the first CS130 project in which you used a linter?
 
-     We used pylint because of the stronge recommedation based on its ability
-     to catch both style issues and buggy usage issues.  This was the first
+     We used pylint because of the strong recommendation based on its ability
+     to catch both style issues and buggy usage issues.  We also selected this 
+     linter because of its compatibility with make targets.  This was the first
      CS130 project in which we used a linter of any kind.
 
 
 L3.  [3pts] How did you automate the execution of your code linter?  Did
      everyone in your team find it easy to run?
 
-     We creating make targets for difference executions of our code linter.  We
+     We created make targets for difference executions of our code linter.  
+     There are targets for testing individual files as well as bulk files.  We
      found this extremely easy to run.
 
 
@@ -108,7 +120,11 @@ L4.  [4pts] Did the use of the linter improve your overall code quality and
      serious issues (e.g. buggy language idioms) you were unaware of?
 
      Yes, the linter certainly improved our overall code quality and 
-     correctness.  For example, TODO - DALLAS.
+     correctness.  For example, we did not have docstrings in any of our files 
+     and in some functions.  We also realized that we were wasting some 
+     computational resources by iterating over dictionary keys twice when doing 
+     list comprehension with <Dict>.keys().  There were no major issues that we
+     were unaware of.
 
 
 Performance Improvement (18 pts)
@@ -124,6 +140,11 @@ this investigation, and fix performance issues in your code.
 P1.  [7pts] Give a brief overview of 3-4 of the worst hot-spots you identified
      in your performance testing and analysis.  For each one, describe how your
      team was able to resolve it.
+
+     Our two major hotspots were in set_cell_contents() and 
+     update_cell_values().  Although these are only two hotspots, they were by 
+     far the main contributors towards poor performance.  All other function 
+     calls took less than 
 
 
 P2.  [4pts] Did your team try anything to resolve performance issues and find

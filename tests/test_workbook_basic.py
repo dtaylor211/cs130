@@ -21,6 +21,7 @@ Classes:
     - test_rename_sheet(object) -> None
     - test_move_sheet(object) -> None
     - test_copy_sheet(object) -> None
+    - test_rename_sheet_update(object) -> None
 
 '''
 
@@ -561,3 +562,61 @@ class TestWorkbook:
         assert name == 'Sheet4_2'
         (_, name) = wb1.copy_sheet('Sheet4')
         assert name == 'Sheet4_3'
+
+    def test_rename_sheet_update(self) -> None:
+        '''
+        Test updating simple references on sheet rename
+
+        '''
+
+        wb1 = Workbook()
+        wb1.new_sheet('Sheet1')
+        wb1.new_sheet('Sheet2')
+        wb1.set_cell_contents('Sheet1', 'A1', '=2')
+        wb1.set_cell_contents('Sheet2', 'A1', '=Sheet1!A1')
+        wb1.rename_sheet('Sheet1', 'Sheet3')
+        contents = wb1.get_cell_contents('Sheet2', 'A1')
+        value = wb1.get_cell_value('Sheet2', 'A1')
+        assert contents == '=Sheet3!A1'
+        assert value == Decimal(2)
+
+        wb1.set_cell_contents('Sheet3', 'A2', '=3')
+        wb1.set_cell_contents('Sheet3', 'A3', '=4')
+        wb1.set_cell_contents('Sheet2', 'A2', '=Sheet3!A2')
+        wb1.set_cell_contents('Sheet2', 'A3', '=Sheet3!A3')
+        wb1.rename_sheet('Sheet3', 'Sheet4')
+        contents = wb1.get_cell_contents('Sheet2', 'A1')
+        value = wb1.get_cell_value('Sheet2', 'A1')
+        assert contents == '=Sheet4!A1'
+        assert value == Decimal(2)
+        contents = wb1.get_cell_contents('Sheet2', 'A2')
+        value = wb1.get_cell_value('Sheet2', 'A2')
+        assert contents == '=Sheet4!A2'
+        assert value == Decimal(3)
+        contents = wb1.get_cell_contents('Sheet2', 'A3')
+        value = wb1.get_cell_value('Sheet2', 'A3')
+        assert contents == '=Sheet4!A3'
+        assert value == Decimal(4)
+
+        wb1.new_sheet('Sheet5')
+        wb1.set_cell_contents('Sheet5', 'A1', '=Sheet2!A2 + Sheet2!A3')
+        wb1.set_cell_contents('Sheet5', 'A2', '=Sheet2!A2 + Sheet4!A3')
+        wb1.rename_sheet('Sheet2', 'Sheet6')
+        wb1.rename_sheet('Sheet4', 'Sheet7')
+        contents = wb1.get_cell_contents('Sheet5', 'A1')
+        value = wb1.get_cell_value('Sheet5', 'A1')
+        assert contents == '=Sheet6!A2 + Sheet6!A3'
+        assert value == Decimal(7)
+        contents = wb1.get_cell_contents('Sheet5', 'A2')
+        value = wb1.get_cell_value('Sheet5', 'A2')
+        assert contents == '=Sheet6!A2 + Sheet7!A3'
+        assert value == Decimal(7)
+
+        wb1.new_sheet('A Sheet')
+        wb1.set_cell_contents('A Sheet', 'A1', '=0.1')
+        wb1.set_cell_contents('Sheet5', 'A1', '=\'A Sheet\'!A1')
+        wb1.rename_sheet('A Sheet', 'Darth Jar Jar')
+        contents = wb1.get_cell_contents('Sheet5', 'A1')
+        value = wb1.get_cell_value('Sheet5', 'A1')
+        assert contents == '=\'Darth Jar Jar\'!A1'
+        assert value == Decimal('0.1')

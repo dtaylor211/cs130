@@ -196,13 +196,11 @@ class Cell:
             elif inp[0] == "=":
                 parser, evaluator = self.get_parser_and_evaluator()
                 tree = parser.parse(inp)
-                print('t', tree)
                 visitor = _CellTreeVisitor(str(evaluator.get_working_sheet()))
                 visitor.visit(tree)
                 self._children = list(visitor.children)
                 evaluator = evaluator.transform(tree).children[0]
                 # Handle when referencing an empty cell only
-                print('e', evaluator)
                 evaluator = Decimal('0') if evaluator is None else evaluator
                 self.set_contents_and_value(contents, evaluator)
 
