@@ -55,7 +55,6 @@ def get_coords_from_loc(location: str) -> Tuple[int, int]:
     - tuple containing the coordinates (col, row)
 
     '''
-
     if not re.match(r"^[A-Z]{1,4}[1-9][0-9]{0,3}$", location.upper()):
         raise ValueError("Cell location is invalid")
 

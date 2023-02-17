@@ -45,7 +45,6 @@ RESTRICTED_VALUES = [
     Decimal('-NaN')
 ]
 
-
 class _CellTreeVisitor(Visitor):
     '''
     This visitor gets all children cells from the tree of a cell.
@@ -54,25 +53,33 @@ class _CellTreeVisitor(Visitor):
 
     def __init__(self, sheet: str):
         '''
-        TODO
+        Initialize a Cell Tree Visitor
+
+        Arguments:
+        - sheet: str - sheet to visit children in
 
         '''
+
         self.children = set()
         self.sheet = sheet
 
     def cell(self, tree: Tree) -> None:
         '''
-        TODO
+        Get a cell from a Tree object
+
+        Arguments:
+        - tree: Tree - tree containing cell information
 
         '''
+
         if len(tree.children) == 2:
             cell_sheet = str(tree.children[0])
             if cell_sheet[0] == "'":
                 cell_sheet = cell_sheet[1:-1]
-            cell = str(tree.children[1])
+            cell = str(tree.children[1]).replace('$', '') 
         else:
             cell_sheet = self.sheet
-            cell = str(tree.children[0])
+            cell = str(tree.children[0]).replace('$','')
         self.children.add((cell_sheet, cell))
 
 
@@ -189,11 +196,13 @@ class Cell:
             elif inp[0] == "=":
                 parser, evaluator = self.get_parser_and_evaluator()
                 tree = parser.parse(inp)
+                print('t', tree)
                 visitor = _CellTreeVisitor(str(evaluator.get_working_sheet()))
                 visitor.visit(tree)
                 self._children = list(visitor.children)
                 evaluator = evaluator.transform(tree).children[0]
                 # Handle when referencing an empty cell only
+                print('e', evaluator)
                 evaluator = Decimal('0') if evaluator is None else evaluator
                 self.set_contents_and_value(contents, evaluator)
 
@@ -311,8 +320,10 @@ class Cell:
         new_contents = ''
         for i, substring in enumerate(split):
             if i % 2 == 0:
+                substring = re.sub(
+                    r'([^ ])([\+\-\\\*\&])([^ ])', r'\1 \2 \3', substring)
                 new_contents += re.sub(
-                    r'([\ \-\+\\\*=&!])(\$?[A-Za-z]+)(\$?[1-9][0-9]*)([^!]|$)',
+                    r'([\ \-+\\\*=&!])(\$?[A-Za-z]+)(\$?[1-9][0-9]*)([^!]|$)',
                     subberoo, substring)
             else:
                 new_contents += f'"{substring}"'

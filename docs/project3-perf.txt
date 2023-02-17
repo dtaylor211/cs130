@@ -1,0 +1,49 @@
+CS130 Project 3 - Performance Improvement
+=========================================
+
+Improvement 1
+-------------
+
+Theory: We will reach the recursion limit using our current graph algorithm,
+so we will try to remove this issue by making the algorithm iterative.
+
+Rationale: When we would run our performance tests with a number of cells
+above ~900 for renaming a sheet or dealing with a circular chain, we would get
+terminal output saying that we had reached our recursion limit.
+
+Outcome: After changing the graph algorithm to be iterative and have
+iterative SCC, we no longer reach our recursion depth limit. Yay! :)
+
+
+Improvement 2
+-------------
+
+Theory: We have a lot of extra calls to set_cell_contents when we rename
+a sheet, and so we think that we are trying to update the same cell
+multiple times.  We will try to fix by first calculating the set of all
+cells that reference the renamed sheet.
+
+Rationale: When we hit the Make target test-performance-rename-volume1
+(described in more detail in its docstring) we observe around 80,000 calls to 
+set_cell_contents.
+
+Outcome: It worked yay! Now down to the correct number of calls vs cells (1:1).
+
+
+Improvement 3
+-------------
+
+Theory: Copying cells seemed to take a while, we thought this may be due to 
+unnecessary calls to update_cells, so we tried to switch our function so that
+it used the sheet implementation of set_cell_contents (no update_cell call
+here).
+
+Rationale: We THOUGHT we didn't need to update other cells after moving
+because they should have the same values as source cells, essentially.  We also
+saw that the time to copy ~2000 cells was ~45 seconds.
+
+Outcome: It doesn't really work. Most importantly we realized that we DO need
+to be able to update the cells that reference the newly copied cells, and
+that we need to notify of cells changing (which is handled by the workbook
+implementation of set_cell_contents). This change did increase our runtime
+by 2 seconds, which is not significant enough anyways.
