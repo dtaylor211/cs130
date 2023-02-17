@@ -16,7 +16,6 @@ Classes:
     Methods:
     - list_sheets(object) -> List[str]
     - get_sheet_objects(object) -> Dict[str, Sheet]
-    - in_update(object) -> bool
     - num_sheets(object) -> int
     - new_sheet(object, Optional[str]) -> Tuple[int, str]
     - del_sheet(object, str) -> None
@@ -72,7 +71,6 @@ class Workbook:
         self._sheet_names = []
         # dictionary that maps lowercase sheet name to Sheet object
         self._sheet_objects: Dict[str, Sheet] = {}
-        self._in_update = False
 
     ########################################################################
     # Getters and Setters
@@ -137,22 +135,6 @@ class Workbook:
         '''
 
         self._sheet_objects = sheet_objects
-
-    def in_update(self) -> bool:
-        '''
-        Get whether we are currently in an update state
-
-        '''
-        print('f',self._in_update)
-        return self._in_update
-    
-    def __set_in_update(self, in_update: bool) -> None:
-        '''
-        Set whether we are currently in an update state
-
-        '''
-
-        self._in_update = in_update
 
     ########################################################################
     # Base Functionality
@@ -314,9 +296,7 @@ class Workbook:
         '''
 
         sheet_objects = self.get_sheet_objects()
-        print(location, self.in_update())
-        if not self.in_update():
-            self.evaluator.set_working_sheet(sheet_name)
+        self.evaluator.set_working_sheet(sheet_name)
         sheet_name_lower = sheet_name.lower()
 
         self.__validate_sheet_existence(sheet_name_lower)
@@ -328,14 +308,10 @@ class Workbook:
         new_value = sheet_objects[sheet_name_lower].get_cell_value(location)
 
         # update other cells
-        self.__set_in_update(True)
-
         if new_value == prev_value:
             self.update_cell_values(sheet_name, location, notify=False)
         else:
             self.update_cell_values(sheet_name, location)
-
-        self.__set_in_update(False)
 
     def get_cell_contents(self, sheet_name: str, location: str)-> Optional[str]:
         '''
@@ -421,7 +397,6 @@ class Workbook:
         - renamed_sheet - new name of renamed sheet with preserved case
 
         '''
-        print(self.in_update())
 
         sheet_objects = self.get_sheet_objects()
 
@@ -669,9 +644,7 @@ class Workbook:
         self.__set_sheet_objects(sheet_objects)
 
         # updates the contents of all cells referencing the cell name
-        self.__set_in_update(True)
         self.update_cell_values(sheet_name, renamed_sheet = new_sheet_name)
-        self.__set_in_update(False)
 
 
     def move_sheet(self, sheet_name: str, index: int) -> None:
