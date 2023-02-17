@@ -76,7 +76,7 @@ class _CellTreeVisitor(Visitor):
             cell_sheet = str(tree.children[0])
             if cell_sheet[0] == "'":
                 cell_sheet = cell_sheet[1:-1]
-            cell = str(tree.children[1]).replace('$', '') 
+            cell = str(tree.children[1]).replace('$', '')
         else:
             cell_sheet = self.sheet
             cell = str(tree.children[0]).replace('$','')

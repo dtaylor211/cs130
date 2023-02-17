@@ -296,7 +296,6 @@ class Workbook:
         '''
 
         sheet_objects = self.get_sheet_objects()
-        # self.evaluator.set_working_sheet(sheet_name)
         sheet_name_lower = sheet_name.lower()
 
         self.__validate_sheet_existence(sheet_name_lower)
@@ -938,7 +937,6 @@ class Workbook:
         # get the acyclic components from the scc
         components = cell_graph.get_strongly_connected_components()
         dag_nodes = set()
-
         sheet_objects = self.get_sheet_objects()
 
         # if nodes are part of cycle make them a circlular reference
@@ -946,7 +944,6 @@ class Workbook:
         for component in components:
             if len(component) == 1 and component[0] not in adj[component[0]]:
                 dag_nodes.add(component[0])
-
             else:
                 for sheet, cell in component:
                     sheet_objects[

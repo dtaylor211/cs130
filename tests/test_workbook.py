@@ -457,7 +457,14 @@ class TestWorkbook:
         assert contents is None
         assert value is None
 
-        # With absolute reference
+    def test_move_cells_overlap_abs_refs(self) -> None:
+        '''
+        Test copying a group of cells in the same sheet where the source area
+        and target area are overlapping, now including absolute cell references
+
+        '''
+
+        wb1 = Workbook()
         wb1.new_sheet('Sheet2')
         wb1.set_cell_contents('Sheet2', 'A1', '1')
         wb1.set_cell_contents('Sheet2', 'B1', '=$A$1')
@@ -496,7 +503,14 @@ class TestWorkbook:
         assert contents is None
         assert value is None
 
-        # With mixed reference
+    def test_move_cells_overlap_mix_refs(self) -> None:
+        '''
+        Test copying a group of cells in the same sheet where the source area
+        and target area are overlapping, now including mixed cell references
+
+        '''
+
+        wb1 = Workbook()
         wb1.new_sheet('Sheet3')
         wb1.set_cell_contents('Sheet3', 'A1', '1')
         wb1.set_cell_contents('Sheet3', 'A2', '=A$1')
@@ -543,7 +557,6 @@ class TestWorkbook:
         '''
 
         wb1 = Workbook()
-        # Relative references
         wb1.new_sheet('Sheet1')
         wb1.set_cell_contents('Sheet1', 'A1', '=A2+B1')
         wb1.set_cell_contents('Sheet1', 'B1', '=B2')
@@ -582,7 +595,14 @@ class TestWorkbook:
         assert contents == "2"
         assert value == Decimal('2')
 
-        # With mixed reference
+    def test_copy_cells_overlap_mix_refs(self) -> None:
+        '''
+        Test copying a group of cells in the same sheet where the source area
+        and target area are overlapping, now with mixed cell references
+
+        '''
+
+        wb1 = Workbook()
         wb1.new_sheet('Sheet2')
         wb1.set_cell_contents('Sheet2', 'A1', '=A2+B1')
         wb1.set_cell_contents('Sheet2', 'B1', '=$B2')
@@ -664,8 +684,6 @@ class TestWorkbook:
         print(wb1.get_cell_contents('Sheet2', 'B3'))
         assert value == Decimal('6')
 
-        # try with no space after parens
-        
         wb1.move_cells('Sheet2', 'B3', 'B3', 'A1', 'Sheet1')
         contents = wb1.get_cell_contents('Sheet1', 'A1')
         value = wb1.get_cell_value('Sheet1', 'A1')
