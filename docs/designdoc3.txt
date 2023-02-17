@@ -144,7 +144,12 @@ P1.  [7pts] Give a brief overview of 3-4 of the worst hot-spots you identified
      Our two major hotspots were in set_cell_contents() and 
      update_cell_values().  Although these are only two hotspots, they were by 
      far the main contributors towards poor performance.  All other function 
-     calls took less than 
+     calls took less than 0.03 seconds.  For both hotspots, the main resolution
+     was related to switching to an iterative graph algorithm and scc.  We 
+     further addressed issues with set_cell_contents() when renaming sheets by
+     getting a set of all cells to be updated instead of iterating through 
+     parent's adjacency graphs (and potentially resetting the same cell more 
+     than once).
 
 
 P2.  [4pts] Did your team try anything to resolve performance issues and find
@@ -152,16 +157,32 @@ P2.  [4pts] Did your team try anything to resolve performance issues and find
      If so, were you able to identify why the intended fix didn't produce the
      desired benefit?
 
+     Yes, we tried to improve speed of copying and moving cells by changing the
+     call to set_cell_contents() of the copied/moved cells to be within the 
+     sheet abstraction (rather than the workbook abstraction).  However, this
+     did not speed things up significantly and it produced errors for cell 
+     updating.  This occurred because we want to be able to handle updating 
+     a cell in the case that a newly moved cell depends on another cell to be 
+     moved that hasn't been set yet.
+
 
 P3.  [4pts] How do you feel that your performance updates affected your code's
      readability and maintainability?  Did it make it better? worse? unchanged?
      Elaborate on your answer.
+
+     Overall, it made things a lot better.  However, if you don't consider a 
+     change to an iterative algorithm, then the only other aspect that improved 
+     performance was essentially a simple bug fix.
 
 
 P4.  [3pts] Did your performance updates cause any regressions in functionality?
      If so, briefly describe any issues that emerged.  How were these issues
      identified (e.g. automated test failures, manual testing, etc.)?  How
      quickly were issues identified?
+
+     No, our performance updates did not cause any regressions in functionality
+     (other than what was discussed in P2).  We know this is true from our 
+     automated testing.
 
 
 Section F:  CS130 Project 3 Feedback [OPTIONAL]

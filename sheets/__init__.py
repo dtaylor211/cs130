@@ -22,7 +22,7 @@ from .cell_error import CellError, CellErrorType
 # We need to have a lowercase version field, and thus are disabling the
 # check for snake casing.
 
-version = '1.1.1'
+version = '1.2'
 
 # pylint: enable=invalid-name
 
