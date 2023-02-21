@@ -93,6 +93,9 @@ class Cell:
 
     '''
 
+    PARSER = lark.Lark.open('formulas.lark', start='formula',
+                rel_to=__file__)
+
     def __init__(self, loc: str, evaluator: Evaluator):
         '''
         Initialize a new Cell object
@@ -110,8 +113,6 @@ class Cell:
         self._value = None
         self._children = []
         self._evaluator = evaluator
-        self._parser = lark.Lark.open(
-            'formulas.lark', start='formula', rel_to=__file__)
 
     def get_loc(self) -> str:
         '''
@@ -155,7 +156,7 @@ class Cell:
 
         '''
 
-        return self._parser, self._evaluator
+        return Cell.PARSER, self._evaluator
 
     def set_contents_and_value(self, contents: Optional[str],
             value: Optional[Any]) -> None:
