@@ -1,0 +1,120 @@
+CS130 Project 4 - Design Document
+=================================
+
+Please answer all questions in this design document.  Note that the final
+feedback section is optional, and you are not required to answer it if you
+don't want to.
+
+Unanswered or incompletely answered questions, or answers that don't actually
+match the code/repository, will result in deductions.
+
+Answers don't have to be deeply detailed!  We are mainly looking for an
+overview or summary description of how your project works, and your team's
+experiences working on this project.
+
+Logistics (7 pts)
+-----------------
+
+L1.  [2pts] Enumerate all teammates here.
+
+
+L2.  [2pts] What did each teammate focus on during this project?
+
+
+L3.  [3pts] Approximately how many hours did each teammate spend on the project?
+
+
+Spreadsheet Engine Design (31 pts)
+----------------------------------
+
+D1.  [3pts] Briefly describe the changes you made to the Lark parser grammar
+     to support Boolean literals.
+     
+
+D2.  [4pts] Briefly describe the changes you made to the Lark parser grammar
+     to support conditional expressions.  How did you ensure that conditional
+     operations are lower precedence than arithmetic and string concatenation
+     operations?
+
+
+D3.  [6pts] Briefly describe how function invocation works in your spreadsheet
+     engine.  How easy or hard would it be for you to add new functions to your
+     engine?  What about a third-party developer?  How well does your code
+     follow the Open/Closed Principle?
+
+
+D4.  [4pts] Is your implementation able to lazily evaluate the arguments to
+     functions like IF(), CHOOSE() and IFERROR()?  (Recall from the Project 4
+     spec that your spreadsheet engine should not report cycles in cases where
+     an argument to these functions does not need to be evaluated.)  If so,
+     what changes to your design were required to achieve this?  If not, what
+     prevented your team from implementing this?
+
+
+D5.  [4pts] Is your implementation able to evaluate the ISERROR() function
+     correctly, with respect to circular-reference errors?  (Recall from the
+     Project 4 spec that ISERROR() behaves differently when part of a cycle,
+     vs. being outside the cycle and referencing some cell in the cycle.)
+     If so, what changes to your design were required to achieve this?  If
+     not, what prevented your team from implementing this?
+
+
+D6.  [4pts] Is your implementation able to successfully identify cycles that
+     are not evident from static analysis of formulas containing INDIRECT()?
+     If so, what changes to your design were required, if any, to achieve this?
+     If not, what prevented your team from implementing this?
+
+
+D7.  [6pts] Project 4 has a number of small but important operations to
+     implement.  Comparison operations include a number of comparison and type
+     conversion rules.  Different functions may require specific numbers and
+     types of arguments.  How did your team structure the implementation of
+     these operations?  How did your approach affect the reusability and
+     testability of these operations?
+
+
+Performance Analysis (12 pts)
+-----------------------------
+
+In this project you must measure and analyze the performance of features that
+generate large bulk changes to a workbook:  loading a workbook, copying or
+renaming a sheet, and moving or copying an area of cells.  Construct some
+performance tests to exercise these aspects of your engine, and use a profiler
+to identify where your program is spending the bulk of its time.
+
+A1.  [4pts] Briefly enumerate the performance tests you created to exercise
+     your implementation.
+
+
+A2.  [2pts] What profiler did you choose to run your performance tests with?
+     Why?  Give an example of how to invoke one of your tests with the profiler.
+
+
+A3.  [6pts] What are ~3 of the most significant hot-spots you identified in your
+     performance testing?  Did you expect these hot-spots, or were they
+     surprising to you?
+
+
+Section F:  CS130 Project 3 Feedback [OPTIONAL]
+-----------------------------------------------
+
+These questions are OPTIONAL, and you do not need to answer them.  Your grade
+will not be affected by answering or not answering them.  Also, your grade will
+not be affected by negative feedback - we want to know what went poorly so that
+we can improve future versions of the course.
+
+F1.  What parts of the assignment did you find highly enjoyable?  Conversely,
+     what parts of the assignment did you find unenjoyable?
+
+
+F2.  What parts of the assignment helped you learn more about software
+     engineering best-practices, or other useful development skills?
+     What parts were not helpful in learning these skills?
+
+
+F3.  Were there any parts of the assignment that seemed _unnecessarily_ tedious?
+     (Some parts of software development are always tedious, of course.)
+
+
+F4.  Do you have any feedback and/or constructive criticism about how this
+     project can be made better in future iterations of CS130?
