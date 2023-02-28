@@ -167,7 +167,7 @@ class Evaluator(Transformer):
 
         '''
 
-        return bool(token)
+        return token
 
     def CELLREF(self, token: Token) -> Token:
         '''

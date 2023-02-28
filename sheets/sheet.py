@@ -201,7 +201,6 @@ class Sheet:
         coords = get_coords_from_loc(location)
         if coords not in cells:
             return None
-
         return cells[coords].get_value()
 
     def get_cell_adjacency_list(self) -> Dict[Tuple[str, str],

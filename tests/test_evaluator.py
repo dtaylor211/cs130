@@ -451,9 +451,9 @@ class TestEvaluator:
         result = EVALUATOR.transform(tree)
         assert result == Tree('bool', [True])
 
-        # tree = PARSER.parse('=A3<A4')
-        # result = EVALUATOR.transform(tree)
-        # assert result == Tree('bool', [True])
+        tree = PARSER.parse('=A3<A4')
+        result = EVALUATOR.transform(tree)
+        assert result == Tree('bool', [True])
 
     def test_complex_formula(self) -> None:
         '''

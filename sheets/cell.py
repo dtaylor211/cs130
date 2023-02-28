@@ -165,7 +165,7 @@ class Cell:
 
         Arguments:
         - contents: Optional[str] - contents to set, can be None
-        - value: Optional[str] - value to set, can be None
+        - value: Optional[Any] - value to set, can be None
 
         '''
 
