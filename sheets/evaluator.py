@@ -11,6 +11,7 @@ Global Variables:
     to the operator function
 - EMPTY_SUBS (Dict[type, Any]) - converts type of not None expression to the
     correct empty value
+- RECOGNIZED_FUNCS (List[str]) - names of accepted functions
 
 Classes:
 - Evaluator
@@ -64,6 +65,21 @@ EMPTY_SUBS = {
     Decimal: Decimal(0),
     bool: False
 }
+
+RECOGNIZED_FUNCS = [
+    'and',
+    'or',
+    'not',
+    'xor',
+    'exact',
+    'if',
+    'iferror',
+    'choose',
+    'isblank',
+    'iserror',
+    'version',
+    'indirect'
+]
 
 class Evaluator(Transformer):
     '''
@@ -186,6 +202,13 @@ class Evaluator(Transformer):
 
     # we enable the checking for snake-cases again
 
+    # def expr(self, args: List) -> Tree:
+    #     '''
+    #     '''
+
+    #     print('halo',args[-1])
+    #     return self.transform(args[-1])
+
     # pylint: disable=broad-exception-caught
 
     # We disable the checking for broad exceptions for the next few functions.
@@ -229,6 +252,7 @@ class Evaluator(Transformer):
 
         except Exception as e:
             return self.__process_exceptions(e, detail='addition/subtraction')
+        
 
     def mul_expr(self, args: List) -> Tree:
         '''
@@ -455,6 +479,23 @@ class Evaluator(Transformer):
         e_type = [i[0] for i in list(CELL_ERRORS.items()) if i[-1]==x.upper()]
         e_type = CellErrorType(e_type[0])
         return Tree('cell_error', [CellError(e_type, '', None)])
+    
+    def func_expr(self, args: List) -> Tree:
+        '''
+        '''
+
+        try:
+            print(args)
+            func_name = args[0]
+            args_list = args[1]
+
+            if func_name not in RECOGNIZED_FUNCS:
+                raise ValueError
+            
+            return
+        except Exception as e:
+            detail = "function operations"
+            self.__process_exceptions(e, detail)
 
     ########################################################################
     # Exception Processing

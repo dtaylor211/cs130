@@ -9,7 +9,7 @@
 
 ?formula : "=" expression
 
-?expression : add_expr | concat_expr | comp_expr
+?expression : add_expr | concat_expr | comp_expr | func_expr
 
 //========================================
 // Arithmetic expressions
@@ -35,6 +35,15 @@
 ?comp_expr : (comp_expr COMP)? expression
 
 //========================================
+// Function expressions
+
+?func_expr : (FUNC_NAME)? args
+
+// ?args : "(" expression ("," expression)? ")"
+?args : ("(" args ("," args)? ")")? expression
+
+
+//========================================
 // Base values
 
 ?base : cell
@@ -42,8 +51,10 @@
       | NUMBER                  -> number
       | STRING                  -> string
       | BOOL                    -> bool
+      // | expression              -> expr
       | "(" expression ")"      -> parens
       | "(" comp_expr ")"       -> parens
+      // | func_expr               -> function
 
 cell : (_sheetname "!")? CELLREF
 
@@ -75,6 +86,8 @@ SHEET_NAME: /[A-Za-z_][A-Za-z0-9_]*/
 // that this lexer rule also matches invalid sheet names, but that isn't a big
 // deal here.
 QUOTED_SHEET_NAME: /\'[^']*\'/
+
+FUNC_NAME: /[A-Za-z][A-Za-z0-9_]*/
 
 // Don't need to support signs on numbers because we have unary +/- operator
 // support in the parser.
