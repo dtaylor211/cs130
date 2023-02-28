@@ -47,6 +47,7 @@ import operator
 from lark import Tree, Transformer, Token
 
 from .cell_error import CellError, CellErrorType, CELL_ERRORS
+from .function_handler import FunctionHandler
 
 
 COMP_OPERATORS = {
@@ -66,20 +67,7 @@ EMPTY_SUBS = {
     bool: False
 }
 
-RECOGNIZED_FUNCS = [
-    'and',
-    'or',
-    'not',
-    'xor',
-    'exact',
-    'if',
-    'iferror',
-    'choose',
-    'isblank',
-    'iserror',
-    'version',
-    'indirect'
-]
+
 
 class Evaluator(Transformer):
     '''
@@ -97,6 +85,7 @@ class Evaluator(Transformer):
 
         '''
 
+        self.function_handler = FunctionHandler()
         Transformer.__init__(self)
         self.workbook = workbook
         self._working_sheet = sheet_name
@@ -201,13 +190,6 @@ class Evaluator(Transformer):
     # pylint: enable=invalid-name
 
     # we enable the checking for snake-cases again
-
-    # def expr(self, args: List) -> Tree:
-    #     '''
-    #     '''
-
-    #     print('halo',args[-1])
-    #     return self.transform(args[-1])
 
     # pylint: disable=broad-exception-caught
 
@@ -482,20 +464,30 @@ class Evaluator(Transformer):
     
     def func_expr(self, args: List) -> Tree:
         '''
+        Evaluate a function expression
+
+        Arguments:
+        - args: List - function name and list of arguments
+
+        Returns:
+        - Tree holding result of the function
+
         '''
 
         try:
-            print(args)
-            func_name = args[0]
-            args_list = args[1]
+            func_name = args[0].lower()
+            args_list = args[-1]
 
-            if func_name not in RECOGNIZED_FUNCS:
-                raise ValueError
-            
-            return
+            result = self.function_handler.map_func(func_name)
+            return result(args_list)
+
+        except KeyError as e:
+            detail = 'function'
+            return self.__process_exceptions(e, detail)
+
         except Exception as e:
             detail = "function operations"
-            self.__process_exceptions(e, detail)
+            return self.__process_exceptions(e, detail)
 
     ########################################################################
     # Exception Processing
@@ -527,11 +519,13 @@ class Evaluator(Transformer):
             error_type = CellErrorType.DIVIDE_BY_ZERO
 
         elif isinstance(ex, KeyError):
-            detail = f'Attempting to access unknown {detail}'
             error_type = CellErrorType.BAD_REFERENCE
+            if detail == 'function':
+                error_type = CellErrorType.BAD_NAME
+            detail = f'Attempting to access unknown {detail}'
 
         elif isinstance(ex, TypeError):
-            detail = f'Attempting to perform {detail}'
+            detail = f'Attempting to perform {detail} on incorrect types'
             error_type = CellErrorType.TYPE_ERROR
 
         else:
@@ -560,43 +554,7 @@ class Evaluator(Transformer):
         norm = num.normalize()
         _, _, exp = norm.as_tuple()
         return norm if exp <= 0 else norm.quantize(1)
-    
-    def __convert_from_bool(bool_input: bool, target_type: type) -> Any:
-        '''
-        '''
 
-        result = None
-        if bool_input:
-            if target_type == Decimal:
-                result = Decimal(1)
-            else:
-                result = 'TRUE'
-        else:
-            if target_type == Decimal:
-                result = Decimal(0)
-            else:
-                result = 'FALSE'
-        return result
-    
-    def __convert_to_bool(input: Any, input_type: type) -> bool:
-        '''
-        '''
-
-        result = None
-        if input_type == str:
-            if input.lower() == 'true':
-                result = True
-            elif input.lower() == 'false':
-                result = False
-            else:
-                raise TypeError('Cannot convert given string to boolean')
-        else:
-            if input != Decimal(0):
-                result = True
-            else:
-                result = False
-        return result
-    
     def __compare_values(left: Any, right: Any, types: Tuple[type, type],
                          op: str) -> bool:
         '''

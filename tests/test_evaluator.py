@@ -447,10 +447,9 @@ class TestEvaluator:
         result = EVALUATOR.transform(tree)
         assert result == Tree('bool', [False])
 
-        tree = PARSER.parse('=func_name(1+2, 4)')
-        print(tree)
+        tree = PARSER.parse('=AND(True, 4)')
         result = EVALUATOR.transform(tree)
-        assert result == Tree('bool', [False])
+        assert result == Tree('bool', [True])
 
         # tree = PARSER.parse('=A3<A4')
         # result = EVALUATOR.transform(tree)

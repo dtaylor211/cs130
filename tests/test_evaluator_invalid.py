@@ -67,10 +67,10 @@ class TestEvaluatorInvalid:
         assert result_value.get_type() == CellErrorType.PARSE_ERROR
         assert isinstance(result_value, CellError)
 
-        WB.set_cell_contents('Test', 'A1', '=A1(A2)')
+        WB.set_cell_contents('Test', 'A1', '=A1((A2)')
         result_contents = WB.get_cell_contents('Test','A1')
         result_value = WB.get_cell_value('Test', 'A1')
-        assert result_contents == '=A1(A2)'
+        assert result_contents == '=A1((A2)'
         assert result_value.get_type() == CellErrorType.PARSE_ERROR
         assert isinstance(result_value, CellError)
 
@@ -452,3 +452,10 @@ class TestEvaluatorInvalid:
         value = WB.get_cell_value('Test', 'A2')
         assert isinstance(value, CellError)
         assert value.get_type() == CellErrorType.TYPE_ERROR
+
+        # WB.set_cell_contents('Test', 'A3', '=A1(A2)')
+        # result_contents = WB.get_cell_contents('Test','A1')
+        # result_value = WB.get_cell_value('Test', 'A1')
+        # assert result_contents == '=A1(A2)'
+        # assert isinstance(result_value, CellError)
+        # assert result_value.get_type() == CellErrorType.BAD_NAME
