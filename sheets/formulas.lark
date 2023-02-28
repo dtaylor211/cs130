@@ -9,7 +9,7 @@
 
 ?formula : "=" expression
 
-?expression : add_expr | concat_expr
+?expression : add_expr | concat_expr | comp_expr
 
 //========================================
 // Arithmetic expressions
@@ -17,6 +17,7 @@
 // This generates right-deep trees:  ?add_expr : mul_expr (ADD_OP add_expr)?
 // Instead we would prefer to generate left-deep trees when given a sequence
 // of operators at the same precedence level.
+
 ?add_expr : (add_expr ADD_OP)? mul_expr
 
 ?mul_expr : (mul_expr MUL_OP)? unary_op
@@ -29,13 +30,20 @@
 ?concat_expr : (concat_expr "&")? base
 
 //========================================
+// Comparison expressions - lowest precedence
+
+?comp_expr : (comp_expr COMP)? expression
+
+//========================================
 // Base values
 
 ?base : cell
       | ERROR_VALUE             -> error
       | NUMBER                  -> number
       | STRING                  -> string
+      | BOOL                    -> bool
       | "(" expression ")"      -> parens
+      | "(" comp_expr ")"       -> parens
 
 cell : (_sheetname "!")? CELLREF
 
@@ -49,6 +57,7 @@ _sheetname : SHEET_NAME | QUOTED_SHEET_NAME
 
 ADD_OP: ("+" | "-")
 MUL_OP: ("*" | "/")
+COMP: ("=" | "==" | "<>" | "!=" | "<" | ">" | "<=" | ">=")
 
 // Error values are also separately named lexer rules so we know what kind of
 // error is referenced.  All are case-insensitive.
@@ -72,3 +81,5 @@ QUOTED_SHEET_NAME: /\'[^']*\'/
 NUMBER: /([0-9]+(\.[0-9]*)?)|(\.[0-9]+)/
 
 STRING: /\"[^"]*\"/
+
+BOOL: /[Tt][Rr][Uu][Ee]/ | /[Ff][Aa][Ll][Ss][Ee]/

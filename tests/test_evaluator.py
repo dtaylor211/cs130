@@ -20,6 +20,7 @@ Classes:
     - test_unary_operations(object) -> None
     - test_addition_subtraction(object) -> None
     - test_multiplication_division(object) -> None
+    - test_comparison(object) -> None
     - test_complex_formula(object) -> None
     - test_reference_same_sheet(object) -> None
     - test_reference_other_sheet(object) -> None
@@ -409,6 +410,46 @@ class TestEvaluator:
         tree = PARSER.parse('=A1*A6')
         result = EVALUATOR.transform(tree)
         assert result == Tree('number', [Decimal(0)])
+
+    def test_comparison(self) -> None:
+        '''
+        Test when given a formula with a comparison operator
+        (</<=/>/>=/=/==/!=/<>)
+
+        '''
+
+        WB.set_cell_contents('Test', 'A1', 'string1')
+        WB.set_cell_contents('Test', 'A2', 'string2')
+        WB.set_cell_contents('Test', 'A3', '=False')
+        WB.set_cell_contents('Test', 'A4', '=True')
+
+        tree = PARSER.parse('=A1<A2')
+        result = EVALUATOR.transform(tree)
+        assert result == Tree('bool', [True])
+
+        tree = PARSER.parse('="a"<"["')
+        result = EVALUATOR.transform(tree)
+        assert result == Tree('bool', [False])
+
+        tree = PARSER.parse('="a"<"["')
+        result = EVALUATOR.transform(tree)
+        assert result == Tree('bool', [False])
+
+        tree = PARSER.parse('="BLUE"="blue"')
+        result = EVALUATOR.transform(tree)
+        assert result == Tree('bool', [True])
+
+        tree = PARSER.parse('="BLUE"<"blue"')
+        result = EVALUATOR.transform(tree)
+        assert result == Tree('bool', [False])
+
+        tree = PARSER.parse('="BLUE">"blue"')
+        result = EVALUATOR.transform(tree)
+        assert result == Tree('bool', [False])
+
+        # tree = PARSER.parse('=A3<A4')
+        # result = EVALUATOR.transform(tree)
+        # assert result == Tree('bool', [True])
 
     def test_complex_formula(self) -> None:
         '''

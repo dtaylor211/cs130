@@ -36,7 +36,7 @@ class TestSheet:
 
         '''
 
-        sheet = Sheet("July Totals", None, None)
+        sheet = Sheet("July Totals", None)
         assert sheet.get_extent() == (0, 0)
 
         sheet.set_cell_contents("A1", "1")
@@ -60,7 +60,7 @@ class TestSheet:
 
         '''
 
-        sheet = Sheet("July Totals", None, None)
+        sheet = Sheet("July Totals", None)
         assert sheet.get_extent() == (0, 0)
 
         sheet.set_cell_contents("A1", "1")
@@ -93,7 +93,7 @@ class TestSheet:
 
         '''
 
-        sheet = Sheet('Aloha', None, None)
+        sheet = Sheet('Aloha', None)
         sheet.set_cell_contents('A1', '1')
         source_cells = sheet.get_source_cells('A1', 'A1')
         assert source_cells == ['A1']
@@ -126,7 +126,7 @@ class TestSheet:
 
         '''
 
-        sheet = Sheet('Source', None, None)
+        sheet = Sheet('Source', None)
         sheet.set_cell_contents('A1', '1')
         sheet.set_cell_contents('A3', '2')
         sheet.set_cell_contents('B3', '3')
