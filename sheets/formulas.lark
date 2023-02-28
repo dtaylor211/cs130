@@ -37,10 +37,11 @@
 //========================================
 // Function expressions
 
-?func_expr : (FUNC_NAME)? args
+?func_expr : (FUNC_NAME)? "(" args ")"
 
 // ?args : "(" expression ("," expression)? ")"
-?args : ("(" args ("," args)? ")")? expression
+// ?args : ("(" args ("," args)? ")")? expression
+?args : expression ("," args)?
 
 
 //========================================
