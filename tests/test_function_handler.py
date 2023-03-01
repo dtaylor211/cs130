@@ -83,6 +83,11 @@ class TestFunctionHandler:
         assert isinstance(result, CellError)
         assert result.get_type() == CellErrorType.TYPE_ERROR
 
+        tree = PARSER.parse('=and(False, #REF!)')
+        result = EVALUATOR.transform(tree).children[-1]
+        assert isinstance(result, CellError)
+        assert result.get_type() == CellErrorType.BAD_REFERENCE
+
     def test_or(self) -> None:
         '''
         Test OR logic
@@ -114,6 +119,11 @@ class TestFunctionHandler:
         tree = PARSER.parse('=OR("FaLSe", 7==8, A2, AND(A1, A3))')
         result = EVALUATOR.transform(tree)
         assert result == Tree('bool', [True])
+
+        tree = PARSER.parse('=or(True, #REF!)')
+        result = EVALUATOR.transform(tree).children[-1]
+        assert isinstance(result, CellError)
+        assert result.get_type() == CellErrorType.BAD_REFERENCE
 
     def test_not(self) -> None:
         '''
@@ -151,6 +161,11 @@ class TestFunctionHandler:
         tree = PARSER.parse('=NOT(AND("FaLSe", 7==8, A1, A2, A3))')
         result = EVALUATOR.transform(tree)
         assert result == Tree('bool', [True])
+
+        tree = PARSER.parse('=not(#REF!)')
+        result = EVALUATOR.transform(tree).children[-1]
+        assert isinstance(result, CellError)
+        assert result.get_type() == CellErrorType.BAD_REFERENCE
 
     def test_xor(self) -> None:
         '''
@@ -191,6 +206,11 @@ class TestFunctionHandler:
         tree = PARSER.parse('=XOR("tRUe", 7==7, NOT(A2), XOR(A1, A3))')
         result = EVALUATOR.transform(tree)
         assert result == Tree('bool', [True])
+
+        tree = PARSER.parse('=xor(True, #REF!)')
+        result = EVALUATOR.transform(tree).children[-1]
+        assert isinstance(result, CellError)
+        assert result.get_type() == CellErrorType.BAD_REFERENCE
 
     def test_exact(self) -> None:
         '''
@@ -329,7 +349,7 @@ class TestFunctionHandler:
         result = EVALUATOR.transform(tree).children[-1]
         assert isinstance(result, CellError)
         assert result.get_type() == CellErrorType.TYPE_ERROR
-        
+
         tree = PARSER.parse('=CHOOSE(A1)')
         result = EVALUATOR.transform(tree).children[-1]
         assert isinstance(result, CellError)
@@ -438,6 +458,28 @@ class TestFunctionHandler:
         tree = PARSER.parse('=ISERROR(A3)')
         result = EVALUATOR.transform(tree)
         assert result == Tree('bool', [True])
+
+        WB.set_cell_contents('Test', 'A1', '=A2')
+        WB.set_cell_contents('Test', 'A2', '=A1')
+        WB.set_cell_contents('Test', 'A3', '=ISERROR(A2)')
+        tree = PARSER.parse('=ISERROR(A2)')
+        result = EVALUATOR.transform(tree)
+        assert result == Tree('bool', [True])
+
+        tree = PARSER.parse('=ISERROR(A3)')
+        result = EVALUATOR.transform(tree)
+        assert result == Tree('bool', [False])
+
+        WB.set_cell_contents('Test', 'A1', '=ISERROR(A2)')
+        WB.set_cell_contents('Test', 'A2', '=ISERROR(A1)')
+        WB.set_cell_contents('Test', 'A3', '=ISERROR(A2)')
+        tree = PARSER.parse('=ISERROR(A2)')
+        result = EVALUATOR.transform(tree)
+        assert result == Tree('bool', [True])
+
+        tree = PARSER.parse('=ISERROR(A3)')
+        result = EVALUATOR.transform(tree)
+        assert result == Tree('bool', [False])
 
     def test_version(self) -> None:
         '''

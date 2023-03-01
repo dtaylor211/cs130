@@ -86,6 +86,8 @@ class FunctionHandler:
         bool_result = True
         for expression in args:
             arg = expression.children[0]
+            if isinstance(arg, CellError):
+                return Tree('cell_error', [arg])
             res = convert_to_bool(arg, type(arg)) if arg is not None else False
             bool_result = bool_result and res
 
@@ -109,6 +111,8 @@ class FunctionHandler:
         bool_result = False
         for expression in args:
             arg = expression.children[0]
+            if isinstance(arg, CellError):
+                return Tree('cell_error', [arg])
             res = convert_to_bool(arg, type(arg))
             bool_result = bool_result or res
 
@@ -130,6 +134,8 @@ class FunctionHandler:
             raise TypeError('Invalid number of arguments')
 
         arg = args[0].children[0]
+        if isinstance(arg, CellError):
+            return Tree('cell_error', [arg])
         res = convert_to_bool(arg, type(arg))
         bool_result = not res
 
@@ -153,6 +159,8 @@ class FunctionHandler:
         bool_result = False
         for expression in args:
             arg = expression.children[0]
+            if isinstance(arg, CellError):
+                return Tree('cell_error', [arg])
             res = convert_to_bool(arg, type(arg))
             # only flips when res true, will be true on odd number of true args
             bool_result = bool_result != res
@@ -339,16 +347,15 @@ class FunctionHandler:
         if args[0].data == 'cell_ref':
             return args[0]
 
-        elif args[0].data == 'cell_error':
+        if args[0].data == 'cell_error':
             return args[0]
 
-        else: 
-            try:
-                s = self.PARSER.parse(f'={str(args[0].children[-1])}')
-                if s.data != 'cell':
-                    raise lark.exceptions.LarkError
-                return s, 'Y'
+        try:
+            s = self.PARSER.parse(f'={str(args[0].children[-1])}')
+            if s.data != 'cell':
+                raise lark.exceptions.LarkError
+            return s, 'Y'
 
-            except lark.exceptions.LarkError:
-                return Tree('cell_error', [
-                    CellError(CellErrorType.BAD_REFERENCE, '')])
+        except lark.exceptions.LarkError:
+            return Tree('cell_error', [
+                CellError(CellErrorType.BAD_REFERENCE, '')])
