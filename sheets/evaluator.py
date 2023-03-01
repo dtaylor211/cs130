@@ -48,6 +48,7 @@ from lark import Tree, Transformer, Token
 
 from .cell_error import CellError, CellErrorType, CELL_ERRORS
 from .function_handler import FunctionHandler
+from .utils import convert_to_bool
 
 
 COMP_OPERATORS = {
@@ -167,21 +168,21 @@ class Evaluator(Transformer):
 
         '''
 
-        return token
+        return convert_to_bool(token, str)
 
-    def CELLREF(self, token: Token) -> Token:
-        '''
-        Evaluate a CELLREF type
+    # def CELL_REF(self, token: Token) -> Token:
+    #     '''
+    #     Evaluate a CELLREF type
 
-        Arguments:
-        - token: Token - contains data about the cell reference
+    #     Arguments:
+    #     - token: Token - contains data about the cell reference
 
-        Returns:
-        - the original token passed in
+    #     Returns:
+    #     - the original token passed in
 
-        '''
+    #     '''
 
-        return token
+    #     return token
 
     ########################################################################
     # Expressions
@@ -411,6 +412,7 @@ class Evaluator(Transformer):
                 raise KeyError('Cell location out of bounds')
 
             result = self.workbook.get_cell_value(working_sheet, cell_name)
+
             # Check for propogating errors
             if isinstance(result, CellError):
                 return Tree('cell_error', [result])
@@ -488,6 +490,21 @@ class Evaluator(Transformer):
         except Exception as e:
             detail = "function operations"
             return self.__process_exceptions(e, detail)
+        
+    def args_expr(self, args: List) -> Tree:
+        '''
+        Evaluate an expression of function arguments:
+
+        '''
+
+        if args == []:
+            return Tree('args_list', [])
+
+        elif len(args[-1].children) == 1:
+            return Tree('args_list', [args[0]]+[args[-1]])
+
+        else:
+            return Tree('args_list', [args[0]]+args[-1].children)
 
     ########################################################################
     # Exception Processing
@@ -525,7 +542,7 @@ class Evaluator(Transformer):
             detail = f'Attempting to access unknown {detail}'
 
         elif isinstance(ex, TypeError):
-            detail = f'Attempting to perform {detail} on incorrect types'
+            detail = f'{detail}: {ex.args[0]}'
             error_type = CellErrorType.TYPE_ERROR
 
         else:

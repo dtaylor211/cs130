@@ -447,10 +447,6 @@ class TestEvaluator:
         result = EVALUATOR.transform(tree)
         assert result == Tree('bool', [False])
 
-        tree = PARSER.parse('=AND(True, 4)')
-        result = EVALUATOR.transform(tree)
-        assert result == Tree('bool', [True])
-
         tree = PARSER.parse('=A3<A4')
         result = EVALUATOR.transform(tree)
         assert result == Tree('bool', [True])

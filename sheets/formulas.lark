@@ -37,11 +37,11 @@
 //========================================
 // Function expressions
 
-?func_expr : (FUNC_NAME)? "(" args ")"
+?func_expr : (FUNC_NAME)? "(" (args_expr)? ")"
 
 // ?args : "(" expression ("," expression)? ")"
 // ?args : ("(" args ("," args)? ")")? expression
-?args : expression ("," args)?
+?args_expr : (expression ("," args_expr)? )?
 
 
 //========================================
@@ -52,10 +52,8 @@
       | NUMBER                  -> number
       | STRING                  -> string
       | BOOL                    -> bool
-      // | expression              -> expr
       | "(" expression ")"      -> parens
       | "(" comp_expr ")"       -> parens
-      // | func_expr               -> function
 
 cell : (_sheetname "!")? CELLREF
 

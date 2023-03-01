@@ -16,8 +16,10 @@ Classes:
 
 '''
 
-from decimal import Decimal
+
 from lark import Tree
+
+from .utils import convert_to_bool
 
 
 class FunctionHandler:
@@ -42,27 +44,6 @@ class FunctionHandler:
     def map_func(self, func_name: str):
         return self.recognized_funcs[func_name]
     
-    def convert_to_bool(self, input, input_type: type) -> bool:
-        '''
-        '''
-        
-        result = None
-        if input_type == bool:
-            return input
-        elif input_type == str:
-            if input.lower() == 'true':
-                result = True
-            elif input.lower() == 'false':
-                result = False
-            else:
-                raise TypeError('Cannot convert given string to boolean')
-        else:
-            if input != Decimal(0):
-                result = True
-            else:
-                result = False
-        return result
-    
     #  def __convert_from_bool(bool_input: bool, target_type: type) -> Any:
     #     '''
     #     '''
@@ -85,13 +66,18 @@ class FunctionHandler:
         '''
 
         if len(args.children) < 1:
-            raise TypeError
-        
+            raise TypeError('Invalid number of arguments')
+        print('d',args.children)
         for expression in args.children:
+            print(expression)
             a = expression.children[0]
-            res = self.convert_to_bool(a, type(a))
-            if res != True:
+            print('a', a, type(a))
+            res = convert_to_bool(a, type(a))
+            print(res)
+            if not res:
+                print('ay')
                 return Tree('bool', [False])
+
         return Tree('bool', [True])
 
     

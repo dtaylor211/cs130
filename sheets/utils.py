@@ -14,6 +14,7 @@ Methods:
 
 import re
 from typing import Tuple
+from decimal import Decimal
 
 
 def get_loc_from_coords(coords: Tuple[int, int]) -> str:
@@ -68,3 +69,24 @@ def get_coords_from_loc(location: str) -> Tuple[int, int]:
         col_num = col_num * 26 + ord(letter) - ord('A') + 1
 
     return (col_num, row_num)
+
+def convert_to_bool(input, input_type: type) -> bool:
+        '''
+        '''
+        
+        result = None
+        if input_type == bool:
+            return input
+        elif input_type == str:
+            if input.lower() == 'true':
+                result = True
+            elif input.lower() == 'false':
+                result = False
+            else:
+                raise TypeError('Cannot convert given string to boolean')
+        else:
+            if input != Decimal(0):
+                result = True
+            else:
+                result = False
+        return result
