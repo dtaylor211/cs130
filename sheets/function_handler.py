@@ -5,9 +5,6 @@ This module holds the basic functionality of dealing with function calls.
 
 See the Evaluator module for implementation.
 
-Global Variables:
-
-
 Classes:
 - FunctionHandler
 
@@ -23,8 +20,16 @@ from .utils import convert_to_bool
 
 
 class FunctionHandler:
+    '''
+    Handles internal function calls
+
+    '''
 
     def __init__(self):
+        '''
+        Initialize a new function handler
+
+        '''
 
         self._recognized_funcs = {
             'and': self.__and
@@ -42,6 +47,17 @@ class FunctionHandler:
         }
 
     def map_func(self, func_name: str) -> Callable:
+        '''
+        Map a function name to its Callable counterpart
+
+        Arguments:
+        - func_name: str - name of desired function
+
+        Returns:
+        - Callable function with name func_name
+
+        '''
+
         return self._recognized_funcs[func_name]
 
     def __and(self, args: List) -> Tree:
@@ -49,7 +65,7 @@ class FunctionHandler:
         AND logic functionality
 
         Arguments:
-        - args: List
+        - args: List - list of arguments to given function
 
         Returns:
         - Tree containing boolean result
@@ -60,8 +76,8 @@ class FunctionHandler:
             raise TypeError('Invalid number of arguments')
 
         for expression in args:
-            a = expression.children[0]
-            res = convert_to_bool(a, type(a))
+            arg = expression.children[0]
+            res = convert_to_bool(arg, type(arg))
             if not res:
                 return Tree('bool', [False])
 

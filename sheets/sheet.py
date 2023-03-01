@@ -22,6 +22,8 @@ Classes:
     - get_cell_adjacency_list(object) -> Dict[Tuple[str, str],
         List[Tuple[str, str]]]
     - save_sheet(object) -> Dict[str, str]
+    - get_source_cells(object, str, str) -> List[str]
+    - get_target_cells(object, str, str, str, List[str]) -> Dict[str, str]
 
 '''
 

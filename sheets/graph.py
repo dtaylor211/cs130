@@ -6,6 +6,9 @@ adjacency lists.
 
 See the Workbook, Sheet, and Cell modules for implementation.
 
+Global Variables:
+- T (TypeVar)
+
 Classes:
 - Graph
 

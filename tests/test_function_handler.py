@@ -13,7 +13,7 @@ Classes:
 - TestFunctionHandler
 
     Methods:
-    - test_num_literals(object) -> None
+    - test_and(object) -> None
 
 '''
 
@@ -66,8 +66,7 @@ class TestFunctionHandler:
         tree = PARSER.parse('=AND("true", 7==7, A1, A3)')
         result = EVALUATOR.transform(tree)
         assert result == Tree('bool', [True])
-        print('start')
+
         tree = PARSER.parse('=AND("true", 7==7, A2)')
-        print(tree)
         result = EVALUATOR.transform(tree)
         assert result == Tree('bool', [False])

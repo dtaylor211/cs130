@@ -12,6 +12,9 @@ Global Variables:
 Classes:
 - Cell
 
+    Local Variables:
+    - PARSER (Any) - Lark parser for formula evaluation
+
     Methods:
     - get_loc(object) -> str
     - get_contents(object) -> str
@@ -22,6 +25,7 @@ Classes:
     - get_children(object) -> List[Tuple[str, str]]]
     - empty(object) -> None
     - set_circular_error(object) -> None
+    - get_shifted_contents(object, Tuple[int, int]) -> str
 
 '''
 

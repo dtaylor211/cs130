@@ -11,7 +11,7 @@ clean:
 
 test-evaluator:
 	pytest -q ./tests/test_evaluator.py
-	pytest -q ./tests/test_evaluator_invalid.py
+	pytest -q ./tests/test_errors.py
 	pytest -q ./tests/test_function_handler.py
 
 test:
@@ -20,8 +20,8 @@ test:
 	pytest -q ./tests/test_sheet.py
 	pytest -q ./tests/test_utils.py
 	pytest -q ./tests/test_evaluator.py
-	pytest -q ./tests/test_evaluator_invalid.py
 	pytest -q ./tests/test_function_handler.py
+	pytest -q ./tests/test_errors.py
 
 test-performance-reference-chain:
 	python -m cProfile -o program.prof \
@@ -90,7 +90,7 @@ lint-test-all:
 	$(PYLINT) $(PYLINTFLAGS) ./tests/test_workbook_basic.py
 	$(PYLINT) $(PYLINTFLAGS) ./tests/test_sheet.py
 	$(PYLINT) $(PYLINTFLAGS) ./tests/test_evaluator.py
-	$(PYLINT) $(PYLINTFLAGS) ./tests/test_evaluator_invalid.py
+	$(PYLINT) $(PYLINTFLAGS) ./tests/test_errors.py
 	$(PYLINT) $(PYLINTFLAGS) ./tests/test_utils.py
 	$(PYLINT) $(PYLINTFLAGS) ./tests/test_function_handler.py
 

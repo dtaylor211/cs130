@@ -8,6 +8,7 @@ See the Workbook and Sheet modules for implementation.
 Methods:
 - get_loc_from_coords(Tuple[int, int]) -> str
 - get_coords_from_loc(str) -> Tuple[int, int]
+- convert_to_bool(str or Decimal, type) -> bool
 
 '''
 
@@ -46,7 +47,7 @@ def get_coords_from_loc(location: str) -> Tuple[int, int]:
     '''
     Get the coordinate tuple from a location
 
-    raise ValueError is cell location isn't available
+    Throw a ValueError is cell location isn't available
     need to check A-Z (max 4) then 1-9999 for valid lcoation
 
     Arguments:
@@ -70,40 +71,31 @@ def get_coords_from_loc(location: str) -> Tuple[int, int]:
 
     return (col_num, row_num)
 
-def convert_to_bool(input, input_type: type) -> bool:
-        '''
-        '''
-        
-        result = None
-        if input_type == bool:
-            return input
-        elif input_type == str:
-            if input.lower() == 'true':
-                result = True
-            elif input.lower() == 'false':
-                result = False
-            else:
-                raise TypeError('Cannot convert given string to boolean')
+def convert_to_bool(inp: str or Decimal, inp_type: type) -> bool:
+    '''
+    Convert given input of type str or Decimal to boolean
+
+    Throw a TypeError if given input cannot be converted
+
+    Arguments:
+    - inp: str or Decimal - input to convert
+    - inp_type: type - type of input
+
+    Returns:
+    - boolean representation of input
+
+    '''
+
+    result = None
+    if inp_type == bool:
+        result = inp
+    elif inp_type == str:
+        if inp.lower() == 'true':
+            result = True
+        elif inp.lower() == 'false':
+            result = False
         else:
-            if input != Decimal(0):
-                result = True
-            else:
-                result = False
-        return result
-
-#  def __convert_from_bool(bool_input: bool, target_type: type) -> Any:
-    #     '''
-    #     '''
-
-    #     result = None
-    #     if bool_input:
-    #         if target_type == Decimal:
-    #             result = Decimal(1)
-    #         else:
-    #             result = 'TRUE'
-    #     else:
-    #         if target_type == Decimal:
-    #             result = Decimal(0)
-    #         else:
-    #             result = 'FALSE'
-    #     return result
+            raise TypeError('Cannot convert given string to boolean')
+    else:
+        result = bool(inp)
+    return result

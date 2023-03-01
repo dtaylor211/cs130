@@ -48,7 +48,6 @@ from .sheet import Sheet
 from .evaluator import Evaluator
 from .graph import Graph
 from .utils import get_loc_from_coords
-from .function_handler import FunctionHandler
 
 
 class Workbook:

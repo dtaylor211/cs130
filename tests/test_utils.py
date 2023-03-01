@@ -10,6 +10,7 @@ Classes:
     Methods:
     - test_get_coords_from_loc(object) -> None
     - test_get_loc_from_coords(object) -> None
+    - test_convert_to_bool(object) -> None
 
 '''
 
@@ -102,3 +103,11 @@ class TestUtils:
 
         loc = get_loc_from_coords((705, 751))
         assert loc == 'AAC751'
+
+    def test_covert_to_bool(self) -> None:
+        '''
+        Test converting strings and Decimals to bools
+
+        '''
+
+        pass

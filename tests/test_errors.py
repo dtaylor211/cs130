@@ -1,14 +1,15 @@
 '''
-Test Evaluator Invalid
+Test Errors
 
-Tests the Evaluator module found at ../sheets/evaluator.py with invalid
+Tests the Evaluator and Workbook modules found in ../sheets/ with invalid
 inputs.
+Also tests for error propogation.
 
 GLOBAL_VARIABLES:
 - WB (Workbook) - the Workbook used for this test suite
 
 Classes:
-- TestEvaluatorInvalid
+- TestErrors
 
     Methods:
     - test_parse_error(object) -> None
@@ -34,7 +35,7 @@ from sheets.cell_error import CellError, CellErrorType
 WB = Workbook()
 WB.new_sheet('Test')
 
-class TestEvaluatorInvalid:
+class TestErrors:
     '''
     Tests the formula parser and evaluator using invalid inputs
 
@@ -50,58 +51,58 @@ class TestEvaluatorInvalid:
         result_contents = WB.get_cell_contents('Test','A1')
         result_value = WB.get_cell_value('Test', 'A1')
         assert result_contents == '=1E+4'
-        assert result_value.get_type() == CellErrorType.PARSE_ERROR
         assert isinstance(result_value, CellError)
+        assert result_value.get_type() == CellErrorType.PARSE_ERROR
 
         WB.set_cell_contents('Test', 'A1', '=A1A2')
         result_contents = WB.get_cell_contents('Test','A1')
         result_value = WB.get_cell_value('Test', 'A1')
         assert result_contents == '=A1A2'
-        assert result_value.get_type() == CellErrorType.PARSE_ERROR
         assert isinstance(result_value, CellError)
+        assert result_value.get_type() == CellErrorType.PARSE_ERROR
 
         WB.set_cell_contents('Test', 'A1', '=1**2')
         result_contents = WB.get_cell_contents('Test','A1')
         result_value = WB.get_cell_value('Test', 'A1')
         assert result_contents == '=1**2'
-        assert result_value.get_type() == CellErrorType.PARSE_ERROR
         assert isinstance(result_value, CellError)
+        assert result_value.get_type() == CellErrorType.PARSE_ERROR
 
         WB.set_cell_contents('Test', 'A1', '=A1((A2)')
         result_contents = WB.get_cell_contents('Test','A1')
         result_value = WB.get_cell_value('Test', 'A1')
         assert result_contents == '=A1((A2)'
-        assert result_value.get_type() == CellErrorType.PARSE_ERROR
         assert isinstance(result_value, CellError)
+        assert result_value.get_type() == CellErrorType.PARSE_ERROR
 
         WB.set_cell_contents('Test', 'A1', '=A1+(A2-A1')
         result_contents = WB.get_cell_contents('Test','A1')
         result_value = WB.get_cell_value('Test', 'A1')
         assert result_contents == '=A1+(A2-A1'
-        assert result_value.get_type() == CellErrorType.PARSE_ERROR
         assert isinstance(result_value, CellError)
+        assert result_value.get_type() == CellErrorType.PARSE_ERROR
 
         WB.set_cell_contents('Test', 'A1', '=A1+A2-A1)')
         result_contents = WB.get_cell_contents('Test','A1')
         result_value = WB.get_cell_value('Test', 'A1')
         assert result_contents == '=A1+A2-A1)'
-        assert result_value.get_type() == CellErrorType.PARSE_ERROR
         assert isinstance(result_value, CellError)
+        assert result_value.get_type() == CellErrorType.PARSE_ERROR
 
         WB.set_cell_contents('Test', 'A1', '=A 1')
         result_contents = WB.get_cell_contents('Test','A1')
         result_value = WB.get_cell_value('Test', 'A1')
         assert result_contents == '=A 1'
-        assert result_value.get_type() == CellErrorType.PARSE_ERROR
         assert isinstance(result_value, CellError)
+        assert result_value.get_type() == CellErrorType.PARSE_ERROR
 
         WB.set_cell_contents('Test', 'A1', 'Sheet2')
         WB.set_cell_contents('Test', 'A2', '=Test!A1 & \'Sheet2\'')
         contents = WB.get_cell_contents('Test', 'A2')
-        value = WB.get_cell_value('Test', 'A2')
+        result_value = WB.get_cell_value('Test', 'A2')
         assert contents == '=Test!A1 & \'Sheet2\''
-        assert isinstance(value, CellError)
-        assert value.get_type() == CellErrorType.PARSE_ERROR
+        assert isinstance(result_value, CellError)
+        assert result_value.get_type() == CellErrorType.PARSE_ERROR
 
     def test_circular_reference(self) -> None:
         '''

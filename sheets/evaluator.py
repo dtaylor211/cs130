@@ -11,13 +11,13 @@ Global Variables:
     to the operator function
 - EMPTY_SUBS (Dict[type, Any]) - converts type of not None expression to the
     correct empty value
-- RECOGNIZED_FUNCS (List[str]) - names of accepted functions
 
 Classes:
 - Evaluator
 
     Attributes:
     - workbook (Workbook)
+    - function_handler (FunctionHandler)
 
     Methods:
     - get_working_sheet(object) -> str
@@ -25,8 +25,6 @@ Classes:
     - NUMBER(object, Token) -> Decimal
     - STRING(object, Token) -> str
     - BOOL(object, Token) -> bool
-    - CELLREF(object, Token) -> Token
-    - expr(object, List) -> Tree
     - add_expr(object, List) -> Tree
     - mul_expr(object, List) -> Tree
     - unary_op(object, List) -> Tree
@@ -70,8 +68,6 @@ EMPTY_SUBS = {
     bool: False
 }
 
-
-
 class Evaluator(Transformer):
     '''
     Evaluate an input string as a formula, based on the described Lark grammar
@@ -88,9 +84,9 @@ class Evaluator(Transformer):
 
         '''
 
-        self.function_handler = FunctionHandler()
         Transformer.__init__(self)
         self.workbook = workbook
+        self.function_handler = FunctionHandler()
         self._working_sheet = sheet_name
 
     ########################################################################
@@ -157,7 +153,7 @@ class Evaluator(Transformer):
         '''
 
         return str(token)[1:-1]
-    
+
     def BOOL(self, token: Token) -> bool:
         '''
         Evaluate a BOOL type
@@ -203,7 +199,7 @@ class Evaluator(Transformer):
         '''
 
         try:
-            operator = args[1]
+            oper = args[1]
             x = args[0].children[-1]
             y = args[-1].children[-1]
 
@@ -218,12 +214,12 @@ class Evaluator(Transformer):
             x = Decimal(0) if x is None else Decimal(x)
             y = Decimal(0) if y is None else Decimal(y)
 
-            result = x + y if operator == '+' else x - y
+            result = x + y if oper == '+' else x - y
             return Tree('number', [self.__normalize_number(Decimal(result))])
 
         except Exception as e:
             return self.__process_exceptions(e, detail='addition/subtraction')
-        
+
 
     def mul_expr(self, args: List) -> Tree:
         '''
@@ -242,7 +238,7 @@ class Evaluator(Transformer):
 
         try:
 
-            operator = args[1]
+            oper = args[1]
             x = args[0].children[-1]
             y = args[-1].children[-1]
 
@@ -258,10 +254,10 @@ class Evaluator(Transformer):
             y = Decimal(0) if y is None else Decimal(y)
 
             # Check for division by zero
-            if y == Decimal(0) and operator == '/':
+            if y == Decimal(0) and oper == '/':
                 raise ZeroDivisionError
 
-            result = x * y if operator == '*' else x / y
+            result = x * y if oper == '*' else x / y
             return Tree('number', [self.__normalize_number(Decimal(result))])
 
         except Exception as e:
@@ -283,7 +279,7 @@ class Evaluator(Transformer):
 
         try:
 
-            operator = args[0]
+            oper = args[0]
             x = args[1].children[-1]
 
             # Check for propogating errors
@@ -294,7 +290,7 @@ class Evaluator(Transformer):
             # Decimal already accounts for passing in boolean values
             x = Decimal(0) if x is None else Decimal(x)
 
-            result = -1 * x if operator == '-' else x
+            result = -1 * x if oper == '-' else x
             return Tree('number', [Decimal(result)])
 
         except Exception as e:
@@ -324,9 +320,9 @@ class Evaluator(Transformer):
                 return Tree('cell_error', [str2])
 
             # Handle when either input is a boolean
-            if type(str1) == bool:
+            if isinstance(str1, bool):
                 str1 = str(str1).upper()
-            if type(str2) == bool:
+            if isinstance(str2, bool):
                 str2 = str(str2).upper()
 
             # Check for compatible types, deal with empty case
@@ -337,7 +333,7 @@ class Evaluator(Transformer):
 
         except Exception as e:
             return self.__process_exceptions(e, 'string concatenation')
-        
+
     def comp_expr(self, args: List) -> Tree:
         '''
         Evaluate a comparison expression within the Tree
@@ -352,7 +348,7 @@ class Evaluator(Transformer):
         '''
 
         try:
-            op = args[1]
+            oper = args[1]
             x = args[0].children[-1]
             y = args[-1].children[-1]
             x_type = type(x)
@@ -364,7 +360,7 @@ class Evaluator(Transformer):
             if isinstance(y, CellError):
                 return Tree('cell_error', [y])
 
-            result = Evaluator.__compare_values(x, y, (x_type, y_type), op)
+            result = self.__compare_values(x, y, (x_type, y_type), oper)
 
             return Tree('bool', [result])
 
@@ -457,11 +453,10 @@ class Evaluator(Transformer):
         if args == []:
             return Tree('args_list', [])
 
-        elif len(args[-1].children) == 1:
+        if len(args[-1].children) == 1:
             return Tree('args_list', [args[0]]+[args[-1]])
 
-        else:
-            return Tree('args_list', [args[0]]+args[-1].children)
+        return Tree('args_list', [args[0]]+args[-1].children)
 
     def parens(self, args: List) -> Tree:
         '''
@@ -560,8 +555,8 @@ class Evaluator(Transformer):
         _, _, exp = norm.as_tuple()
         return norm if exp <= 0 else norm.quantize(1)
 
-    def __compare_values(left: Any, right: Any, types: Tuple[type, type],
-                         op: str) -> bool:
+    def __compare_values(self, left: Any, right: Any, types: Tuple[type, type],
+                         oper: str) -> bool:
         '''
         Get the boolean value for a comparison between types of bool, str,
         and/or Decimal
@@ -571,7 +566,7 @@ class Evaluator(Transformer):
         - right: Any - right side of comparison
         - types: Tuple[type, type] - types of the left and right sides of the
             comparison operator
-        - op: str - comparison operator
+        - oper: str - comparison operator
 
         Returns:
         - boolean result of comparison
@@ -583,20 +578,20 @@ class Evaluator(Transformer):
             if types == (str, str):
                 left = left.lower()
                 right = right.lower()
-            result = COMP_OPERATORS[op](left, right)
+            result = COMP_OPERATORS[oper](left, right)
 
         elif types in [(bool, str), (str, Decimal), (bool, Decimal)]:
-            if op in ['>', '>=', '!=', '<>']:
+            if oper in ['>', '>=', '!=', '<>']:
                 result = True
 
         elif types in [(str, bool), (Decimal, str), (Decimal, bool)]:
-            if op in ['<', '<=', '!=', '<>']:
+            if oper in ['<', '<=', '!=', '<>']:
                 result = True
 
         else:
-            if left is not None: 
-                result = COMP_OPERATORS[op](left, EMPTY_SUBS[types[0]]) 
+            if left is not None:
+                result = COMP_OPERATORS[oper](left, EMPTY_SUBS[types[0]])
             else:
-                result = COMP_OPERATORS[op](EMPTY_SUBS[types[-1]], right)
+                result = COMP_OPERATORS[oper](EMPTY_SUBS[types[-1]], right)
 
         return result
