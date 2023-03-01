@@ -17,12 +17,20 @@ Logistics (7 pts)
 
 L1.  [2pts] Enumerate all teammates here.
 
+     Benjamin (Ben) Juarez, Kyle McGraw, Dallas Taylor
 
 L2.  [2pts] What did each teammate focus on during this project?
 
+     Ben:      Performance analysis, testing
+     Kyle:     Function support, testing, bug fixes
+     Dallas:   Boolean literals, comparison operations, implicit conversions
+               function support
 
 L3.  [3pts] Approximately how many hours did each teammate spend on the project?
 
+     Ben:      7
+     Kyle:     8
+     Dallas:   10
 
 Spreadsheet Engine Design (31 pts)
 ----------------------------------
@@ -30,18 +38,21 @@ Spreadsheet Engine Design (31 pts)
 D1.  [3pts] Briefly describe the changes you made to the Lark parser grammar
      to support Boolean literals.
      
+     TODO - Dallas
 
 D2.  [4pts] Briefly describe the changes you made to the Lark parser grammar
      to support conditional expressions.  How did you ensure that conditional
      operations are lower precedence than arithmetic and string concatenation
      operations?
 
+     TODO - Dallas
 
 D3.  [6pts] Briefly describe how function invocation works in your spreadsheet
      engine.  How easy or hard would it be for you to add new functions to your
      engine?  What about a third-party developer?  How well does your code
      follow the Open/Closed Principle?
 
+     TODO - Dallas/Kyle
 
 D4.  [4pts] Is your implementation able to lazily evaluate the arguments to
      functions like IF(), CHOOSE() and IFERROR()?  (Recall from the Project 4
@@ -50,6 +61,7 @@ D4.  [4pts] Is your implementation able to lazily evaluate the arguments to
      what changes to your design were required to achieve this?  If not, what
      prevented your team from implementing this?
 
+     TODO - Dallas/Kyle
 
 D5.  [4pts] Is your implementation able to evaluate the ISERROR() function
      correctly, with respect to circular-reference errors?  (Recall from the
@@ -58,12 +70,14 @@ D5.  [4pts] Is your implementation able to evaluate the ISERROR() function
      If so, what changes to your design were required to achieve this?  If
      not, what prevented your team from implementing this?
 
+     TODO - Dallas/Kyle
 
 D6.  [4pts] Is your implementation able to successfully identify cycles that
      are not evident from static analysis of formulas containing INDIRECT()?
      If so, what changes to your design were required, if any, to achieve this?
      If not, what prevented your team from implementing this?
 
+     TODO - Dallas/Kyle
 
 D7.  [6pts] Project 4 has a number of small but important operations to
      implement.  Comparison operations include a number of comparison and type
@@ -72,6 +86,7 @@ D7.  [6pts] Project 4 has a number of small but important operations to
      these operations?  How did your approach affect the reusability and
      testability of these operations?
 
+     TODO - Dallas/Kyle
 
 Performance Analysis (12 pts)
 -----------------------------
@@ -85,15 +100,35 @@ to identify where your program is spending the bulk of its time.
 A1.  [4pts] Briefly enumerate the performance tests you created to exercise
      your implementation.
 
+     TODO
 
 A2.  [2pts] What profiler did you choose to run your performance tests with?
      Why?  Give an example of how to invoke one of your tests with the profiler.
 
+     We used the cProfiler since it is built-in and becuase there was an useful
+     amount of documentation accesible.   We also used SnakeViz (with
+     permission) to better visualize how performance results.  The use of 
+     SnakeViz has to be specificied by the user from the terminal. Upon running
+     your desired performance test, the user will be prompted whether to 
+     visualize the data, and further evaluation depends on their y/N response.
+
+     Here is an example of how to invoke one of our tests with the profiler:
+
+     (with $ make test-performance-rename-sheet-bulk):
+	python -m cProfile -o program.prof \
+		./tests/performance/test_rename_sheet_bulk.py
+	@read -p "Visualize Data? [y/N] " ans && ans=$${ans:-N} ; \
+     if [ $${ans} = y ] || [ $${ans} = Y ]; then \
+          snakeviz program.prof; \
+     fi
+
+     To run another performance test, you just hit another make target.
 
 A3.  [6pts] What are ~3 of the most significant hot-spots you identified in your
      performance testing?  Did you expect these hot-spots, or were they
      surprising to you?
 
+     TODO - Kyle
 
 Section F:  CS130 Project 3 Feedback [OPTIONAL]
 -----------------------------------------------
