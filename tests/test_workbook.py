@@ -915,3 +915,32 @@ class TestWorkbook:
         assert contents == '=#REF! + B1'
         assert isinstance(value, CellError)
         assert value.get_type() == CellErrorType.BAD_REFERENCE
+
+    def test_move_copy_indirect(self) -> None:
+        '''
+        Test moving/copying cells with indirect func calls
+
+        '''
+
+        wb1 = Workbook()
+        wb1.new_sheet('Sheet1')
+        wb1.set_cell_contents('Sheet1', 'A1', '=1')
+        wb1.set_cell_contents('Sheet1', 'A2', '=INDIRECT(Sheet1!A1)')
+        wb1.move_cells('Sheet1', 'A1', 'A2', 'B1')
+        contents = wb1.get_cell_contents('Sheet1', 'B2')
+        value = wb1.get_cell_value('Sheet1', 'B2')
+        assert contents == '=INDIRECT(Sheet1!B1)'
+        assert value == Decimal('1')
+
+        wb1.set_cell_contents('Sheet1', 'B2', '=INDIRECT(Sheet1!$B1)')
+        wb1.copy_cells('Sheet1', 'B1', 'B2', 'C1')
+        contents = wb1.get_cell_contents('Sheet1', 'C2')
+        value = wb1.get_cell_value('Sheet1', 'C2')
+        assert contents == '=INDIRECT(Sheet1!$B1)'
+        assert value == Decimal('1')
+
+        wb1.copy_cells('Sheet1', 'C2', 'C2', 'D3')
+        contents = wb1.get_cell_contents('Sheet1', 'D3')
+        value = wb1.get_cell_value('Sheet1', 'D3')
+        assert contents == '=INDIRECT(Sheet1!$B2)'
+        assert value == Decimal('1')

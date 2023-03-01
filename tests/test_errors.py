@@ -104,6 +104,48 @@ class TestErrors:
         assert isinstance(result_value, CellError)
         assert result_value.get_type() == CellErrorType.PARSE_ERROR
 
+        WB.set_cell_contents('Test', 'A3', '=VERSION(')
+        result_contents = WB.get_cell_contents('Test','A3')
+        result_value = WB.get_cell_value('Test', 'A3')
+        assert result_contents == '=VERSION('
+        assert isinstance(result_value, CellError)
+        assert result_value.get_type() == CellErrorType.PARSE_ERROR
+
+        WB.set_cell_contents('Test', 'A3', '=any_func(arg,)')
+        result_contents = WB.get_cell_contents('Test','A3')
+        result_value = WB.get_cell_value('Test', 'A3')
+        assert result_contents == '=any_func(arg,)'
+        assert isinstance(result_value, CellError)
+        assert result_value.get_type() == CellErrorType.PARSE_ERROR
+
+        WB.set_cell_contents('Test', 'A3', '=__invalid_func(arg)')
+        result_contents = WB.get_cell_contents('Test','A3')
+        result_value = WB.get_cell_value('Test', 'A3')
+        assert result_contents == '=__invalid_func(arg)'
+        assert isinstance(result_value, CellError)
+        assert result_value.get_type() == CellErrorType.PARSE_ERROR
+
+        WB.set_cell_contents('Test', 'A3', '=invalid?_func(arg)')
+        result_contents = WB.get_cell_contents('Test','A3')
+        result_value = WB.get_cell_value('Test', 'A3')
+        assert result_contents == '=invalid?_func(arg)'
+        assert isinstance(result_value, CellError)
+        assert result_value.get_type() == CellErrorType.PARSE_ERROR
+
+        WB.set_cell_contents('Test', 'A3', '=valid_func(arg')
+        result_contents = WB.get_cell_contents('Test','A3')
+        result_value = WB.get_cell_value('Test', 'A3')
+        assert result_contents == '=valid_func(arg'
+        assert isinstance(result_value, CellError)
+        assert result_value.get_type() == CellErrorType.PARSE_ERROR
+
+        WB.set_cell_contents('Test', 'A3', '=INDIRECT(Sheet2!!A1)')
+        result_contents = WB.get_cell_contents('Test','A3')
+        result_value = WB.get_cell_value('Test', 'A3')
+        assert result_contents == '=INDIRECT(Sheet2!!A1)'
+        assert isinstance(result_value, CellError)
+        assert result_value.get_type() == CellErrorType.PARSE_ERROR
+
     def test_circular_reference(self) -> None:
         '''
         Test when given a formula with a circular reference error
@@ -133,6 +175,18 @@ class TestErrors:
         WB.set_cell_contents('Test', 'B1', '=A1')
         WB.set_cell_contents('Test', 'A1', '=B1')
         value = WB.get_cell_value('Test', 'A1')
+        assert isinstance(result_value, CellError)
+        assert result_value.get_type() == CellErrorType.CIRCULAR_REFERENCE
+
+        WB.set_cell_contents('Test', 'A1', '=B1')
+        WB.set_cell_contents('Test', 'B1', '=INDIRECT("Test!A1")')
+        value = WB.get_cell_value('Test', 'B1')
+        assert isinstance(result_value, CellError)
+        assert result_value.get_type() == CellErrorType.CIRCULAR_REFERENCE
+
+        WB.set_cell_contents('Test', 'A1', '=B1')
+        WB.set_cell_contents('Test', 'B1', '=INDIRECT(Test!B1)')
+        value = WB.get_cell_value('Test', 'B1')
         assert isinstance(result_value, CellError)
         assert result_value.get_type() == CellErrorType.CIRCULAR_REFERENCE
 
@@ -211,6 +265,20 @@ class TestErrors:
         assert isinstance(result_value, CellError)
         assert result_value.get_type() == CellErrorType.BAD_NAME
 
+        WB.set_cell_contents('Test', 'A3', '=A1(A2)')
+        result_contents = WB.get_cell_contents('Test','A3')
+        result_value = WB.get_cell_value('Test', 'A3')
+        assert result_contents == '=A1(A2)'
+        assert isinstance(result_value, CellError)
+        assert result_value.get_type() == CellErrorType.BAD_NAME
+
+        WB.set_cell_contents('Test', 'A3', '=and_or(A2)')
+        result_contents = WB.get_cell_contents('Test','A3')
+        result_value = WB.get_cell_value('Test', 'A3')
+        assert result_contents == '=and_or(A2)'
+        assert isinstance(result_value, CellError)
+        assert result_value.get_type() == CellErrorType.BAD_NAME
+
     def test_type_error(self) -> None:
         '''
         Test when given a formula with a type error
@@ -258,6 +326,27 @@ class TestErrors:
         result_contents = WB.get_cell_contents('Test','A3')
         result_value = WB.get_cell_value('Test', 'A3')
         assert result_contents == '=A1/A2'
+        assert result_value.get_type() == CellErrorType.TYPE_ERROR
+        assert isinstance(result_value, CellError)
+
+        WB.set_cell_contents('Test', 'A3', '=AND(True, "string")')
+        result_contents = WB.get_cell_contents('Test','A3')
+        result_value = WB.get_cell_value('Test', 'A3')
+        assert result_contents == '=AND(True, "string")'
+        assert result_value.get_type() == CellErrorType.TYPE_ERROR
+        assert isinstance(result_value, CellError)
+
+        WB.set_cell_contents('Test', 'A3', '=VERSION(True)')
+        result_contents = WB.get_cell_contents('Test','A3')
+        result_value = WB.get_cell_value('Test', 'A3')
+        assert result_contents == '=VERSION(True)'
+        assert result_value.get_type() == CellErrorType.TYPE_ERROR
+        assert isinstance(result_value, CellError)
+
+        WB.set_cell_contents('Test', 'A3', '=AND()')
+        result_contents = WB.get_cell_contents('Test','A3')
+        result_value = WB.get_cell_value('Test', 'A3')
+        assert result_contents == '=AND()'
         assert result_value.get_type() == CellErrorType.TYPE_ERROR
         assert isinstance(result_value, CellError)
 
@@ -463,10 +552,3 @@ class TestErrors:
         value = WB.get_cell_value('Test', 'A2')
         assert isinstance(value, CellError)
         assert value.get_type() == CellErrorType.TYPE_ERROR
-
-        # WB.set_cell_contents('Test', 'A3', '=A1(A2)')
-        # result_contents = WB.get_cell_contents('Test','A1')
-        # result_value = WB.get_cell_value('Test', 'A1')
-        # assert result_contents == '=A1(A2)'
-        # assert isinstance(result_value, CellError)
-        # assert result_value.get_type() == CellErrorType.BAD_NAME
