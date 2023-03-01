@@ -86,7 +86,7 @@ class FunctionHandler:
         bool_result = True
         for expression in args:
             arg = expression.children[0]
-            res = convert_to_bool(arg, type(arg))
+            res = convert_to_bool(arg, type(arg)) if arg is not None else False
             bool_result = bool_result and res
 
         return Tree('bool', [bool_result])
