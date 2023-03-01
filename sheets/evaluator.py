@@ -391,6 +391,7 @@ class Evaluator(Transformer):
             else:
                 working_sheet = self.get_working_sheet()
                 cell_name = args[0].replace('$', '')
+
             # Check that cell location is within bounds
             if not re.match(r"^[A-Z]{1,4}[1-9][0-9]{0,3}$", cell_name.upper()):
                 raise KeyError('Cell location out of bounds')
@@ -432,7 +433,20 @@ class Evaluator(Transformer):
                 args_list = [args[-1]]
 
             result = self.function_handler.map_func(func_name)
-            return result(args_list)
+            result = result(args_list)
+
+            if isinstance(result, Tuple):
+                temp =  self.transform(result[0])
+
+                if temp.children[-1] is None:
+                    return Tree('cell_error', [CellError(CellErrorType.BAD_REFERENCE, '')])
+                else:
+                    return temp
+
+            if result.children[-1] is None:
+                return Tree('cell_error', [CellError(CellErrorType.BAD_REFERENCE, '')])
+
+            return result
 
         except KeyError as e:
             detail = 'function'

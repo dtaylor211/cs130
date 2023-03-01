@@ -37,7 +37,7 @@
 //========================================
 // Function expressions
 
-?func_expr : (FUNC_NAME)? "(" (args_expr)? ")"
+?func_expr : (FUNC_NAME) "(" (args_expr)? ")"
 
 // ?args : "(" expression ("," expression)? ")"
 // ?args : ("(" args ("," args)? ")")? expression

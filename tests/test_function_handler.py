@@ -24,7 +24,7 @@ from lark import Lark, Tree
 # pylint: disable=unused-import, import-error
 import context
 from sheets.evaluator import Evaluator
-from sheets import Workbook, CellError, CellErrorType
+from sheets import Workbook, CellError, CellErrorType, version
 
 
 WB = Workbook()
@@ -340,7 +340,7 @@ class TestFunctionHandler:
         result = EVALUATOR.transform(tree).children[-1]
         assert isinstance(result, CellError)
         assert result.get_type() == CellErrorType.TYPE_ERROR
-
+        
         tree = PARSER.parse('=CHOOSE(A1)')
         result = EVALUATOR.transform(tree).children[-1]
         assert isinstance(result, CellError)
@@ -471,3 +471,97 @@ class TestFunctionHandler:
         tree = PARSER.parse('=ISERROR(A3)')
         result = EVALUATOR.transform(tree)
         assert result == Tree('bool', [False])
+
+    def test_version(self) -> None:
+        '''
+        test VERSION functionality
+
+        '''
+
+        tree = PARSER.parse('=VERSION()')
+        result = EVALUATOR.transform(tree)
+        assert result == Tree('string', [version])
+
+        tree = PARSER.parse('=VERSION(arg1)')
+        result = EVALUATOR.transform(tree).children[-1]
+        assert isinstance(result, CellError)
+        assert result.get_type() == CellErrorType.TYPE_ERROR
+
+        tree = PARSER.parse('=VERSION("",arg1)')
+        result = EVALUATOR.transform(tree).children[-1]
+        assert isinstance(result, CellError)
+        assert result.get_type() == CellErrorType.TYPE_ERROR
+
+    def test_indirect(self) -> None:
+        '''
+        test INDIRECT functionality
+
+        '''
+
+        tree = PARSER.parse('=INDIRECT()')
+        result = EVALUATOR.transform(tree).children[-1]
+        assert isinstance(result, CellError)
+        assert result.get_type() == CellErrorType.TYPE_ERROR
+
+        tree = PARSER.parse('=INDIRECT(A1, A2)')
+        result = EVALUATOR.transform(tree).children[-1]
+        assert isinstance(result, CellError)
+        assert result.get_type() == CellErrorType.TYPE_ERROR
+
+        WB.set_cell_contents('Test', 'A1', '=1')
+        tree = PARSER.parse('=INDIRECT(A1)')
+        result = EVALUATOR.transform(tree)
+        assert result == Tree('cell_ref', [Decimal(1)])
+
+        tree = PARSER.parse('=INDIRECT("A1")')
+        result = EVALUATOR.transform(tree)
+        assert result == Tree('cell_ref', [Decimal(1)])
+
+        WB.set_cell_contents('Test', 'A2', 'True')
+        tree = PARSER.parse('=INDIRECT("Test!A2")')
+        result = EVALUATOR.transform(tree)
+        assert result == Tree('cell_ref', ['True'])
+
+        tree = PARSER.parse('=INDIRECT(Test!A2)')
+        result = EVALUATOR.transform(tree)
+        assert result == Tree('cell_ref', ['True'])
+
+        tree = PARSER.parse('=INDIRECT(A4)')
+        result = EVALUATOR.transform(tree).children[-1]
+        assert isinstance(result, CellError)
+        assert result.get_type() == CellErrorType.BAD_REFERENCE
+
+        tree = PARSER.parse('=INDIRECT("A5")')
+        result = EVALUATOR.transform(tree).children[-1]
+        assert isinstance(result, CellError)
+        assert result.get_type() == CellErrorType.BAD_REFERENCE
+
+        tree = PARSER.parse('=INDIRECT(Sheet2!A1)')
+        result = EVALUATOR.transform(tree).children[-1]
+        assert isinstance(result, CellError)
+        assert result.get_type() == CellErrorType.BAD_REFERENCE
+
+        # tree = PARSER.parse('=INDIRECT(Sheet2!!A1)')
+        # result = EVALUATOR.transform(tree).children[-1]
+        # assert isinstance(result, CellError)
+        # assert result.get_type() == CellErrorType.BAD_REFERENCE
+
+        tree = PARSER.parse('=INDIRECT("Sheet2!!A1")')
+        result = EVALUATOR.transform(tree).children[-1]
+        assert isinstance(result, CellError)
+        assert result.get_type() == CellErrorType.BAD_REFERENCE
+
+        tree = PARSER.parse('=INDIRECT(123)')
+        result = EVALUATOR.transform(tree).children[-1]
+        assert isinstance(result, CellError)
+        assert result.get_type() == CellErrorType.BAD_REFERENCE
+
+        tree = PARSER.parse('=INDIRECT(True)')
+        result = EVALUATOR.transform(tree).children[-1]
+        assert isinstance(result, CellError)
+        assert result.get_type() == CellErrorType.BAD_REFERENCE
+
+        tree = PARSER.parse('=INDIRECT(AND(1))')
+        result = EVALUATOR.transform(tree).children[-1]
+        assert isinstance(result, CellError)
+        assert result.get_type() == CellErrorType.BAD_REFERENCE

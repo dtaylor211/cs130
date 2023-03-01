@@ -63,6 +63,22 @@ test-performance-rename-chain:
         snakeviz program.prof; \
     fi
 
+test-performance-rename-sheet-bulk:
+	python -m cProfile -o program.prof \
+		./tests/performance/test_rename_sheet_bulk.py
+	@read -p "Visualize Data? [y/N] " ans && ans=$${ans:-N} ; \
+    if [ $${ans} = y ] || [ $${ans} = Y ]; then \
+        snakeviz program.prof; \
+    fi
+
+test-performance-copy-sheet-bulk:
+	python -m cProfile -o program.prof \
+		./tests/performance/test_copy_sheet_bulk.py
+	@read -p "Visualize Data? [y/N] " ans && ans=$${ans:-N} ; \
+    if [ $${ans} = y ] || [ $${ans} = Y ]; then \
+        snakeviz program.prof; \
+    fi
+
 test-performance-copy:
 	python -m cProfile -o program.prof \
 		./tests/performance/test_copy.py
@@ -74,6 +90,38 @@ test-performance-copy:
 test-performance-move:
 	python -m cProfile -o program.prof \
 		./tests/performance/test_move.py
+	@read -p "Visualize Data? [y/N] " ans && ans=$${ans:-N} ; \
+    if [ $${ans} = y ] || [ $${ans} = Y ]; then \
+        snakeviz program.prof; \
+    fi
+
+test-performance-move-cells-bulk:
+	python -m cProfile -o program.prof \
+		./tests/performance/test_move_cells_bulk.py
+	@read -p "Visualize Data? [y/N] " ans && ans=$${ans:-N} ; \
+    if [ $${ans} = y ] || [ $${ans} = Y ]; then \
+        snakeviz program.prof; \
+    fi
+
+test-performance-copy-cells-bulk:
+	python -m cProfile -o program.prof \
+		./tests/performance/test_copy_cells_bulk.py
+	@read -p "Visualize Data? [y/N] " ans && ans=$${ans:-N} ; \
+    if [ $${ans} = y ] || [ $${ans} = Y ]; then \
+        snakeviz program.prof; \
+    fi
+
+test-performance-fib:
+	python -m cProfile -o program.prof \
+		./tests/performance/test_fibonacci.py
+	@read -p "Visualize Data? [y/N] " ans && ans=$${ans:-N} ; \
+    if [ $${ans} = y ] || [ $${ans} = Y ]; then \
+        snakeviz program.prof; \
+    fi
+
+test-performance-load:
+	python -m cProfile -o program.prof \
+		./tests/performance/test_load_wb.py
 	@read -p "Visualize Data? [y/N] " ans && ans=$${ans:-N} ; \
     if [ $${ans} = y ] || [ $${ans} = Y ]; then \
         snakeviz program.prof; \
@@ -102,6 +150,12 @@ lint-test-performance-all:
 	$(PYLINT) $(PYLINTFLAGS) ./tests/performance/test_rename_chain.py
 	$(PYLINT) $(PYLINTFLAGS) ./tests/performance/test_move.py
 	$(PYLINT) $(PYLINTFLAGS) ./tests/performance/test_copy.py
+	$(PYLINT) $(PYLINTFLAGS) ./tests/performance/test_copy_cells_bulk.py
+	$(PYLINT) $(PYLINTFLAGS) ./tests/performance/test_move_cells_bulk.py
+	$(PYLINT) $(PYLINTFLAGS) ./tests/performance/test_copy_sheet_bulk.py
+	$(PYLINT) $(PYLINTFLAGS) ./tests/performance/test_rename_sheet_bulk.py
+	$(PYLINT) $(PYLINTFLAGS) ./tests/performance/test_fibonacci.py
+	$(PYLINT) $(PYLINTFLAGS) ./tests/performance/test_load_wb.py
 
 lint-test-%:
 	$(PYLINT) $(PYLINTFLAGS) ./tests/test_$*.py
