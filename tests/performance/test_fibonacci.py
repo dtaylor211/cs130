@@ -30,7 +30,7 @@ def test_fib() -> None:
 
     wb1.set_cell_contents(name, 'A2', '=1')
 
-    for i in range(3, 1000):
+    for i in range(3, 1001):
         wb1.set_cell_contents(name, f'A{i}', f'=A{i - 2} + A{i - 1}')
 
     wb1.set_cell_contents(name, 'A1', '=1')
