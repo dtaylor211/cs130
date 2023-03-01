@@ -1,7 +1,8 @@
 '''
 Performance - Test Fibonacci
 
-Performance tests for computing the Fibonacci sequence of cell references.
+Performance tests for computing the Fibonacci sequence of cell references 
+(meant to simulate benchmark test FibBenchmark).
 
 When running this file, a profile is output to the terminal with the 10
 most time consuming parts of the computation listed.
