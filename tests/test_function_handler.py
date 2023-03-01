@@ -305,3 +305,127 @@ class TestFunctionHandler:
         tree = PARSER.parse('=IFERROR(A2, A3)')
         result = EVALUATOR.transform(tree)
         assert result == Tree('cell_ref', [False])
+
+    def test_choose(self) -> None:
+        '''
+        Test CHOOSE logic
+
+        '''
+
+        WB.set_cell_contents('Test', 'A1', '2')
+        WB.set_cell_contents('Test', 'A2', '=True')
+        WB.set_cell_contents('Test', 'A3', '=0')
+
+        tree = PARSER.parse('=CHOOSE()')
+        result = EVALUATOR.transform(tree).children[-1]
+        assert isinstance(result, CellError)
+        assert result.get_type() == CellErrorType.TYPE_ERROR
+
+        tree = PARSER.parse('=CHOOSE(A1)')
+        result = EVALUATOR.transform(tree).children[-1]
+        assert isinstance(result, CellError)
+        assert result.get_type() == CellErrorType.TYPE_ERROR
+
+        tree = PARSER.parse('=CHOOSE("string", A1, 0)')
+        result = EVALUATOR.transform(tree).children[-1]
+        assert isinstance(result, CellError)
+        assert result.get_type() == CellErrorType.TYPE_ERROR
+
+        tree = PARSER.parse('=CHOOSE("0", A1, 0)')
+        result = EVALUATOR.transform(tree).children[-1]
+        assert isinstance(result, CellError)
+        assert result.get_type() == CellErrorType.TYPE_ERROR
+
+        tree = PARSER.parse('=CHOOSE("1.5", A1, 0)')
+        result = EVALUATOR.transform(tree).children[-1]
+        assert isinstance(result, CellError)
+        assert result.get_type() == CellErrorType.TYPE_ERROR
+
+        tree = PARSER.parse('=CHOOSE("3", A1, 0)')
+        result = EVALUATOR.transform(tree).children[-1]
+        assert isinstance(result, CellError)
+        assert result.get_type() == CellErrorType.TYPE_ERROR
+
+        tree = PARSER.parse('=CHOOSE(A1, 1, 12)')
+        result = EVALUATOR.transform(tree)
+        assert result == Tree('number', [Decimal('12')])
+
+        tree = PARSER.parse('=CHOOSE(A2, "string1")')
+        result = EVALUATOR.transform(tree)
+        assert result == Tree('string', ["string1"])
+
+        tree = PARSER.parse('=CHOOSE(A3+1, A2, A1)')
+        result = EVALUATOR.transform(tree)
+        assert result == Tree('cell_ref', [True])
+
+    def test_isblank(self) -> None:
+        '''
+        Test ISBLANK logic
+
+        '''
+
+        WB.set_cell_contents('Test', 'A1', '')
+        WB.set_cell_contents('Test', 'A2', '=False')
+        WB.set_cell_contents('Test', 'A3', '=0')
+
+        tree = PARSER.parse('=ISBLANK()')
+        result = EVALUATOR.transform(tree).children[-1]
+        assert isinstance(result, CellError)
+        assert result.get_type() == CellErrorType.TYPE_ERROR
+
+        tree = PARSER.parse('=ISBLANK("string", A1)')
+        result = EVALUATOR.transform(tree).children[-1]
+        assert isinstance(result, CellError)
+        assert result.get_type() == CellErrorType.TYPE_ERROR
+
+        tree = PARSER.parse('=ISBLANK("")')
+        result = EVALUATOR.transform(tree)
+        assert result == Tree('bool', [False])
+
+        tree = PARSER.parse('=ISBLANK(A1)')
+        result = EVALUATOR.transform(tree)
+        assert result == Tree('bool', [True])
+
+        tree = PARSER.parse('=ISBLANK(A2)')
+        result = EVALUATOR.transform(tree)
+        assert result == Tree('bool', [False])
+
+        tree = PARSER.parse('=ISBLANK(A3)')
+        result = EVALUATOR.transform(tree)
+        assert result == Tree('bool', [False])
+
+    def test_iserror(self) -> None:
+        '''
+        Test ISERROR logic
+
+        '''
+
+        WB.set_cell_contents('Test', 'A1', '')
+        WB.set_cell_contents('Test', 'A2', '=A1+')
+        WB.set_cell_contents('Test', 'A3', '=1/0')
+
+        tree = PARSER.parse('=ISERROR()')
+        result = EVALUATOR.transform(tree).children[-1]
+        assert isinstance(result, CellError)
+        assert result.get_type() == CellErrorType.TYPE_ERROR
+
+        tree = PARSER.parse('=ISERROR("string", A1)')
+        result = EVALUATOR.transform(tree).children[-1]
+        assert isinstance(result, CellError)
+        assert result.get_type() == CellErrorType.TYPE_ERROR
+
+        tree = PARSER.parse('=ISERROR("A1+")')
+        result = EVALUATOR.transform(tree)
+        assert result == Tree('bool', [False])
+
+        tree = PARSER.parse('=ISERROR(A1)')
+        result = EVALUATOR.transform(tree)
+        assert result == Tree('bool', [False])
+
+        tree = PARSER.parse('=ISERROR(A2)')
+        result = EVALUATOR.transform(tree)
+        assert result == Tree('bool', [True])
+
+        tree = PARSER.parse('=ISERROR(A3)')
+        result = EVALUATOR.transform(tree)
+        assert result == Tree('bool', [True])
