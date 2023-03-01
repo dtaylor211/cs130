@@ -10,13 +10,19 @@ Classes:
     Methods:
     - test_get_coords_from_loc(object) -> None
     - test_get_loc_from_coords(object) -> None
+    - test_convert_to_bool(object) -> None
 
 '''
 
+
 # pylint: disable=unused-import, import-error
-import context
+from decimal import Decimal
+
 import pytest
-from sheets.utils import get_loc_from_coords, get_coords_from_loc
+
+import context
+from sheets.utils import get_loc_from_coords, get_coords_from_loc,\
+    convert_to_bool
 
 
 class TestUtils:
@@ -102,3 +108,38 @@ class TestUtils:
 
         loc = get_loc_from_coords((705, 751))
         assert loc == 'AAC751'
+
+    def test_covert_to_bool(self) -> None:
+        '''
+        Test converting strings and Decimals to bools
+
+        '''
+
+        with pytest.raises(TypeError):
+            convert_to_bool('anystr')
+        with pytest.raises(TypeError):
+            convert_to_bool('1')
+        with pytest.raises(TypeError):
+            convert_to_bool(int(1))
+        with pytest.raises(TypeError):
+            convert_to_bool(int(1))
+        with pytest.raises(TypeError):
+            convert_to_bool(['True'])
+
+        booly = convert_to_bool('true', str)
+        assert booly
+
+        booly = convert_to_bool('trUe', str)
+        assert booly
+
+        booly = convert_to_bool('FALSE', str)
+        assert not booly
+
+        booly = convert_to_bool(Decimal(0), Decimal)
+        assert not booly
+
+        booly = convert_to_bool(Decimal(1), Decimal)
+        assert booly
+
+        booly = convert_to_bool(Decimal('-0.231'), Decimal)
+        assert booly

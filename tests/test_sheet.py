@@ -3,9 +3,6 @@ Test Sheet
 
 Tests the Sheet module found at ../sheets/sheet.py.
 
-Global Variables:
-- 
-
 Classes:
 - TestSheet
 

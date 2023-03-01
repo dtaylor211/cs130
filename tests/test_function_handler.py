@@ -13,7 +13,7 @@ Classes:
 - TestFunctionHandler
 
     Methods:
-    - test_num_literals(object) -> None
+    - test_and(object) -> None
 
 '''
 

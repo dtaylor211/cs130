@@ -5,9 +5,6 @@ This module holds the basic functionality of dealing with function calls.
 
 See the Evaluator module for implementation.
 
-Global Variables:
-
-
 Classes:
 - FunctionHandler
 
@@ -24,8 +21,16 @@ from .cell_error import CellError
 
 
 class FunctionHandler:
+    '''
+    Handles internal function calls
+
+    '''
 
     def __init__(self):
+        '''
+        Initialize a new function handler
+
+        '''
 
         self._recognized_funcs = {
             'and': self.__and,
@@ -43,6 +48,17 @@ class FunctionHandler:
         }
 
     def map_func(self, func_name: str) -> Callable:
+        '''
+        Map a function name to its Callable counterpart
+
+        Arguments:
+        - func_name: str - name of desired function
+
+        Returns:
+        - Callable function with name func_name
+
+        '''
+
         return self._recognized_funcs[func_name]
 
     def __and(self, args: List) -> Tree:
@@ -50,7 +66,74 @@ class FunctionHandler:
         AND logic functionality
 
         Arguments:
-        - args: List
+        - args: List - list of arguments to given function
+
+        Returns:
+        - Tree containing boolean result
+
+        '''
+
+        if len(args) < 1:
+            raise TypeError('Invalid number of arguments')
+
+        bool_result = True
+        for expression in args:
+            arg = expression.children[0]
+            res = convert_to_bool(arg, type(arg))
+            bool_result = bool_result and res
+
+        return Tree('bool', [bool_result])
+
+    def __or(self, args: List) -> Tree:
+        '''
+        OR logic functionality
+
+        Arguments:
+        - args: List - list of arguments to given function
+
+        Returns:
+        - Tree containing boolean result
+
+        '''
+
+        if len(args) < 1:
+            raise TypeError('Invalid number of arguments')
+
+        bool_result = False
+        for expression in args:
+            arg = expression.children[0]
+            res = convert_to_bool(arg, type(arg))
+            bool_result = bool_result or res
+
+        return Tree('bool', [bool_result])
+
+    def __not(self, args: List) -> Tree:
+        '''
+        NOT logic functionality
+
+        Arguments:
+        - args: List - list of arguments to given function
+
+        Returns:
+        - Tree containing boolean result
+
+        '''
+
+        if len(args) != 1:
+            raise TypeError('Invalid number of arguments')
+
+        arg = args[0].children[0]
+        res = convert_to_bool(arg, type(arg))
+        bool_result = not res
+
+        return Tree('bool', [bool_result])
+
+    def __xor(self, args: List) -> Tree:
+        '''
+        XOR logic functionality
+
+        Arguments:
+        - args: List - list of arguments to given function
 
         Returns:
         - Tree containing boolean result
@@ -73,7 +156,7 @@ class FunctionHandler:
         OR logic functionality
 
         Arguments:
-        - args: List
+        - args: List - list of arguments to given function
 
         Returns:
         - Tree containing boolean result
@@ -96,7 +179,7 @@ class FunctionHandler:
         NOT logic functionality
 
         Arguments:
-        - args: List
+        - args: List - list of arguments to given function
 
         Returns:
         - Tree containing boolean result
@@ -117,7 +200,7 @@ class FunctionHandler:
         XOR logic functionality
 
         Arguments:
-        - args: List
+        - args: List - list of arguments to given function
 
         Returns:
         - Tree containing boolean result
@@ -141,7 +224,7 @@ class FunctionHandler:
         EXACT logic functionality
 
         Arguments:
-        - args: List
+        - args: List - list of arguments to given function
 
         Returns:
         - Tree containing boolean result
@@ -172,7 +255,7 @@ class FunctionHandler:
         IF logic functionality
 
         Arguments:
-        - args: List
+        - args: List - list of arguments to given function
 
         Returns:
         - Tree containing result value
@@ -196,7 +279,7 @@ class FunctionHandler:
         IFERROR logic functionality
 
         Arguments:
-        - args: List
+        - args: List - list of arguments to given function
 
         Returns:
         - Tree containing result value
