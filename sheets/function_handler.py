@@ -145,8 +145,8 @@ class FunctionHandler:
 
         bool_result = True
         for expression in args:
-            a = expression.children[0]
-            res = convert_to_bool(a, type(a))
+            arg = expression.children[0]
+            res = convert_to_bool(arg, type(arg))
             bool_result = bool_result and res
 
         return Tree('bool', [bool_result])
@@ -168,8 +168,8 @@ class FunctionHandler:
 
         bool_result = False
         for expression in args:
-            a = expression.children[0]
-            res = convert_to_bool(a, type(a))
+            arg = expression.children[0]
+            res = convert_to_bool(arg, type(arg))
             bool_result = bool_result or res
 
         return Tree('bool', [bool_result])
@@ -189,8 +189,8 @@ class FunctionHandler:
         if len(args) != 1:
             raise TypeError('Invalid number of arguments')
 
-        a = args[0].children[0]
-        res = convert_to_bool(a, type(a))
+        arg = args[0].children[0]
+        res = convert_to_bool(arg, type(arg))
         bool_result = not res
 
         return Tree('bool', [bool_result])
@@ -212,8 +212,8 @@ class FunctionHandler:
 
         bool_result = False
         for expression in args:
-            a = expression.children[0]
-            res = convert_to_bool(a, type(a))
+            arg = expression.children[0]
+            res = convert_to_bool(arg, type(arg))
             # only flips when res true, will be true on odd number of true args
             bool_result = bool_result != res
 
@@ -237,9 +237,9 @@ class FunctionHandler:
         str1 = args[0].children[0]
         str2 = args[1].children[0]
 
-        if type(str1) == bool:
+        if isinstance(str1, bool):
             str1 = str(str1).upper()
-        if type(str2) == bool:
+        if isinstance(str2, bool):
             str2 = str(str2).upper()
 
         # Check for compatible types, deal with empty case
@@ -265,11 +265,11 @@ class FunctionHandler:
         if len(args) != 2 and len(args) != 3:
             raise TypeError('Invalid number of arguments')
 
-        a = args[0].children[0]
-        res = convert_to_bool(a, type(a))
+        arg = args[0].children[0]
+        res = convert_to_bool(arg, type(arg))
         if res:
             return args[1]
-        elif len(args) == 3:
+        if len(args) == 3:
             return args[2]
 
         return Tree('bool', [False])
@@ -289,10 +289,10 @@ class FunctionHandler:
         if len(args) != 1 and len(args) != 2:
             raise TypeError('Invalid number of arguments')
 
-        a = args[0].children[0]
-        if not isinstance(a, CellError):
+        arg = args[0].children[0]
+        if not isinstance(arg, CellError):
             return args[0]
-        elif len(args) == 2:
+        if len(args) == 2:
             return args[1]
 
         return Tree('string', [""])

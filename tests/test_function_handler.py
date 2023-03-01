@@ -20,7 +20,6 @@ Classes:
 from decimal import Decimal
 
 from lark import Lark, Tree
-import pytest
 
 # pylint: disable=unused-import, import-error
 import context
@@ -67,9 +66,13 @@ class TestFunctionHandler:
         result = EVALUATOR.transform(tree)
         assert result == Tree('bool', [True])
 
-        tree = PARSER.parse('=AND("true", 7==7, A2)')
+        tree = PARSER.parse('=and("true", 7==7, A2)')
         result = EVALUATOR.transform(tree)
         assert result == Tree('bool', [False])
+
+        tree = PARSER.parse('=and("true")')
+        result = EVALUATOR.transform(tree)
+        assert result == Tree('bool', [True])
 
     def test_or(self) -> None:
         '''
