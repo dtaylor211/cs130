@@ -13,11 +13,13 @@ Classes:
 
 '''
 
-from typing import Callable, List
-from lark import Tree
+from typing import Callable, List, Tuple, Optional
+import lark
+from lark import Tree, Lark
 
 from .utils import convert_to_bool
-from .cell_error import CellError
+from .cell_error import CellError, CellErrorType
+import sheets
 
 
 class FunctionHandler:
@@ -25,6 +27,9 @@ class FunctionHandler:
     Handles internal function calls
 
     '''
+
+    PARSER = Lark.open('formulas.lark', start='formula',
+                rel_to=__file__)
 
     def __init__(self):
         '''
@@ -43,8 +48,8 @@ class FunctionHandler:
             # 'choose': self.__choose,
             # 'isblank': self.__isblank,
             # 'iserror': self.__iserror,
-            # 'version': self.__version,
-            # 'indirect': self.__indirect
+            'version': self.__version,
+            'indirect': self.__indirect
         }
 
     def map_func(self, func_name: str) -> Callable:
@@ -296,3 +301,53 @@ class FunctionHandler:
             return args[1]
 
         return Tree('string', [""])
+
+    def __version(self, args: List) -> Tree:
+        '''
+        VERSION functionality
+
+        Arguments:
+        - args: List - list of arguments to given function
+
+        Returns:
+        - Tree containing result value
+
+        '''
+
+        if len(args) != 0:
+            raise TypeError('Invalid number of arguments')
+
+        return Tree('string', [f"{sheets.version}"])
+
+    def __indirect(self, args: List) -> Tuple[Tree or str, Optional[str]]:
+        '''
+        INDIRECT functionality
+
+        Arguments:
+        - args: List - list of arguments to given function
+
+        Returns:
+        - Tree containing result value
+
+        '''
+
+        if len(args) != 1:
+            raise TypeError('Invalid number of arguments')
+
+        if args[0].data == 'cell_ref':
+            return args[0]
+
+        elif args[0].data == 'cell_error':
+            return args[0]
+
+        else: 
+            try:
+                s = self.PARSER.parse(f'={str(args[0].children[-1])}')
+                if s.data != 'cell':
+                    raise lark.exceptions.LarkError
+                return s, 'Y'
+
+            except lark.exceptions.LarkError:
+                return Tree('cell_error', [
+                    CellError(CellErrorType.BAD_REFERENCE, '')])
+
