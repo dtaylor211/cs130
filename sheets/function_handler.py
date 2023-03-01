@@ -347,16 +347,15 @@ class FunctionHandler:
         if args[0].data == 'cell_ref':
             return args[0]
 
-        elif args[0].data == 'cell_error':
+        if args[0].data == 'cell_error':
             return args[0]
 
-        else: 
-            try:
-                s = self.PARSER.parse(f'={str(args[0].children[-1])}')
-                if s.data != 'cell':
-                    raise lark.exceptions.LarkError
-                return s, 'Y'
+        try:
+            s = self.PARSER.parse(f'={str(args[0].children[-1])}')
+            if s.data != 'cell':
+                raise lark.exceptions.LarkError
+            return s, 'Y'
 
-            except lark.exceptions.LarkError:
-                return Tree('cell_error', [
-                    CellError(CellErrorType.BAD_REFERENCE, '')])
+        except lark.exceptions.LarkError:
+            return Tree('cell_error', [
+                CellError(CellErrorType.BAD_REFERENCE, '')])

@@ -340,7 +340,7 @@ class TestFunctionHandler:
         result = EVALUATOR.transform(tree).children[-1]
         assert isinstance(result, CellError)
         assert result.get_type() == CellErrorType.TYPE_ERROR
-        
+
         tree = PARSER.parse('=CHOOSE(A1)')
         result = EVALUATOR.transform(tree).children[-1]
         assert isinstance(result, CellError)
