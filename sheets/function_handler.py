@@ -12,11 +12,11 @@ Classes:
 - FunctionHandler
 
     Methods:
-    - and
+    - map_func(object, str) -> Callable
 
 '''
 
-
+from typing import Callable, List
 from lark import Tree
 
 from .utils import convert_to_bool
@@ -26,7 +26,7 @@ class FunctionHandler:
 
     def __init__(self):
 
-        self.recognized_funcs = {
+        self._recognized_funcs = {
             'and': self.__and
             # 'or': self.__or,
             # 'not': self.__not,
@@ -41,44 +41,28 @@ class FunctionHandler:
             # 'indirect': self.__indirect
         }
 
-    def map_func(self, func_name: str):
-        return self.recognized_funcs[func_name]
-    
-    #  def __convert_from_bool(bool_input: bool, target_type: type) -> Any:
-    #     '''
-    #     '''
+    def map_func(self, func_name: str) -> Callable:
+        return self._recognized_funcs[func_name]
 
-    #     result = None
-    #     if bool_input:
-    #         if target_type == Decimal:
-    #             result = Decimal(1)
-    #         else:
-    #             result = 'TRUE'
-    #     else:
-    #         if target_type == Decimal:
-    #             result = Decimal(0)
-    #         else:
-    #             result = 'FALSE'
-    #     return result
-    
-    def __and(self, args):
+    def __and(self, args: List) -> Tree:
         '''
+        AND logic functionality
+
+        Arguments:
+        - args: List
+
+        Returns:
+        - Tree containing boolean result
+
         '''
 
-        if len(args.children) < 1:
+        if len(args) < 1:
             raise TypeError('Invalid number of arguments')
-        print('d',args.children)
-        for expression in args.children:
-            print(expression)
+
+        for expression in args:
             a = expression.children[0]
-            print('a', a, type(a))
             res = convert_to_bool(a, type(a))
-            print(res)
             if not res:
-                print('ay')
                 return Tree('bool', [False])
 
         return Tree('bool', [True])
-
-    
-

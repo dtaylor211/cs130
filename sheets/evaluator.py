@@ -33,6 +33,8 @@ Classes:
     - concat_expr(object, List) -> Tree
     - comp_expr(object, List) -> Tree
     - cell(object, List) -> Tree
+    - func_expr(object, List) -> Tree
+    - args_expr(object, List) -> Tree
     - parens(object, List) -> Tree
     - error(object, List) -> Tree
 
@@ -169,20 +171,6 @@ class Evaluator(Transformer):
         '''
 
         return convert_to_bool(token, str)
-
-    # def CELL_REF(self, token: Token) -> Token:
-    #     '''
-    #     Evaluate a CELLREF type
-
-    #     Arguments:
-    #     - token: Token - contains data about the cell reference
-
-    #     Returns:
-    #     - the original token passed in
-
-    #     '''
-
-    #     return token
 
     ########################################################################
     # Expressions
@@ -429,9 +417,51 @@ class Evaluator(Transformer):
         except Exception as e:
             return self.__process_exceptions(e, 'cell operations')
 
+    def func_expr(self, args: List) -> Tree:
+        '''
+        Evaluate a function expression
+
+        Arguments:
+        - args: List - function name and list of arguments
+
+        Returns:
+        - Tree holding result of the function
+
+        '''
+
+        try:
+            func_name = args[0].lower()
+            args_list = args[-1].children
+
+            result = self.function_handler.map_func(func_name)
+            return result(args_list)
+
+        except KeyError as e:
+            detail = 'function'
+            return self.__process_exceptions(e, detail)
+
+        except Exception as e:
+            detail = "function operations"
+            return self.__process_exceptions(e, detail)
+
     # pylint: enable=broad-exception-caught
 
     # We enable the checks for catching broad exceptions.
+
+    def args_expr(self, args: List) -> Tree:
+        '''
+        Evaluate an expression of function arguments:
+
+        '''
+
+        if args == []:
+            return Tree('args_list', [])
+
+        elif len(args[-1].children) == 1:
+            return Tree('args_list', [args[0]]+[args[-1]])
+
+        else:
+            return Tree('args_list', [args[0]]+args[-1].children)
 
     def parens(self, args: List) -> Tree:
         '''
@@ -463,48 +493,6 @@ class Evaluator(Transformer):
         e_type = [i[0] for i in list(CELL_ERRORS.items()) if i[-1]==x.upper()]
         e_type = CellErrorType(e_type[0])
         return Tree('cell_error', [CellError(e_type, '', None)])
-    
-    def func_expr(self, args: List) -> Tree:
-        '''
-        Evaluate a function expression
-
-        Arguments:
-        - args: List - function name and list of arguments
-
-        Returns:
-        - Tree holding result of the function
-
-        '''
-
-        try:
-            func_name = args[0].lower()
-            args_list = args[-1]
-
-            result = self.function_handler.map_func(func_name)
-            return result(args_list)
-
-        except KeyError as e:
-            detail = 'function'
-            return self.__process_exceptions(e, detail)
-
-        except Exception as e:
-            detail = "function operations"
-            return self.__process_exceptions(e, detail)
-        
-    def args_expr(self, args: List) -> Tree:
-        '''
-        Evaluate an expression of function arguments:
-
-        '''
-
-        if args == []:
-            return Tree('args_list', [])
-
-        elif len(args[-1].children) == 1:
-            return Tree('args_list', [args[0]]+[args[-1]])
-
-        else:
-            return Tree('args_list', [args[0]]+args[-1].children)
 
     ########################################################################
     # Exception Processing

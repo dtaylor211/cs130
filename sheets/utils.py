@@ -90,3 +90,20 @@ def convert_to_bool(input, input_type: type) -> bool:
             else:
                 result = False
         return result
+
+#  def __convert_from_bool(bool_input: bool, target_type: type) -> Any:
+    #     '''
+    #     '''
+
+    #     result = None
+    #     if bool_input:
+    #         if target_type == Decimal:
+    #             result = Decimal(1)
+    #         else:
+    #             result = 'TRUE'
+    #     else:
+    #         if target_type == Decimal:
+    #             result = Decimal(0)
+    #         else:
+    #             result = 'FALSE'
+    #     return result
