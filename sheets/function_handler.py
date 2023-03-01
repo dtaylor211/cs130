@@ -14,6 +14,8 @@ Classes:
 '''
 
 from typing import Callable, List, Tuple, Optional
+from decimal import Decimal, InvalidOperation
+
 import lark
 from lark import Tree, Lark
 
@@ -45,9 +47,9 @@ class FunctionHandler:
             'exact': self.__exact,
             'if': self.__if,
             'iferror': self.__iferror,
-            # 'choose': self.__choose,
-            # 'isblank': self.__isblank,
-            # 'iserror': self.__iserror,
+            'choose': self.__choose,
+            'isblank': self.__isblank,
+            'iserror': self.__iserror,
             'version': self.__version,
             'indirect': self.__indirect
         }
@@ -69,73 +71,6 @@ class FunctionHandler:
     def __and(self, args: List) -> Tree:
         '''
         AND logic functionality
-
-        Arguments:
-        - args: List - list of arguments to given function
-
-        Returns:
-        - Tree containing boolean result
-
-        '''
-
-        if len(args) < 1:
-            raise TypeError('Invalid number of arguments')
-
-        bool_result = True
-        for expression in args:
-            arg = expression.children[0]
-            res = convert_to_bool(arg, type(arg))
-            bool_result = bool_result and res
-
-        return Tree('bool', [bool_result])
-
-    def __or(self, args: List) -> Tree:
-        '''
-        OR logic functionality
-
-        Arguments:
-        - args: List - list of arguments to given function
-
-        Returns:
-        - Tree containing boolean result
-
-        '''
-
-        if len(args) < 1:
-            raise TypeError('Invalid number of arguments')
-
-        bool_result = False
-        for expression in args:
-            arg = expression.children[0]
-            res = convert_to_bool(arg, type(arg))
-            bool_result = bool_result or res
-
-        return Tree('bool', [bool_result])
-
-    def __not(self, args: List) -> Tree:
-        '''
-        NOT logic functionality
-
-        Arguments:
-        - args: List - list of arguments to given function
-
-        Returns:
-        - Tree containing boolean result
-
-        '''
-
-        if len(args) != 1:
-            raise TypeError('Invalid number of arguments')
-
-        arg = args[0].children[0]
-        res = convert_to_bool(arg, type(arg))
-        bool_result = not res
-
-        return Tree('bool', [bool_result])
-
-    def __xor(self, args: List) -> Tree:
-        '''
-        XOR logic functionality
 
         Arguments:
         - args: List - list of arguments to given function
@@ -302,6 +237,73 @@ class FunctionHandler:
 
         return Tree('string', [""])
 
+    def __choose(self, args: List) -> Tree:
+        '''
+        CHOOSE logic functionality
+
+        Arguments:
+        - args: List - list of arguments to given function
+
+        Returns:
+        - Tree containing result value
+
+        '''
+
+        if len(args) < 2:
+            raise TypeError('Invalid number of arguments')
+
+        arg = args[0].children[0]
+        try:
+            arg = Decimal(0) if arg is None else Decimal(arg)
+            if arg % 1 != 0 or arg < 1 or arg > len(args)-1:
+                raise TypeError('Invalid CHOOSE index')
+        except InvalidOperation:
+            raise TypeError('Invalid CHOOSE index')
+
+        return args[int(arg)]
+
+    def __isblank(self, args: List) -> Tree:
+        '''
+        ISBLANK logic functionality
+
+        Arguments:
+        - args: List - list of arguments to given function
+
+        Returns:
+        - Tree containing boolean result
+
+        '''
+
+        if len(args) != 1:
+            raise TypeError('Invalid number of arguments')
+
+        arg = args[0].children[0]
+        if arg is None:
+            return Tree('bool', [True])
+
+        return Tree('bool', [False])
+
+    def __iserror(self, args: List) -> Tree:
+        '''
+        ISERROR logic functionality
+
+        Arguments:
+        - args: List - list of arguments to given function
+
+        Returns:
+        - Tree containing boolean result
+
+        '''
+
+        if len(args) != 1:
+            raise TypeError('Invalid number of arguments')
+
+        arg = args[0].children[0]
+        if isinstance(arg, CellError):
+            return Tree('bool', [True])
+
+        return Tree('bool', [False])
+
     def __version(self, args: List) -> Tree:
         '''
         VERSION functionality
@@ -350,4 +352,3 @@ class FunctionHandler:
             except lark.exceptions.LarkError:
                 return Tree('cell_error', [
                     CellError(CellErrorType.BAD_REFERENCE, '')])
-
