@@ -119,22 +119,22 @@ class TestErrors:
         result_contents = WB.get_cell_contents('Test','A4')
         result_value = WB.get_cell_value('Test', 'A4')
         assert result_contents == '=A1+A2+A3'
-        assert result_value.get_type() == CellErrorType.CIRCULAR_REFERENCE
         assert isinstance(result_value, CellError)
+        assert result_value.get_type() == CellErrorType.CIRCULAR_REFERENCE
 
         WB.set_cell_contents('Test', 'A1', '=A1')
         result_contents = WB.get_cell_contents('Test','A1')
         result_value = WB.get_cell_value('Test', 'A1')
         assert result_contents == '=A1'
-        assert result_value.get_type() == CellErrorType.CIRCULAR_REFERENCE
         assert isinstance(result_value, CellError)
+        assert result_value.get_type() == CellErrorType.CIRCULAR_REFERENCE
 
         WB.set_cell_contents('Test', 'A1', '=1')
         WB.set_cell_contents('Test', 'B1', '=A1')
         WB.set_cell_contents('Test', 'A1', '=B1')
         value = WB.get_cell_value('Test', 'A1')
-        assert isinstance(value, CellError)
-        assert value.get_type() == CellErrorType.CIRCULAR_REFERENCE
+        assert isinstance(result_value, CellError)
+        assert result_value.get_type() == CellErrorType.CIRCULAR_REFERENCE
 
     def test_bad_reference(self) -> None:
         '''
@@ -146,22 +146,22 @@ class TestErrors:
         result_contents = WB.get_cell_contents('Test','A1')
         result_value = WB.get_cell_value('Test', 'A1')
         assert result_contents == '=Test2!A1'
-        assert result_value.get_type() == CellErrorType.BAD_REFERENCE
         assert isinstance(result_value, CellError)
+        assert result_value.get_type() == CellErrorType.BAD_REFERENCE
 
         WB.set_cell_contents('Test', 'A1', '=AAAAA1')
         result_contents = WB.get_cell_contents('Test','A1')
         result_value = WB.get_cell_value('Test', 'A1')
         assert result_contents == '=AAAAA1'
-        assert result_value.get_type() == CellErrorType.BAD_REFERENCE
         assert isinstance(result_value, CellError)
+        assert result_value.get_type() == CellErrorType.BAD_REFERENCE
 
         WB.set_cell_contents('Test', 'A1', '=AAAA10000')
         result_contents = WB.get_cell_contents('Test','A1')
         result_value = WB.get_cell_value('Test', 'A1')
         assert result_contents == '=AAAA10000'
-        assert result_value.get_type() == CellErrorType.BAD_REFERENCE
         assert isinstance(result_value, CellError)
+        assert result_value.get_type() == CellErrorType.BAD_REFERENCE
 
         WB.new_sheet('Del')
         WB.set_cell_contents('Del', 'A1', '1')
@@ -170,8 +170,8 @@ class TestErrors:
         result_contents = WB.get_cell_contents('Test','A1')
         result_value = WB.get_cell_value('Test', 'A1')
         assert result_contents == '=Del!A1'
-        assert result_value.get_type() == CellErrorType.BAD_REFERENCE
         assert isinstance(result_value, CellError)
+        assert result_value.get_type() == CellErrorType.BAD_REFERENCE
 
         WB.new_sheet('Del sheet')
         WB.set_cell_contents('Test', 'A1', "='Del sheet'!A1+1")
@@ -179,8 +179,8 @@ class TestErrors:
         result_contents = WB.get_cell_contents('Test','A1')
         result_value = WB.get_cell_value('Test', 'A1')
         assert result_contents == "='Del sheet'!A1+1"
-        assert result_value.get_type() == CellErrorType.BAD_REFERENCE
         assert isinstance(result_value, CellError)
+        assert result_value.get_type() == CellErrorType.BAD_REFERENCE
 
         WB.new_sheet('Sheet1')
         WB.set_cell_contents('Sheet1', 'A1', 'Sheet2')
@@ -195,11 +195,21 @@ class TestErrors:
         '''
         Test when given a formula with a bad name
 
-        TODO - in later projects
-
         '''
-        bad_names_optional = False
-        assert bad_names_optional is False
+
+        WB.set_cell_contents('Test', 'A1', '=UNKNOWN()')
+        result_contents = WB.get_cell_contents('Test', 'A1')
+        result_value = WB.get_cell_value('Test', 'A1')
+        assert result_contents == '=UNKNOWN()'
+        assert isinstance(result_value, CellError)
+        assert result_value.get_type() == CellErrorType.BAD_NAME
+
+        WB.set_cell_contents('Test', 'A1', '=a__afunc(arg1, arg2)')
+        result_contents = WB.get_cell_contents('Test', 'A1')
+        result_value = WB.get_cell_value('Test', 'A1')
+        assert result_contents == '=a__afunc(arg1, arg2)'
+        assert isinstance(result_value, CellError)
+        assert result_value.get_type() == CellErrorType.BAD_NAME
 
     def test_type_error(self) -> None:
         '''

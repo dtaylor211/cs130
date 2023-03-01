@@ -8,13 +8,13 @@ See the Workbook and Sheet modules for implementation.
 Methods:
 - get_loc_from_coords(Tuple[int, int]) -> str
 - get_coords_from_loc(str) -> Tuple[int, int]
-- convert_to_bool(str or Decimal, type) -> bool
+- convert_to_bool(Any, type) -> bool
 
 '''
 
 
 import re
-from typing import Tuple
+from typing import Tuple, Any
 from decimal import Decimal
 
 
@@ -71,14 +71,14 @@ def get_coords_from_loc(location: str) -> Tuple[int, int]:
 
     return (col_num, row_num)
 
-def convert_to_bool(inp: str or Decimal, inp_type: type) -> bool:
+def convert_to_bool(inp: Any, inp_type: type) -> bool:
     '''
-    Convert given input of type str or Decimal to boolean
+    Convert given input of type str, Decimal, or boolean to boolean
 
     Throw a TypeError if given input cannot be converted
 
     Arguments:
-    - inp: str or Decimal - input to convert
+    - inp: Any - input to convert
     - inp_type: type - type of input
 
     Returns:
@@ -96,6 +96,7 @@ def convert_to_bool(inp: str or Decimal, inp_type: type) -> bool:
             result = False
         else:
             raise TypeError('Cannot convert given string to boolean')
-    else:
+    elif inp_type == Decimal:
         result = bool(inp)
+    else: raise TypeError('Cannot convert given type to boolean')
     return result
