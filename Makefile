@@ -150,6 +150,12 @@ lint-test-performance-all:
 	$(PYLINT) $(PYLINTFLAGS) ./tests/performance/test_rename_chain.py
 	$(PYLINT) $(PYLINTFLAGS) ./tests/performance/test_move.py
 	$(PYLINT) $(PYLINTFLAGS) ./tests/performance/test_copy.py
+	$(PYLINT) $(PYLINTFLAGS) ./tests/performance/test_copy_cells_bulk.py
+	$(PYLINT) $(PYLINTFLAGS) ./tests/performance/test_move_cells_bulk.py
+	$(PYLINT) $(PYLINTFLAGS) ./tests/performance/test_copy_sheet_bulk.py
+	$(PYLINT) $(PYLINTFLAGS) ./tests/performance/test_rename_sheet_bulk.py
+	$(PYLINT) $(PYLINTFLAGS) ./tests/performance/test_fibonacci.py
+	$(PYLINT) $(PYLINTFLAGS) ./tests/performance/test_load_wb.py
 
 lint-test-%:
 	$(PYLINT) $(PYLINTFLAGS) ./tests/test_$*.py

@@ -19,7 +19,7 @@ from sheets import Workbook, CellError, CellErrorType
 from tests import context
 
 
-def test_fib(N: int) -> None:
+def test_fib() -> None:
     '''
     Stress test for a Fibonacci sequence of cell references
 
@@ -30,18 +30,16 @@ def test_fib(N: int) -> None:
 
     wb1.set_cell_contents(name, 'A2', '=1')
 
-    for i in range(3, N):
+    for i in range(3, 1000):
         wb1.set_cell_contents(name, f'A{i}', f'=A{i - 2} + A{i - 1}')
 
     wb1.set_cell_contents(name, 'A1', '=1')
 
 if __name__ == '__main__':
-    N = 1000
-
     profiler = cProfile.Profile()
     profiler.enable()
 
-    test_fib(N)
+    test_fib()
 
     profiler.disable()
     stats = Stats(profiler).sort_stats('cumtime')

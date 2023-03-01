@@ -16,7 +16,7 @@ from pstats import Stats
 
 # pylint: disable=unused-import, import-error
 from sheets import Workbook, CellError, CellErrorType
-from tests import context 
+from tests import context
 
 
 def test_move_cells_bulk() -> None:
