@@ -80,6 +80,8 @@ class FunctionHandler:
         bool_result = True
         for expression in args:
             arg = expression.children[0]
+            if isinstance(arg, CellError):
+                return Tree('cell_error', [arg])
             res = convert_to_bool(arg, type(arg))
             bool_result = bool_result and res
 
@@ -103,6 +105,8 @@ class FunctionHandler:
         bool_result = False
         for expression in args:
             arg = expression.children[0]
+            if isinstance(arg, CellError):
+                return Tree('cell_error', [arg])
             res = convert_to_bool(arg, type(arg))
             bool_result = bool_result or res
 
@@ -124,73 +128,8 @@ class FunctionHandler:
             raise TypeError('Invalid number of arguments')
 
         arg = args[0].children[0]
-        res = convert_to_bool(arg, type(arg))
-        bool_result = not res
-
-        return Tree('bool', [bool_result])
-
-    def __xor(self, args: List) -> Tree:
-        '''
-        XOR logic functionality
-
-        Arguments:
-        - args: List - list of arguments to given function
-
-        Returns:
-        - Tree containing boolean result
-
-        '''
-
-        if len(args) < 1:
-            raise TypeError('Invalid number of arguments')
-
-        bool_result = True
-        for expression in args:
-            arg = expression.children[0]
-            res = convert_to_bool(arg, type(arg))
-            bool_result = bool_result and res
-
-        return Tree('bool', [bool_result])
-
-    def __or(self, args: List) -> Tree:
-        '''
-        OR logic functionality
-
-        Arguments:
-        - args: List - list of arguments to given function
-
-        Returns:
-        - Tree containing boolean result
-
-        '''
-
-        if len(args) < 1:
-            raise TypeError('Invalid number of arguments')
-
-        bool_result = False
-        for expression in args:
-            arg = expression.children[0]
-            res = convert_to_bool(arg, type(arg))
-            bool_result = bool_result or res
-
-        return Tree('bool', [bool_result])
-
-    def __not(self, args: List) -> Tree:
-        '''
-        NOT logic functionality
-
-        Arguments:
-        - args: List - list of arguments to given function
-
-        Returns:
-        - Tree containing boolean result
-
-        '''
-
-        if len(args) != 1:
-            raise TypeError('Invalid number of arguments')
-
-        arg = args[0].children[0]
+        if isinstance(arg, CellError):
+            return Tree('cell_error', [arg])
         res = convert_to_bool(arg, type(arg))
         bool_result = not res
 
@@ -214,6 +153,8 @@ class FunctionHandler:
         bool_result = False
         for expression in args:
             arg = expression.children[0]
+            if isinstance(arg, CellError):
+                return Tree('cell_error', [arg])
             res = convert_to_bool(arg, type(arg))
             # only flips when res true, will be true on odd number of true args
             bool_result = bool_result != res
