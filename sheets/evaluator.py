@@ -432,6 +432,8 @@ class Evaluator(Transformer):
         try:
             func_name = args[0].lower()
             args_list = args[-1].children
+            if len(args_list) == 1:
+                args_list = [args[-1]]
 
             result = self.function_handler.map_func(func_name)
             return result(args_list)
