@@ -38,21 +38,35 @@ Spreadsheet Engine Design (31 pts)
 D1.  [3pts] Briefly describe the changes you made to the Lark parser grammar
      to support Boolean literals.
      
-     TODO - Dallas
+     We added a BOOL base that matches to True and False (handling case 
+     insensitivity).
 
 D2.  [4pts] Briefly describe the changes you made to the Lark parser grammar
      to support conditional expressions.  How did you ensure that conditional
      operations are lower precedence than arithmetic and string concatenation
      operations?
 
-     TODO - Dallas
+     We added all of the comparison operators to a COMP terminal.  We then 
+     created a comparison expression (comp_expr) similar to how add_expr, etc. 
+     are implemented.  It is ordered such that if another expression is present
+     within the comparison expression then that other expression is evaluated 
+     first.  We also added comp_expr to be an instance of the expression.
 
 D3.  [6pts] Briefly describe how function invocation works in your spreadsheet
      engine.  How easy or hard would it be for you to add new functions to your
      engine?  What about a third-party developer?  How well does your code
      follow the Open/Closed Principle?
 
-     TODO - Dallas/Kyle
+     When a function is called the Evaluator will transform the parsed tree such
+     that we have access to the string function name and a list of arguments for
+     the function.  We match the function name to a callable counterpart through
+     a dictionary that has all of the supported functions.  This dictionary
+     and all functions implementations are in a FunctionHandler class.  This 
+     would make it easy to add new functions as you only have to add the
+     relevant key/value pair into the dictionary and define the function within
+     that class.   We believe our code follows the Open/Closed Principle quite 
+     well because its all modularized.  FunctionHandler is its own module that
+     handles all of the actual computation that occurs during a function call.
 
 D4.  [4pts] Is your implementation able to lazily evaluate the arguments to
      functions like IF(), CHOOSE() and IFERROR()?  (Recall from the Project 4
@@ -61,7 +75,12 @@ D4.  [4pts] Is your implementation able to lazily evaluate the arguments to
      what changes to your design were required to achieve this?  If not, what
      prevented your team from implementing this?
 
-     TODO - Dallas/Kyle
+     Yes, these functions are lazily evaluated and they do not report cycles in
+     cases where the branch is not evaluated.  We had to change how we 
+     calculated dependencies because our Visitor would traverse the tree from 
+     the leaves up.  We did this by changing our Visitor into an Interpreter 
+     that traverses down through the root allowing us to make branches when
+     calculating dependencies.
 
 D5.  [4pts] Is your implementation able to evaluate the ISERROR() function
      correctly, with respect to circular-reference errors?  (Recall from the
@@ -70,14 +89,16 @@ D5.  [4pts] Is your implementation able to evaluate the ISERROR() function
      If so, what changes to your design were required to achieve this?  If
      not, what prevented your team from implementing this?
 
-     TODO - Dallas/Kyle
+     Yes, our implementation is able to evaluate this correctly because we 
+     use the strongly connected component algorithm.  We only have cells 
+     participating in a cycle set to circular reference errors.
 
 D6.  [4pts] Is your implementation able to successfully identify cycles that
      are not evident from static analysis of formulas containing INDIRECT()?
      If so, what changes to your design were required, if any, to achieve this?
      If not, what prevented your team from implementing this?
 
-     TODO - Dallas/Kyle
+     TODO  
 
 D7.  [6pts] Project 4 has a number of small but important operations to
      implement.  Comparison operations include a number of comparison and type
@@ -86,7 +107,13 @@ D7.  [6pts] Project 4 has a number of small but important operations to
      these operations?  How did your approach affect the reusability and
      testability of these operations?
 
-     TODO - Dallas/Kyle
+     Both of the comparison operations and the function calls utilize dictionary
+     mapping where the key is a string representation of the desired operation 
+     and the value is a callable counterpart.  This implementation allowed for
+     heavily simplified processing of either call.  All functions can be handled
+     through one call to a dictionary.  With regard to number of arguments, the
+     lark grammar is structured such that we can accept multiple arguments as a 
+     list 
 
 Performance Analysis (12 pts)
 -----------------------------
