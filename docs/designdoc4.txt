@@ -91,14 +91,17 @@ D5.  [4pts] Is your implementation able to evaluate the ISERROR() function
 
      Yes, our implementation is able to evaluate this correctly because we 
      use the strongly connected component algorithm.  We only have cells 
-     participating in a cycle set to circular reference errors.
+     participating in a cycle set to circular reference errors.  No changes were
+     required to achieve this.
 
 D6.  [4pts] Is your implementation able to successfully identify cycles that
      are not evident from static analysis of formulas containing INDIRECT()?
      If so, what changes to your design were required, if any, to achieve this?
      If not, what prevented your team from implementing this?
 
-     TODO  
+     Yes, our implementation successfully does this because in our Interpreter
+     when we reach a formula that contains INDIRECT() we do evalutation time 
+     analysis to determing what dependencies are contained in the formula.    
 
 D7.  [6pts] Project 4 has a number of small but important operations to
      implement.  Comparison operations include a number of comparison and type
