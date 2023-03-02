@@ -916,9 +916,10 @@ class TestWorkbook:
         assert isinstance(value, CellError)
         assert value.get_type() == CellErrorType.BAD_REFERENCE
 
-    def test_move_copy_indirect(self) -> None:
+    def test_indirect_with_refs(self) -> None:
         '''
-        Test moving/copying cells with indirect func calls
+        Test moving/copying cells or dealing with cell references with 
+        INDIRECT func calls
 
         '''
 
@@ -944,3 +945,64 @@ class TestWorkbook:
         value = wb1.get_cell_value('Sheet1', 'D3')
         assert contents == '=INDIRECT(Sheet1!$B2)'
         assert value == Decimal('1')
+
+        wb1.set_cell_contents('Sheet1', 'B1', '=D2')
+        wb1.copy_cells('Sheet1', 'C2', 'C2', 'D2')
+        contents = wb1.get_cell_contents('Sheet1', 'D2')
+        value = wb1.get_cell_value('Sheet1', 'D2')
+        assert contents == '=INDIRECT(Sheet1!$B1)'
+        assert isinstance(value, CellError)
+        assert value.get_type() == CellErrorType.CIRCULAR_REFERENCE
+
+        wb1.set_cell_contents('Sheet1', 'DT1', '=1')
+        wb1.set_cell_contents('Sheet1', 'BJ1', '=INDIRECT("DT1")')
+        wb1.copy_cells('Sheet1', 'BJ1', 'DT1', 'KM1')
+        contents = wb1.get_cell_contents('Sheet1', 'KM1')
+        value = wb1.get_cell_value('Sheet1', 'KM1')
+        assert contents == '=INDIRECT("DT1")'
+        assert value == Decimal(1)
+
+        wb1.set_cell_contents('Sheet1', 'KT1', '=INDIRECT("Sheet1!DT1")')
+        wb1.copy_cells('Sheet1', 'KT1', 'KT1', 'DL1')
+        contents = wb1.get_cell_contents('Sheet1', 'DL1')
+        value = wb1.get_cell_value('Sheet1', 'DL1')
+        assert contents == '=INDIRECT("Sheet1!DT1")'
+        assert value == Decimal(1)
+
+        wb1.set_cell_contents('Sheet1', 'F1', '=23')
+        wb1.set_cell_contents('Sheet1', 'F2', '=INDIRECT(F1)')
+        contents = wb1.get_cell_contents('Sheet1', 'F2')
+        value = wb1.get_cell_value('Sheet1', 'F2')
+        assert contents == '=INDIRECT(F1)'
+        assert value == Decimal('23')
+
+        wb1.set_cell_contents('Sheet1', 'F1', '=24')
+        value = wb1.get_cell_value('Sheet1', 'F2')
+        assert value == Decimal('24')
+
+        wb1.new_sheet('Sheet2')
+        wb1.set_cell_contents('Sheet2', 'F1', '="uwu"')
+        wb1.set_cell_contents('Sheet1', 'F2', '=INDIRECT(Sheet2!F1)')
+        contents = wb1.get_cell_contents('Sheet1', 'F2')
+        value = wb1.get_cell_value('Sheet1', 'F2')
+        assert contents == '=INDIRECT(Sheet2!F1)'
+        assert value == 'uwu'
+
+        wb1.set_cell_contents('Sheet1', 'F2', '=INDIRECT("Sheet2!F1")')
+        contents = wb1.get_cell_contents('Sheet1', 'F2')
+        value = wb1.get_cell_value('Sheet1', 'F2')
+        assert contents == '=INDIRECT("Sheet2!F1")'
+        assert value == 'uwu'
+
+        wb1.set_cell_contents('Sheet1', 'HC1', '=INDIRECT("A" & 1)')
+        contents = wb1.get_cell_contents('Sheet1', 'HC1')
+        value = wb1.get_cell_value('Sheet1', 'HC1')
+        assert contents == '=INDIRECT("A" & 1)'
+        assert isinstance(value, CellError)
+        assert value.get_type() == CellErrorType.BAD_REFERENCE
+
+        wb1.set_cell_contents('Sheet1', 'JF1', '=INDIRECT("SheET2!"&"F"&1)')
+        contents = wb1.get_cell_contents('Sheet1', 'JF1')
+        value = wb1.get_cell_value('Sheet1', 'JF1')
+        assert contents == '=INDIRECT("SheET2!"&"F"&1)'
+        assert value == 'uwu'

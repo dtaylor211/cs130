@@ -88,6 +88,19 @@ class TestFunctionHandler:
         assert isinstance(result, CellError)
         assert result.get_type() == CellErrorType.BAD_REFERENCE
 
+        WB.set_cell_contents('Test', 'A1', '\'tru')
+        tree = PARSER.parse('=A1&"e"')
+        result = EVALUATOR.transform(tree)
+        assert result == Tree('string', ['true'])
+
+        tree = PARSER.parse('=AND(A1&"e")')
+        result = EVALUATOR.transform(tree)
+        assert result == Tree('bool', [True])
+
+        tree = PARSER.parse('=AND (A1&"e")')
+        result = EVALUATOR.transform(tree)
+        assert result == Tree('bool', [True])
+
     def test_or(self) -> None:
         '''
         Test OR logic
@@ -550,6 +563,11 @@ class TestFunctionHandler:
         assert isinstance(result, CellError)
         assert result.get_type() == CellErrorType.BAD_REFERENCE
 
+        tree = PARSER.parse('=INDIRECT("Sheet2!A1")')
+        result = EVALUATOR.transform(tree).children[-1]
+        assert isinstance(result, CellError)
+        assert result.get_type() == CellErrorType.BAD_REFERENCE
+
         tree = PARSER.parse('=INDIRECT("Sheet2!!A1")')
         result = EVALUATOR.transform(tree).children[-1]
         assert isinstance(result, CellError)
@@ -564,6 +582,15 @@ class TestFunctionHandler:
         result = EVALUATOR.transform(tree).children[-1]
         assert isinstance(result, CellError)
         assert result.get_type() == CellErrorType.BAD_REFERENCE
+
+        tree = PARSER.parse('=INDIRECT(AND(1))')
+        result = EVALUATOR.transform(tree).children[-1]
+        assert isinstance(result, CellError)
+        assert result.get_type() == CellErrorType.BAD_REFERENCE
+
+    def test_indirect_move_copy(self) -> None:
+        '''
+        '''
 
         tree = PARSER.parse('=INDIRECT(AND(1))')
         result = EVALUATOR.transform(tree).children[-1]

@@ -435,7 +435,7 @@ class Evaluator(Transformer):
             result = self.function_handler.map_func(func_name)
             result = result(args_list)
 
-            if isinstance(result, Tuple):
+            if isinstance(result, Tuple): 
                 temp =  self.transform(result[0])
 
                 if temp.children[-1] is None:

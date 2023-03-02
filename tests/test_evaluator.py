@@ -509,6 +509,10 @@ class TestEvaluator:
         result = EVALUATOR.transform(tree)
         assert result == Tree('bool', [True])
 
+        tree = PARSER.parse('= FALSE == AND(TRUE, FALSE)')
+        result = EVALUATOR.transform(tree)
+        assert result == Tree('bool', [True])
+
     def test_reference_same_sheet(self) -> None:
         '''
         Test when given a formula that references the same sheet
