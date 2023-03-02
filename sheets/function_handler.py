@@ -88,7 +88,7 @@ class FunctionHandler:
             arg = expression.children[0]
             if isinstance(arg, CellError):
                 return Tree('cell_error', [arg])
-            res = convert_to_bool(arg, type(arg))
+            res = convert_to_bool(arg, type(arg)) if arg is not None else False
             bool_result = bool_result and res
 
         return Tree('bool', [bool_result])

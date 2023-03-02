@@ -86,6 +86,15 @@ class TestFunctionHandler:
         result = EVALUATOR.transform(tree)
         assert result == Tree('bool', [True])
 
+        tree = PARSER.parse('=and(Test!A4)')
+        result = EVALUATOR.transform(tree)
+        assert result == Tree('bool', [False])
+
+        tree = PARSER.parse('=and("Test!A3")')
+        result = EVALUATOR.transform(tree).children[-1]
+        assert isinstance(result, CellError)
+        assert result.get_type() == CellErrorType.TYPE_ERROR
+
         tree = PARSER.parse('=and(False, #REF!)')
         result = EVALUATOR.transform(tree).children[-1]
         assert isinstance(result, CellError)
@@ -625,11 +634,6 @@ class TestFunctionHandler:
         result = EVALUATOR.transform(tree).children[-1]
         assert isinstance(result, CellError)
         assert result.get_type() == CellErrorType.BAD_REFERENCE
-
-        # tree = PARSER.parse('=INDIRECT(Sheet2!!A1)')
-        # result = EVALUATOR.transform(tree).children[-1]
-        # assert isinstance(result, CellError)
-        # assert result.get_type() == CellErrorType.BAD_REFERENCE
 
         tree = PARSER.parse('=INDIRECT("Sheet2!!A1")')
         result = EVALUATOR.transform(tree).children[-1]
