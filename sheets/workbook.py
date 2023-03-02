@@ -504,10 +504,10 @@ class Workbook:
                 raise TypeError("Sheet name is not proper type (string)")
             sheet_name = sheet["name"]
 
-            if not isinstance(sheet["cell-contents"], dict):
-                raise TypeError("Cell-contents is not proper type (dictionary))")
             if "cell-contents" not in sheet:
                 raise KeyError("Missing: 'cell-contents'")
+            if not isinstance(sheet["cell-contents"], dict):
+                raise TypeError("Cell-contents is not proper type (dictionary))")
             cell_contents = sheet["cell-contents"]
 
             new_wb.new_sheet(sheet_name)
