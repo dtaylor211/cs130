@@ -185,6 +185,11 @@ class FunctionHandler:
         str1 = args[0].children[0]
         str2 = args[1].children[0]
 
+        if isinstance(str1, CellError):
+            return Tree('cell_error', [str1])
+        if isinstance(str2, CellError):
+            return Tree('cell_error', [str2])
+
         if isinstance(str1, bool):
             str1 = str(str1).upper()
         if isinstance(str2, bool):

@@ -14,6 +14,18 @@ Classes:
 
     Methods:
     - test_and(object) -> None
+    - test_or(object) -> None
+    - test_not(object) -> None
+    - test_xor(object) -> None
+    - test_exact(object) -> None
+    - test_if(object) -> None
+    - test_iferror(object) -> None
+    - test_choose(object) -> None
+    - test_isblank(object) -> None
+    - test_iserror(object) -> None
+    - test_version(object) -> None
+    - test_indirect(object) -> None
+    - test_badname(object) -> None
 
 '''
 
@@ -244,6 +256,18 @@ class TestFunctionHandler:
         result = EVALUATOR.transform(tree)
         assert result == Tree('bool', [True])
 
+        tree = PARSER.parse('=EXACT(#REF!, #REF!)')
+        result = EVALUATOR.transform(tree).children[-1]
+        assert isinstance(result, CellError)
+        assert result.get_type() == CellErrorType.BAD_REFERENCE
+
+        WB.set_cell_contents('Test', 'A2', '=A3')
+        WB.set_cell_contents('Test', 'A3', '=EXACT(#REF!, A2)')
+        tree = PARSER.parse('=A3')
+        result = EVALUATOR.transform(tree).children[-1]
+        assert isinstance(result, CellError)
+        assert result.get_type() == CellErrorType.CIRCULAR_REFERENCE
+
     def test_if(self) -> None:
         '''
         Test IF logic
@@ -282,13 +306,31 @@ class TestFunctionHandler:
         result = EVALUATOR.transform(tree)
         assert result == Tree('number', [Decimal('12')])
 
-        tree = PARSER.parse('=IF(EXACT(7==8, A2), "string1", 0)')
+        tree = PARSER.parse('=IF(EXACT(7==8, A2), "string1", #REF!)')
         result = EVALUATOR.transform(tree)
         assert result == Tree('string', ["string1"])
 
         tree = PARSER.parse('=IF(AND("FaLSe", 7==8, A1, A2, A3), "0", A3)')
         result = EVALUATOR.transform(tree)
         assert result == Tree('cell_ref', [Decimal('0')])
+
+        WB.set_cell_contents('Test', 'A1', '=A2+1')
+        WB.set_cell_contents('Test', 'A2', '=IF(OR(True, 0), A1+1, A3+1)')
+        WB.set_cell_contents('Test', 'A3', '=1+2')
+        tree = PARSER.parse('=A2')
+        result = EVALUATOR.transform(tree).children[-1]
+        assert isinstance(result, CellError)
+        assert result.get_type() == CellErrorType.CIRCULAR_REFERENCE
+
+        WB.set_cell_contents('Test', 'A2', '=IF(AND(True, 0), A1+1, A3+1)')
+        tree = PARSER.parse('=A2')
+        result = EVALUATOR.transform(tree)
+        assert result == Tree('cell_ref', [Decimal('4')])
+
+        WB.set_cell_contents('Test', 'A2', '=IF(AND(True, 0), A1+1)')
+        tree = PARSER.parse('=A2')
+        result = EVALUATOR.transform(tree)
+        assert result == Tree('cell_ref', [False])
 
     def test_iferror(self) -> None:
         '''
@@ -318,13 +360,31 @@ class TestFunctionHandler:
         result = EVALUATOR.transform(tree)
         assert result == Tree('number', [Decimal('12')])
 
-        tree = PARSER.parse('=IFERROR(A2)')
+        tree = PARSER.parse('=IFERROR("#REF!")')
+        result = EVALUATOR.transform(tree)
+        assert result == Tree('string', ["#REF!"])
+
+        tree = PARSER.parse('=IFERROR(A2, #REF!)')
         result = EVALUATOR.transform(tree)
         assert result == Tree('cell_ref', [False])
 
-        tree = PARSER.parse('=IFERROR(A2, A3)')
+        WB.set_cell_contents('Test', 'A1', '=A2+1')
+        WB.set_cell_contents('Test', 'A2', '=IFERROR(A1+1, A3+1)')
+        WB.set_cell_contents('Test', 'A3', '=1+2')
+        tree = PARSER.parse('=A2')
+        result = EVALUATOR.transform(tree).children[-1]
+        assert isinstance(result, CellError)
+        assert result.get_type() == CellErrorType.CIRCULAR_REFERENCE
+
+        WB.set_cell_contents('Test', 'A2', '=IFERROR(A1+#REF!, A3+1)')
+        tree = PARSER.parse('=A2')
         result = EVALUATOR.transform(tree)
-        assert result == Tree('cell_ref', [False])
+        assert result == Tree('cell_ref', [Decimal('4')])
+
+        WB.set_cell_contents('Test', 'A2', '=IFERROR(A1+#REF!)')
+        tree = PARSER.parse('=A2')
+        result = EVALUATOR.transform(tree)
+        assert result == Tree('cell_ref', [""])
 
     def test_choose(self) -> None:
         '''
@@ -370,13 +430,26 @@ class TestFunctionHandler:
         result = EVALUATOR.transform(tree)
         assert result == Tree('number', [Decimal('12')])
 
-        tree = PARSER.parse('=CHOOSE(A2, "string1")')
+        tree = PARSER.parse('=CHOOSE(A2, "string1", #REF!)')
         result = EVALUATOR.transform(tree)
         assert result == Tree('string', ["string1"])
 
         tree = PARSER.parse('=CHOOSE(A3+1, A2, A1)')
         result = EVALUATOR.transform(tree)
         assert result == Tree('cell_ref', [True])
+
+        WB.set_cell_contents('Test', 'A1', '=A2+1')
+        WB.set_cell_contents('Test', 'A2', '=CHOOSE(1+0, A1+1, 2+1, A3+1)')
+        WB.set_cell_contents('Test', 'A3', '=1+2')
+        tree = PARSER.parse('=A2')
+        result = EVALUATOR.transform(tree).children[-1]
+        assert isinstance(result, CellError)
+        assert result.get_type() == CellErrorType.CIRCULAR_REFERENCE
+
+        WB.set_cell_contents('Test', 'A2', '=CHOOSE(2+1, A1+1, 2+1, A3+1)')
+        tree = PARSER.parse('=A2')
+        result = EVALUATOR.transform(tree)
+        assert result == Tree('cell_ref', [Decimal('4')])
 
     def test_isblank(self) -> None:
         '''
@@ -413,6 +486,18 @@ class TestFunctionHandler:
         tree = PARSER.parse('=ISBLANK(A3)')
         result = EVALUATOR.transform(tree)
         assert result == Tree('bool', [False])
+
+        WB.set_cell_contents('Test', 'A3', '#REF!')
+        tree = PARSER.parse('=ISBLANK(A3)')
+        result = EVALUATOR.transform(tree)
+        assert result == Tree('bool', [False])
+
+        WB.set_cell_contents('Test', 'A2', '=A3')
+        WB.set_cell_contents('Test', 'A3', '=ISBLANK(A3)')
+        tree = PARSER.parse('=A3')
+        result = EVALUATOR.transform(tree).children[-1]
+        assert isinstance(result, CellError)
+        assert result.get_type() == CellErrorType.CIRCULAR_REFERENCE
 
     def test_iserror(self) -> None:
         '''
@@ -565,3 +650,21 @@ class TestFunctionHandler:
         result = EVALUATOR.transform(tree).children[-1]
         assert isinstance(result, CellError)
         assert result.get_type() == CellErrorType.BAD_REFERENCE
+
+    def test_badname(self) -> None:
+        '''
+        test bad function names
+
+        '''
+
+        tree = PARSER.parse('=FUNCTION(#REF!, 3)')
+        result = EVALUATOR.transform(tree).children[-1]
+        assert isinstance(result, CellError)
+        assert result.get_type() == CellErrorType.BAD_NAME
+
+        WB.set_cell_contents('Test', 'A2', '=A3')
+        WB.set_cell_contents('Test', 'A3', '=annd(1, A2)')
+        tree = PARSER.parse('=A3')
+        result = EVALUATOR.transform(tree).children[-1]
+        assert isinstance(result, CellError)
+        assert result.get_type() == CellErrorType.BAD_NAME
