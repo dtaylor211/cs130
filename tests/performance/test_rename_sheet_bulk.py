@@ -51,4 +51,4 @@ if __name__ == '__main__':
 
     profiler.disable()
     stats = Stats(profiler).sort_stats('cumtime')
-    stats.print_stats(10)
+    stats.print_stats(20)
