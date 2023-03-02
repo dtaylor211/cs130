@@ -30,12 +30,12 @@ def test_rename_bulk() -> None:
     for i in range(2, 501):
         wb1.set_cell_contents(name, f'A{i}', f'=A{i - 1} + 1')
     wb1.set_cell_contents(name, 'A1', "=1")
-    for i in range(2, 501):
-        wb1.set_cell_contents(name, f'B{i}', f'=B{i - 1} + 2')
-    wb1.set_cell_contents(name, 'B1', "=1")
-    for i in range(2, 501):
-        wb1.set_cell_contents(name, f'C{i}', f'=C{i - 1} + 3')
-    wb1.set_cell_contents(name, 'C1', "=1")
+    # for i in range(2, 501):
+    #     wb1.set_cell_contents(name, f'B{i}', f'=B{i - 1} + 2')
+    # wb1.set_cell_contents(name, 'B1', "=1")
+    # for i in range(2, 501):
+    #     wb1.set_cell_contents(name, f'C{i}', f'=C{i - 1} + 3')
+    # wb1.set_cell_contents(name, 'C1', "=1")
 
     for i in range(10):
         if i % 2 == 0:

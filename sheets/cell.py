@@ -31,11 +31,12 @@ Classes:
 
 
 import re
-from decimal import Decimal, DecimalException
+from decimal import Decimal, DecimalException, InvalidOperation
 from typing import Optional, List, Tuple, Any
 
 import lark
-from lark import Visitor, Tree
+from lark import Tree
+from lark.visitors import Interpreter, visit_children_decor
 
 from .evaluator import Evaluator
 from .cell_error import CellError, CellErrorType, CELL_ERRORS
@@ -49,15 +50,15 @@ RESTRICTED_VALUES = [
     Decimal('-NaN')
 ]
 
-class _CellTreeVisitor(Visitor):
+class _CellTreeInterpreter(Interpreter):
     '''
-    This visitor gets all children cells from the tree of a cell.
+    This interpreter gets all children cells from the tree of a cell.
 
     '''
 
-    def __init__(self, sheet: str):
+    def __init__(self, sheet: str, evaluator):
         '''
-        Initialize a Cell Tree Visitor
+        Initialize a Cell Tree Interpreter
 
         Arguments:
         - sheet: str - sheet to visit children in
@@ -66,7 +67,9 @@ class _CellTreeVisitor(Visitor):
 
         self.children = set()
         self.sheet = sheet
+        self.evaluator = evaluator
 
+    @visit_children_decor
     def cell(self, tree: Tree) -> None:
         '''
         Get a cell from a Tree object
@@ -76,16 +79,52 @@ class _CellTreeVisitor(Visitor):
 
         '''
 
-        if len(tree.children) == 2:
-            cell_sheet = str(tree.children[0])
+        if len(tree) == 2:
+            cell_sheet = str(tree[0])
             if cell_sheet[0] == "'":
                 cell_sheet = cell_sheet[1:-1]
-            cell = str(tree.children[1]).replace('$', '')
+            cell = str(tree[1]).replace('$', '')
         else:
             cell_sheet = self.sheet
-            cell = str(tree.children[0]).replace('$','')
+            cell = str(tree[0]).replace('$','')
         self.children.add((cell_sheet, cell))
 
+    def func_expr(self, tree: Tree) -> None:
+        '''
+        Get a function expression from a Tree object
+
+        Arguments:
+        - tree: Tree - tree containing function information
+
+        '''
+
+        if tree.children[0] == "IF":
+            if_parts = tree.children[-1].children
+            if self.evaluator.transform(if_parts[0]).children[0]:
+                self.visit(if_parts[-1].children[0])
+            else:
+                self.visit(if_parts[-1].children[-1])
+        elif tree.children[0] == "IFERROR":
+            if_parts = tree.children[-1].children
+            if tree.children[-1].data != "args_expr":
+                if_parts = [tree.children[-1]]
+            if len(if_parts) > 0 and not isinstance(self.evaluator.transform(if_parts[0]).children[0], CellError):
+                self.visit(if_parts[0])
+            elif len(if_parts) > 1:
+                self.visit(if_parts[-1])
+        elif tree.children[0] == "CHOOSE":
+            curr = tree.children[-1].children
+            idx = self.evaluator.transform(curr[0]).children[0]
+            try:
+                idx = Decimal(0) if idx is None else Decimal(idx)
+                if idx % 1 == 0 and idx > 0:
+                    for i in range(int(idx)):
+                        curr = curr[-1].children
+                    self.visit(curr[0])
+            except InvalidOperation:
+                pass
+        else:
+            self.visit_children(tree)
 
 class Cell:
     '''
@@ -200,12 +239,15 @@ class Cell:
             elif inp[0] == "=":
                 parser, evaluator = self.get_parser_and_evaluator()
                 tree = parser.parse(inp)
-                visitor = _CellTreeVisitor(str(evaluator.get_working_sheet()))
+                visitor = _CellTreeInterpreter(str(evaluator.get_working_sheet()), evaluator)
                 visitor.visit(tree)
                 self._children = list(visitor.children)
                 evaluator = evaluator.transform(tree).children[0]
                 # Handle when referencing an empty cell only
                 evaluator = Decimal('0') if evaluator is None else evaluator
+                if isinstance(evaluator, CellError) and \
+                    evaluator.get_type() == CellErrorType.BAD_NAME:
+                    self._children = []
                 self.set_contents_and_value(contents, evaluator)
 
             elif inp.upper() in list(CELL_ERRORS.values()):

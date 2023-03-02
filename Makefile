@@ -111,7 +111,7 @@ test-performance-copy-cells-bulk:
         snakeviz program.prof; \
     fi
 
-test-performance-fib:
+test-performance-benchmark-fib:
 	python -m cProfile -o program.prof \
 		./tests/performance/test_fibonacci.py
 	@read -p "Visualize Data? [y/N] " ans && ans=$${ans:-N} ; \
@@ -122,6 +122,38 @@ test-performance-fib:
 test-performance-load:
 	python -m cProfile -o program.prof \
 		./tests/performance/test_load_wb.py
+	@read -p "Visualize Data? [y/N] " ans && ans=$${ans:-N} ; \
+    if [ $${ans} = y ] || [ $${ans} = Y ]; then \
+        snakeviz program.prof; \
+    fi
+
+test-performance-benchmark-long-chain-update:
+	python -m cProfile -o program.prof \
+		./tests/performance/test_long_chain_update.py
+	@read -p "Visualize Data? [y/N] " ans && ans=$${ans:-N} ; \
+    if [ $${ans} = y ] || [ $${ans} = Y ]; then \
+        snakeviz program.prof; \
+    fi
+
+test-performance-benchmark-long-chain-cycle:
+	python -m cProfile -o program.prof \
+		./tests/performance/test_long_chain_cycle.py
+	@read -p "Visualize Data? [y/N] " ans && ans=$${ans:-N} ; \
+    if [ $${ans} = y ] || [ $${ans} = Y ]; then \
+        snakeviz program.prof; \
+    fi
+
+test-performance-benchmark-mesh-update:
+	python -m cProfile -o program.prof \
+		./tests/performance/test_mesh_update.py
+	@read -p "Visualize Data? [y/N] " ans && ans=$${ans:-N} ; \
+    if [ $${ans} = y ] || [ $${ans} = Y ]; then \
+        snakeviz program.prof; \
+    fi
+
+test-performance-benchmark-mesh-cycle:
+	python -m cProfile -o program.prof \
+		./tests/performance/test_mesh_cycle.py
 	@read -p "Visualize Data? [y/N] " ans && ans=$${ans:-N} ; \
     if [ $${ans} = y ] || [ $${ans} = Y ]; then \
         snakeviz program.prof; \
@@ -156,6 +188,10 @@ lint-test-performance-all:
 	$(PYLINT) $(PYLINTFLAGS) ./tests/performance/test_rename_sheet_bulk.py
 	$(PYLINT) $(PYLINTFLAGS) ./tests/performance/test_fibonacci.py
 	$(PYLINT) $(PYLINTFLAGS) ./tests/performance/test_load_wb.py
+	$(PYLINT) $(PYLINTFLAGS) ./tests/performance/test_long_chain_update.py
+	$(PYLINT) $(PYLINTFLAGS) ./tests/performance/test_long_chain_cycle.py
+	$(PYLINT) $(PYLINTFLAGS) ./tests/performance/test_mesh_update.py
+	$(PYLINT) $(PYLINTFLAGS) ./tests/performance/test_mesh_cycle.py
 
 lint-test-%:
 	$(PYLINT) $(PYLINTFLAGS) ./tests/test_$*.py
