@@ -30,8 +30,6 @@ def test_long_chain_update() -> None:
     wb1 = Workbook()
     _, name = wb1.new_sheet('Sheet1')
 
-    # wb1.set_cell_contents(name, 'A1', '=1')
-
     for i in range(2, 1001):
         wb1.set_cell_contents(name, f'A{i}', f'=A{i - 1} + 1')
 

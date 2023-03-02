@@ -100,7 +100,31 @@ to identify where your program is spending the bulk of its time.
 A1.  [4pts] Briefly enumerate the performance tests you created to exercise
      your implementation.
 
-     TODO
+     1 - test_load_wb.py
+          Performance test for loading a workbook 
+     2 - test_copy_sheet_bulk.py
+          Performance test for copying a sheet
+     3 - test_rename_sheet_bulk.py
+          Performance test for renaming
+     4 - test_move_cells_bulk.py
+          Performance test moving regions of cells
+     5 - test_copy_cells_bulk.py
+          Performance test for copying regions of cells
+     6 - test_fibonacci.py
+          Performance test for simulating Fibonacci benchmark test
+     7 - test_long_chain_update.py
+          Performance test for a long cell reference chain
+          (attempts to simulate LongChainUpdateBenchmark)
+     8 - test_long_chain_cycle.py
+          Performance test for a long circular cell reference chain
+          (attempts to simulate LongChainCycleBenchmark)
+     9 - test_mesh_update.py
+          Performance test for M-row mesh with N-cell-long reference chain
+          (attempts to simulate MxNMeshUpdateBenchmark)
+     10 - test_mesh_cycle.py
+          Performance test for M-row mesh with N-cell-long circular reference 
+               chain
+          (attempts to simulate MxNMeshCycleBenchmark)
 
 A2.  [2pts] What profiler did you choose to run your performance tests with?
      Why?  Give an example of how to invoke one of your tests with the profiler.
@@ -128,7 +152,19 @@ A3.  [6pts] What are ~3 of the most significant hot-spots you identified in your
      performance testing?  Did you expect these hot-spots, or were they
      surprising to you?
 
-     TODO - Kyle
+     The most significant hot spot that we identified (and resolved) was located
+     in cell.py.  Basically, we were loading the lark grammar every time we 
+     created a cell, and this significantly hurt our performance.  With a 
+     simple fix, we now only load the grammar once appropriately.  We knew we 
+     had something significant that was hiding, but we were still surprised when
+     we found out what it was.  No other hotspots were identified that compared 
+     to this one.  However, it seems that our copying and renaming sheet 
+     operations may have some lingering performance issues as highlighted by our 
+     new performance tests in test_copy_sheet_bulk.py and 
+     test_rename_sheet_bulk.py.   Overall, the usage of the profiler was 
+     helpful to develop a deeper understanding of where our program distributes
+     its time, particularly with operations that induce large bulk changes to 
+     a workbook.
 
 Section F:  CS130 Project 3 Feedback [OPTIONAL]
 -----------------------------------------------
