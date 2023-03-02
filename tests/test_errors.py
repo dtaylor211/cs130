@@ -553,17 +553,15 @@ class TestErrors:
         assert isinstance(value, CellError)
         assert value.get_type() == CellErrorType.TYPE_ERROR
 
-        # below are currently not working, but they should be
+        WB.set_cell_contents('Test', 'D1', '=D2')
+        WB.set_cell_contents('Test', 'D2', '=BADNAME(D1)')
+        value = WB.get_cell_value('Test', 'D2')
+        assert isinstance(value, CellError)
+        assert value.get_type() == CellErrorType.BAD_NAME
 
-        # WB.set_cell_contents('Test', 'D1', '=D2')
-        # WB.set_cell_contents('Test', 'D2', '=BADNAME(D1)')
-        # value = WB.get_cell_value('Test', 'D2')
-        # assert isinstance(value, CellError)
-        # assert value.get_type() == CellErrorType.BAD_NAME
-
-        # value = WB.get_cell_value('Test', 'D1')
-        # assert isinstance(value, CellError)
-        # assert value.get_type() == CellErrorType.BAD_NAME
+        value = WB.get_cell_value('Test', 'D1')
+        assert isinstance(value, CellError)
+        assert value.get_type() == CellErrorType.BAD_NAME
 
         WB.set_cell_contents('Test', 'E1', '=E2')
         WB.set_cell_contents('Test', 'E2', '=INDIRECT(E1, "bad")')

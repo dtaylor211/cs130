@@ -99,30 +99,40 @@ class _CellTreeInterpreter(Interpreter):
         '''
 
         if tree.children[0] == "IF":
-            if_parts = tree.children[-1].children
-            if self.evaluator.transform(if_parts[0]).children[0]:
-                self.visit(if_parts[-1].children[0])
+            if_statement = tree.children[-1].children[0]
+            if_branches = tree.children[-1].children[-1]
+            if self.evaluator.transform(if_statement).children[0]:
+                if if_branches.data == "args_expr":
+                    if_branches = if_branches.children[0]
+                self.visit(if_branches)
             else:
-                self.visit(if_parts[-1].children[-1])
+                self.visit(if_branches.children[-1])
         elif tree.children[0] == "IFERROR":
             if_parts = tree.children[-1].children
             if tree.children[-1].data != "args_expr":
                 if_parts = [tree.children[-1]]
-            if len(if_parts) > 0 and not isinstance(self.evaluator.transform(if_parts[0]).children[0], CellError):
+            if len(if_parts) > 0 and not isinstance(self.evaluator.transform(
+                if_parts[0]).children[0], CellError):
                 self.visit(if_parts[0])
             elif len(if_parts) > 1:
                 self.visit(if_parts[-1])
         elif tree.children[0] == "CHOOSE":
-            curr = tree.children[-1].children
-            idx = self.evaluator.transform(curr[0]).children[0]
+            curr = tree.children[-1]
+            idx = self.evaluator.transform(curr.children[0]).children[0]
+            if isinstance(idx, CellError):
+                return
             try:
                 idx = Decimal(0) if idx is None else Decimal(idx)
                 if idx % 1 == 0 and idx > 0:
-                    for i in range(int(idx)):
-                        curr = curr[-1].children
-                    self.visit(curr[0])
+                    for _ in range(int(idx)):
+                        if curr.data != "args_expr":
+                            return
+                        curr = curr.children[-1]
+                    if curr.data == "args_expr":
+                        curr = curr.children[0]
+                    self.visit(curr)
             except InvalidOperation:
-                pass
+                return
         else:
             self.visit_children(tree)
 
@@ -367,7 +377,7 @@ class Cell:
                 substring = re.sub(
                     r'([^ ])([\+\-\\\*\&])([^ ])', r'\1 \2 \3', substring)
                 new_contents += re.sub(
-                    r'([\ \-+\\\*=&!])(\$?[A-Za-z]+)(\$?[1-9][0-9]*)([^!]|$)',
+                    r'([\ \-+\\\*=&!(])(\$?[A-Za-z]+)(\$?[1-9][0-9]*)([^!]|$)',
                     subberoo, substring)
             else:
                 new_contents += f'"{substring}"'

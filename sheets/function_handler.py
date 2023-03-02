@@ -219,10 +219,16 @@ class FunctionHandler:
             raise TypeError('Invalid number of arguments')
 
         arg = args[0].children[0]
+        if isinstance(arg, CellError):
+            return Tree('cell_error', [arg])
         res = convert_to_bool(arg, type(arg))
         if res:
+            if args[1].children[-1] is None:
+                args[1].children[-1] = Decimal('0')
             return args[1]
         if len(args) == 3:
+            if args[2].children[-1] is None:
+                args[2].children[-1] = Decimal('0')
             return args[2]
 
         return Tree('bool', [False])
@@ -244,8 +250,12 @@ class FunctionHandler:
 
         arg = args[0].children[0]
         if not isinstance(arg, CellError):
+            if args[0].children[-1] is None:
+                args[0].children[-1] = Decimal('0')
             return args[0]
         if len(args) == 2:
+            if args[1].children[-1] is None:
+                args[1].children[-1] = Decimal('0')
             return args[1]
 
         return Tree('string', [""])
@@ -266,6 +276,8 @@ class FunctionHandler:
             raise TypeError('Invalid number of arguments')
 
         arg = args[0].children[0]
+        if isinstance(arg, CellError):
+            return Tree('cell_error', [arg])
         try:
             arg = Decimal(0) if arg is None else Decimal(arg)
             if arg % 1 != 0 or arg < 1 or arg > len(args)-1:
@@ -273,6 +285,8 @@ class FunctionHandler:
         except InvalidOperation:
             raise TypeError('Invalid CHOOSE index')
 
+        if args[int(arg)].children[-1] is None:
+            args[int(arg)].children[-1] = Decimal('0')
         return args[int(arg)]
 
     def __isblank(self, args: List) -> Tree:

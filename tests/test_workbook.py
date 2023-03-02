@@ -1006,3 +1006,56 @@ class TestWorkbook:
         value = wb1.get_cell_value('Sheet1', 'JF1')
         assert contents == '=INDIRECT("SheET2!"&"F"&1)'
         assert value == 'uwu'
+
+    def test_conditionals_with_refs(self) -> None:
+        '''
+        Test moving/copying cells or dealing with cell references with 
+        conditional func calls
+
+        '''
+
+        wb1 = Workbook()
+        wb1.new_sheet('Sheet1')
+        wb1.set_cell_contents('Sheet1', 'A1', '=1')
+        wb1.set_cell_contents('Sheet1', 'A2', '=2')
+        wb1.set_cell_contents('Sheet1', 'A3', '=IF(TRUE, Sheet1!A1, Sheet1!A2)')
+        wb1.move_cells('Sheet1', 'A1', 'A3', 'B1')
+        contents = wb1.get_cell_contents('Sheet1', 'B3')
+        value = wb1.get_cell_value('Sheet1', 'B3')
+        assert contents == '=IF(TRUE, Sheet1!B1, Sheet1!B2)'
+        assert value == Decimal('1')
+
+        wb1.set_cell_contents('Sheet1', 'A1', '=$A2+1')
+        wb1.set_cell_contents('Sheet1', 'A2', '=IFERROR(A1+1, A3+1)')
+        wb1.move_cells('Sheet1', 'A1', 'A2', 'B1')
+        contents = wb1.get_cell_contents('Sheet1', 'B2')
+        value = wb1.get_cell_value('Sheet1', 'B2')
+        assert contents == '=IFERROR(B1 + 1, B3 + 1)'
+        assert value == Decimal('2')
+
+        wb1.set_cell_contents('Sheet1', 'A1', '= 1')
+        wb1.set_cell_contents('Sheet1', 'A2', '=A3  +1')
+        wb1.set_cell_contents('Sheet1', 'A3', '=CHOOSE($A1+1, $A3+1, A2)')
+        wb1.move_cells('Sheet1', 'A1', 'A3', 'B1')
+        contents = wb1.get_cell_contents('Sheet1', 'B3')
+        value = wb1.get_cell_value('Sheet1', 'B3')
+        assert contents == '=CHOOSE($A1 + 1, $A3 + 1, B2)'
+        assert value == Decimal('1')
+
+        wb1.new_sheet('Sheet2')
+        wb1.set_cell_contents('Sheet2', 'A1', '=AND(NOT(B1, B2))')
+        wb1.set_cell_contents('Sheet2', 'A2', '=XOR(A1, B2)')
+        wb1.set_cell_contents('Sheet2', 'B1', '=$C1')
+        wb1.set_cell_contents('Sheet2', 'A3',
+            '=IF(CHOOSE(IFERROR(C1) + 1, 1, 0), 1)')
+        wb1.move_cells('Sheet2', 'A1', 'B3', 'B2')
+        contents = wb1.get_cell_contents('Sheet2', 'B4')
+        value = wb1.get_cell_value('Sheet2', 'B4')
+        assert contents == '=IF(CHOOSE(IFERROR(D2) + 1, 1, 0), 1)'
+        assert value == Decimal('1')
+
+        wb1.set_cell_contents('Sheet2', 'A1', '=2 * IFERROR(D2)')
+        contents = wb1.get_cell_contents('Sheet2', 'A1')
+        value = wb1.get_cell_value('Sheet2', 'A1')
+        assert contents == '=2 * IFERROR(D2)'
+        assert value == Decimal('0')

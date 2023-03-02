@@ -300,11 +300,6 @@ class TestFunctionHandler:
         WB.set_cell_contents('Test', 'A2', '=False')
         WB.set_cell_contents('Test', 'A3', '=0')
 
-        tree = PARSER.parse('=IF()')
-        result = EVALUATOR.transform(tree).children[-1]
-        assert isinstance(result, CellError)
-        assert result.get_type() == CellErrorType.TYPE_ERROR
-
         tree = PARSER.parse('=IF("string", A1)')
         result = EVALUATOR.transform(tree).children[-1]
         assert isinstance(result, CellError)
@@ -353,6 +348,15 @@ class TestFunctionHandler:
         tree = PARSER.parse('=A2')
         result = EVALUATOR.transform(tree)
         assert result == Tree('cell_ref', [False])
+
+        tree = PARSER.parse('=IF(#REF!, A1)')
+        result = EVALUATOR.transform(tree).children[-1]
+        assert isinstance(result, CellError)
+        assert result.get_type() == CellErrorType.BAD_REFERENCE
+
+        tree = PARSER.parse('=IF(True, Aaa122)')
+        result = EVALUATOR.transform(tree)
+        assert result == Tree('cell_ref', [Decimal('0')])
 
     def test_iferror(self) -> None:
         '''
@@ -408,6 +412,10 @@ class TestFunctionHandler:
         result = EVALUATOR.transform(tree)
         assert result == Tree('cell_ref', [""])
 
+        tree = PARSER.parse('=IFERROR(ZZ201)')
+        result = EVALUATOR.transform(tree)
+        assert result == Tree('cell_ref', [Decimal('0')])
+
     def test_choose(self) -> None:
         '''
         Test CHOOSE logic
@@ -418,32 +426,17 @@ class TestFunctionHandler:
         WB.set_cell_contents('Test', 'A2', '=True')
         WB.set_cell_contents('Test', 'A3', '=0')
 
-        tree = PARSER.parse('=CHOOSE()')
+        tree = PARSER.parse('=CHOOSE(0, A1, 0)')
         result = EVALUATOR.transform(tree).children[-1]
         assert isinstance(result, CellError)
         assert result.get_type() == CellErrorType.TYPE_ERROR
 
-        tree = PARSER.parse('=CHOOSE(A1)')
+        tree = PARSER.parse('=CHOOSE(1.5, A1, 0)')
         result = EVALUATOR.transform(tree).children[-1]
         assert isinstance(result, CellError)
         assert result.get_type() == CellErrorType.TYPE_ERROR
 
-        tree = PARSER.parse('=CHOOSE("string", A1, 0)')
-        result = EVALUATOR.transform(tree).children[-1]
-        assert isinstance(result, CellError)
-        assert result.get_type() == CellErrorType.TYPE_ERROR
-
-        tree = PARSER.parse('=CHOOSE("0", A1, 0)')
-        result = EVALUATOR.transform(tree).children[-1]
-        assert isinstance(result, CellError)
-        assert result.get_type() == CellErrorType.TYPE_ERROR
-
-        tree = PARSER.parse('=CHOOSE("1.5", A1, 0)')
-        result = EVALUATOR.transform(tree).children[-1]
-        assert isinstance(result, CellError)
-        assert result.get_type() == CellErrorType.TYPE_ERROR
-
-        tree = PARSER.parse('=CHOOSE("3", A1, 0)')
+        tree = PARSER.parse('=CHOOSE(3, A1, 0)')
         result = EVALUATOR.transform(tree).children[-1]
         assert isinstance(result, CellError)
         assert result.get_type() == CellErrorType.TYPE_ERROR
@@ -461,7 +454,7 @@ class TestFunctionHandler:
         assert result == Tree('cell_ref', [True])
 
         WB.set_cell_contents('Test', 'A1', '=A2+1')
-        WB.set_cell_contents('Test', 'A2', '=CHOOSE(1+0, A1+1, 2+1, A3+1)')
+        WB.set_cell_contents('Test', 'A2', '=CHOOSE("1", A1+1, 2+1, A3+1)')
         WB.set_cell_contents('Test', 'A3', '=1+2')
         tree = PARSER.parse('=A2')
         result = EVALUATOR.transform(tree).children[-1]
@@ -472,6 +465,22 @@ class TestFunctionHandler:
         tree = PARSER.parse('=A2')
         result = EVALUATOR.transform(tree)
         assert result == Tree('cell_ref', [Decimal('4')])
+
+        WB.set_cell_contents('Test', 'A1', '=A1')
+        WB.set_cell_contents('Test', 'A2', '=CHOOSE(3, 0, A1)')
+        tree = PARSER.parse('=A2')
+        result = EVALUATOR.transform(tree).children[-1]
+        assert isinstance(result, CellError)
+        assert result.get_type() == CellErrorType.TYPE_ERROR
+
+        tree = PARSER.parse('=CHOOSE(#REF!, A1)')
+        result = EVALUATOR.transform(tree).children[-1]
+        assert isinstance(result, CellError)
+        assert result.get_type() == CellErrorType.BAD_REFERENCE
+
+        tree = PARSER.parse('=CHOOSE(1, Abcd1233)')
+        result = EVALUATOR.transform(tree)
+        assert result == Tree('cell_ref', [Decimal('0')])
 
     def test_isblank(self) -> None:
         '''
@@ -682,5 +691,3 @@ class TestFunctionHandler:
         result = EVALUATOR.transform(tree).children[-1]
         assert isinstance(result, CellError)
         assert result.get_type() == CellErrorType.BAD_REFERENCE
-
-    # Kyle the bad name tests are in test_errors

@@ -9,7 +9,7 @@
 
 ?formula : "=" expression
 
-?expression : add_expr | concat_expr | comp_expr | func_expr
+?expression : add_expr | concat_expr | comp_expr
 
 //========================================
 // Arithmetic expressions
@@ -37,10 +37,6 @@
 //========================================
 // Function expressions
 
-?func_expr : (FUNC_NAME) "(" (args_expr)? ")"
-
-// ?args : "(" expression ("," expression)? ")"
-// ?args : ("(" args ("," args)? ")")? expression
 ?args_expr : (expression ("," args_expr)? )?
 
 
@@ -48,12 +44,12 @@
 // Base values
 
 ?base : cell
-      | ERROR_VALUE             -> error
-      | NUMBER                  -> number
-      | STRING                  -> string
-      | BOOL                    -> bool
-      | "(" expression ")"      -> parens
-      | "(" comp_expr ")"       -> parens
+      | ERROR_VALUE                       -> error
+      | NUMBER                            -> number
+      | STRING                            -> string
+      | BOOL                              -> bool
+      | "(" expression ")"                -> parens
+      | (FUNC_NAME) "(" (args_expr)? ")"  -> func_expr
 
 cell : (_sheetname "!")? CELLREF
 
