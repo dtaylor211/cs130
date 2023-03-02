@@ -133,6 +133,16 @@ class _CellTreeInterpreter(Interpreter):
                     self.visit(curr)
             except InvalidOperation:
                 return
+        elif tree.children[0] == "INDIRECT":
+            ref = tree.children[-1]
+            if ref.data == "string":
+                try:
+                    ref = Cell.PARSER.parse(f'={ref.children[-1][1:-1]}')
+                    if ref.data != 'cell':
+                        return
+                except lark.exceptions.LarkError:
+                    return
+            self.visit(ref)
         else:
             self.visit_children(tree)
 

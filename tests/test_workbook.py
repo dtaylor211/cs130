@@ -1007,6 +1007,14 @@ class TestWorkbook:
         assert contents == '=INDIRECT("SheET2!"&"F"&1)'
         assert value == 'uwu'
 
+        wb1.set_cell_contents('Sheet1', 'a1', '=a2')
+        wb1.set_cell_contents('Sheet1', 'a2', '=INDIRECT("a1")')
+        contents = wb1.get_cell_contents('Sheet1', 'a2')
+        value = wb1.get_cell_value('Sheet1', 'a2')
+        assert contents == '=INDIRECT("a1")'
+        assert isinstance(value, CellError)
+        assert value.get_type() == CellErrorType.CIRCULAR_REFERENCE
+
     def test_conditionals_with_refs(self) -> None:
         '''
         Test moving/copying cells or dealing with cell references with 
