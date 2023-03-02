@@ -25,7 +25,7 @@ Classes:
     - test_iserror(object) -> None
     - test_version(object) -> None
     - test_indirect(object) -> None
-    - test_badname(object) -> None
+    - test_indirect2(object) -> None
 
 '''
 
@@ -667,6 +667,12 @@ class TestFunctionHandler:
         assert isinstance(result, CellError)
         assert result.get_type() == CellErrorType.BAD_REFERENCE
 
+    def test_indirect2(self) -> None:
+        '''
+        test INDIRECT functionality - Part 2
+
+        '''
+
         tree = PARSER.parse('=INDIRECT(123)')
         result = EVALUATOR.transform(tree).children[-1]
         assert isinstance(result, CellError)
@@ -676,16 +682,6 @@ class TestFunctionHandler:
         result = EVALUATOR.transform(tree).children[-1]
         assert isinstance(result, CellError)
         assert result.get_type() == CellErrorType.BAD_REFERENCE
-
-        tree = PARSER.parse('=INDIRECT(AND(1))')
-        result = EVALUATOR.transform(tree).children[-1]
-        assert isinstance(result, CellError)
-        assert result.get_type() == CellErrorType.BAD_REFERENCE
-
-    def test_indirect2(self) -> None:
-        '''
-        TODO
-        '''
 
         tree = PARSER.parse('=INDIRECT(AND(1))')
         result = EVALUATOR.transform(tree).children[-1]

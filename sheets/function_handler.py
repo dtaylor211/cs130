@@ -19,10 +19,14 @@ from decimal import Decimal, InvalidOperation
 import lark
 from lark import Tree, Lark
 
+# import sheets
 from .utils import convert_to_bool
 from .cell_error import CellError, CellErrorType
-import sheets
+from .configs import VERSION
 
+
+
+# pylint: disable=too-few-public-methods
 
 class FunctionHandler:
     '''
@@ -182,6 +186,11 @@ class FunctionHandler:
         if len(args) != 2:
             raise TypeError('Invalid number of arguments')
 
+        # pylint: disable=duplicate-code
+
+        # we have same code called once more in evaluator, but it would not
+        # really make sense to have a helper as this is a specific case that
+        # only happens twice
         str1 = args[0].children[0]
         str2 = args[1].children[0]
 
@@ -282,8 +291,8 @@ class FunctionHandler:
             arg = Decimal(0) if arg is None else Decimal(arg)
             if arg % 1 != 0 or arg < 1 or arg > len(args)-1:
                 raise TypeError('Invalid CHOOSE index')
-        except InvalidOperation:
-            raise TypeError('Invalid CHOOSE index')
+        except InvalidOperation as e:
+            raise TypeError('Invalid CHOOSE index') from e
 
         if args[int(arg)].children[-1] is None:
             args[int(arg)].children[-1] = Decimal('0')
@@ -346,7 +355,7 @@ class FunctionHandler:
         if len(args) != 0:
             raise TypeError('Invalid number of arguments')
 
-        return Tree('string', [f"{sheets.version}"])
+        return Tree('string', [f"{VERSION}"])
 
     def __indirect(self, args: List) -> Tuple[Tree or str, Optional[str]]:
         '''
@@ -370,10 +379,10 @@ class FunctionHandler:
             return args[0]
 
         try:
-            s = self.PARSER.parse(f'={str(args[0].children[-1])}')
-            if s.data != 'cell':
+            tree = self.PARSER.parse(f'={str(args[0].children[-1])}')
+            if tree.data != 'cell':
                 raise lark.exceptions.LarkError
-            return s, 'Y'
+            return tree, 'Y'
 
         except lark.exceptions.LarkError:
             return Tree('cell_error', [
