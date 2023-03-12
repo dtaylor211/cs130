@@ -48,6 +48,7 @@ from .sheet import Sheet
 from .evaluator import Evaluator
 from .graph import Graph
 from .utils import get_loc_from_coords
+from .sort_handler import Row
 
 
 class Workbook:
@@ -857,6 +858,95 @@ class Workbook:
         # Set contents of target cells (within same sheet if to_sheet is None)
         for loc, contents in target_cells.items():
             self.set_cell_contents(to_sheet, loc, contents)
+
+    def sort_region(self, sheet_name: str, start_location: str, 
+                    end_location: str, sort_cols: List) -> None:
+        '''
+        Sort the specified region of a spreadsheet with a stable sort, using
+        the specified columns for the comparison.
+
+        The sheet name match is case-insensitive.
+
+        The start_location and end_location specify the corners of an area of
+        cells in the sheet to be sorted.
+
+        The start_location value does not necessarily have to be the top left
+        corner of the area to sort, nor does the end_location value have to be
+        the bottom right corner of the area; they are simply two corners of
+        the area to sort.
+
+        The sort_cols argument specifies one or more columns to sort on.  Each
+        element in the list is the one-based index of a column in the region,
+        with 1 being the leftmost column in the region.  A column's index in
+        this list may be positive to sort in ascending order, or negative to
+        sort in descending order.  For example, to sort the region B3..J12 on
+        the first two columns, but with the second column in descending order,
+        one would specify sort_cols=[1, -2].
+        
+        The sorting implementation is a stable sort:  if two rows compare as
+        "equal" based on the sorting columns, then they will appear in the
+        final result in the same order as they are at the start.
+        
+        If multiple columns are specified, the behavior is as one would
+        expect:  the rows are ordered on the first column indicated in
+        sort_cols; when multiple rows have the same value for the first
+        column, they are then ordered on the second column indicated in
+        sort_cols; and so forth.
+        
+        No column may be specified twice in sort_cols; e.g. [1, 2, 1] or
+        [2, -2] are both invalid specifications.
+        
+        The sort_cols list may not be empty.  No index may be 0, or refer
+        beyond the right side of the region to be sorted.
+        
+        If the specified sheet name is not found, a KeyError is raised.
+        If any cell location is invalid, a ValueError is raised.
+        If the sort_cols list is invalid in any way, a ValueError is raised.***
+
+        '''
+
+        self.__validate_sheet_existence(sheet_name)
+        sheet_objects = self.get_sheet_objects()
+        sheet = sheet_objects[sheet_name.lower()]
+
+        tl_br_corners = sheet.get_tl_br_corners(start_location, end_location)
+        row_orders = range(1, tl_br_corners[-1][1] - tl_br_corners[0][1] + 2)
+        row_len = tl_br_corners[1][0] - tl_br_corners[0][0] + 1
+
+        source_cells = sheet.get_source_cells(start_location, end_location)
+        # print('sc',source_cells)
+
+        all_rows = []
+        # cells = {}
+        for row_idx in row_orders:
+            cells = {}
+            # print(row_idx*row_len, row_idx*(row_len+1))
+            temp_cells = source_cells[(row_idx-1)*row_len:-1:row_len]
+            # print('t',temp_cells)
+            for col_idx, cell in enumerate(temp_cells):
+                # print(col_idx, cell)
+                cells[col_idx+1] = self.get_cell_value(sheet_name, cell)
+            # print('cells', cells)
+            all_rows.append(Row(row_idx, cells))
+
+        # print('all', all_rows)
+        # still need to fix 
+        a = sorted(all_rows, key=lambda row: row.get_column_value(sort_cols[0]))
+        # print('s', a)
+        _, temp_sheet_name = self.new_sheet()
+
+        for i, row in enumerate(a):
+            # print(i+1, row.row_order)
+            if row.row_order != i+1:
+                start_loc = get_loc_from_coords((tl_br_corners[0][0], tl_br_corners[0][-1]+i))
+                end_loc = get_loc_from_coords((tl_br_corners[1][0], tl_br_corners[0][-1]+i))
+                to_loc = get_loc_from_coords((tl_br_corners[0][0], tl_br_corners[0][-1]+ row.row_order-1))
+                # print(start_loc, end_loc, to_loc)
+                self.move_cells(sheet_name, start_loc, end_loc, to_loc, temp_sheet_name)
+
+        # not most efficient way to do this, prob could save last row of data and move all rows within the same sheet?
+        self.move_cells(temp_sheet_name, start_location, end_location, start_location, sheet_name)
+        self.del_sheet(temp_sheet_name)
 
     ########################################################################
     # Private Helpers
