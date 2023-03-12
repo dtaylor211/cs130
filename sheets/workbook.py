@@ -160,8 +160,7 @@ class Workbook:
         but the case specified for the sheet name is preserved.
 
         The function returns a tuple with two elements:
-        (0-based index of sheet in workbook, sheet name).  This allows the
-        function to report the sheet's name when it is auto-generated.
+        (0-based index of sheet in workbook, sheet name).
 
         If the spreadsheet name is an empty string (not None), or it is
         otherwise invalid, a ValueError is raised.
@@ -269,9 +268,7 @@ class Workbook:
         '''
         Set the contents of the specified cell on the specified sheet.
 
-        The sheet name match is case-insensitive; the text must match but the
-        case does not have to.  Additionally, the cell location can be
-        specified in any case.
+        The sheet name and cell location matches are case-insensitive.
 
         If the specified sheet name is not found, a KeyError is raised.
         If the cell location is invalid, a ValueError is raised.
@@ -284,9 +281,8 @@ class Workbook:
         cell contents to None.
 
         If the cell contents appear to be a formula, and the formula is
-        invalid for some reason, this method does not raise an exception;
-        rather, the cell's value will be a CellError object indicating the
-        naure of the issue.
+        invalid for some reason, the cell's value will be a CellError object
+        indicating the naure of the issue.
 
         Arguments:
         - sheet_name: str - sheet's name
@@ -914,39 +910,75 @@ class Workbook:
         row_len = tl_br_corners[1][0] - tl_br_corners[0][0] + 1
 
         source_cells = sheet.get_source_cells(start_location, end_location)
-        # print('sc',source_cells)
+        # print(source_cells)
 
         all_rows = []
-        # cells = {}
         for row_idx in row_orders:
             cells = {}
-            # print(row_idx*row_len, row_idx*(row_len+1))
-            temp_cells = source_cells[(row_idx-1)*row_len:-1:row_len]
-            # print('t',temp_cells)
+            temp_cells = source_cells[row_idx - 1 :: row_len+1]
+            # print('t', temp_cells)
             for col_idx, cell in enumerate(temp_cells):
-                # print(col_idx, cell)
-                cells[col_idx+1] = self.get_cell_value(sheet_name, cell)
-            # print('cells', cells)
+                cells[col_idx + 1] = self.get_cell_value(sheet_name, cell)
             all_rows.append(Row(row_idx, cells))
 
-        # print('all', all_rows)
-        # still need to fix 
-        a = sorted(all_rows, key=lambda row: row.get_column_value(sort_cols[0]))
-        # print('s', a)
-        _, temp_sheet_name = self.new_sheet()
+        prev_cols = []
+        for sort_col in sort_cols[::-1]:
+            if abs(sort_col) in prev_cols:
+                raise ValueError
+            prev_cols.append(abs(sort_col))
+            reverse = (sort_col < 0)
+            # print(reverse)
+            all_rows = sorted(
+                all_rows,
+                key=lambda row: row.get_column_value(abs(sort_col)),
+                reverse=reverse
+            )
 
-        for i, row in enumerate(a):
-            # print(i+1, row.row_order)
-            if row.row_order != i+1:
-                start_loc = get_loc_from_coords((tl_br_corners[0][0], tl_br_corners[0][-1]+i))
-                end_loc = get_loc_from_coords((tl_br_corners[1][0], tl_br_corners[0][-1]+i))
-                to_loc = get_loc_from_coords((tl_br_corners[0][0], tl_br_corners[0][-1]+ row.row_order-1))
+        # print(all_rows)
+        # _, temp_sheet_name = self.new_sheet()
+
+        # source_cells_to_move = []
+        all_target_cells = {}
+        for i, row in enumerate(all_rows):
+            # print(i, row)
+            if row.row_order != i + 1:
+                start_loc = get_loc_from_coords(
+                    (tl_br_corners[0][0], tl_br_corners[0][-1]+row.row_order-1))
+                end_loc = get_loc_from_coords(
+                    (tl_br_corners[1][0], tl_br_corners[0][-1]+row.row_order-1))
+                to_loc = get_loc_from_coords(
+                    (tl_br_corners[0][0], tl_br_corners[0][-1]+i))
                 # print(start_loc, end_loc, to_loc)
-                self.move_cells(sheet_name, start_loc, end_loc, to_loc, temp_sheet_name)
+                source_cells = sheet.get_source_cells(start_loc, end_loc)
+                # print(source_cells)
+                all_target_cells.update(sheet.get_target_cells(start_loc, end_loc,
+                                                      to_loc, source_cells))
+                # print(target_cells)
+                # for s_cell in source_cells:
+                #     print(s_cell)
+                    # t_cell = target_cells[s_cell]
+                    # print(s_cell, t_cell)
+                    # source_cells_to_move.append(s_cell)
+                    # all_target_cells.u(t_cell)
+                # self.move_cells(sheet_name, start_loc, end_loc, to_loc, temp_sheet_name)
+        # source_set = set(source_cells_to_move)
+        # target_set = set(all_target_cells)
+        # for target_cells in all_target_cells:
+        #     for target_cell in target_cells:
+        #         target_set.add(target_cell)
+        # print(target_set)
+        # source_target_set_diff = source_set.difference(target_set)
+        # for loc in list(source_target_set_diff):
+        #     self.set_cell_contents(sheet_name, loc, None)
 
+        # Set contents of target cells (within same sheet if to_sheet is None)
+        # print('t', all_target_cells)
+        for loc, contents in all_target_cells.items():
+            # print(loc, contents)
+            self.set_cell_contents(sheet_name, loc, contents)
         # not most efficient way to do this, prob could save last row of data and move all rows within the same sheet?
-        self.move_cells(temp_sheet_name, start_location, end_location, start_location, sheet_name)
-        self.del_sheet(temp_sheet_name)
+        # self.move_cells(temp_sheet_name, start_location, end_location, start_location, sheet_name)
+        # self.del_sheet(temp_sheet_name)
 
     ########################################################################
     # Private Helpers

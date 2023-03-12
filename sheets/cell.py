@@ -50,6 +50,11 @@ RESTRICTED_VALUES = [
     Decimal('-NaN')
 ]
 
+BOOL_VALUES = [
+    'TRUE',
+    'FALSE'
+]
+
 class _CellTreeInterpreter(Interpreter):
     '''
     This interpreter gets all children cells from the tree of a cell.
@@ -313,6 +318,11 @@ class Cell:
                 e_type = CellErrorType(e_type[0])
                 self.set_contents_and_value(contents, CellError(e_type, '',
                     None))
+
+            elif inp.upper() == 'TRUE':
+                self.set_contents_and_value(contents, True)
+            elif inp.upper() == 'FALSE':
+                self.set_contents_and_value(contents, False)
 
             # Otherwise set to NUMBER type, if this fails throws
             # Decimal Exception

@@ -1,3 +1,4 @@
 tests/test.py
 program.prof
 test.pstats
+test.json

@@ -636,11 +636,11 @@ class TestFunctionHandler:
         WB.set_cell_contents('Test', 'A2', 'True')
         tree = PARSER.parse('=INDIRECT("Test!A2")')
         result = EVALUATOR.transform(tree)
-        assert result == Tree('cell_ref', ['True'])
+        assert result == Tree('cell_ref', [True])
 
         tree = PARSER.parse('=INDIRECT(Test!A2)')
         result = EVALUATOR.transform(tree)
-        assert result == Tree('cell_ref', ['True'])
+        assert result == Tree('cell_ref', [True])
 
         tree = PARSER.parse('=INDIRECT(A4)')
         result = EVALUATOR.transform(tree).children[-1]

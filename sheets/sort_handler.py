@@ -26,9 +26,11 @@ class Row:
         self.cells = cells
 
     def get_column_value(self, column: str):
-        print(self.cells)
-        print(11, column, self.cells[column])
+        # print(self.cells)
+        # print(11, column, self.cells[column])
+        print(1, self.cells[column])
         return self.cells[column]
     
     def __repr__(self): 
-        return str(self.row_order)
+        # this is only to help w debugging - formats in print statements
+        return str(self.row_order) + str(self.cells)
