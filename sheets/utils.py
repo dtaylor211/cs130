@@ -5,18 +5,45 @@ This module holds utility functions for the Sheets package
 
 See the Workbook and Sheet modules for implementation.
 
+Global Variables:
+- COMP_OPERATORS (Dict[str, built_in_function]) - converts string of operator
+    to the operator function
+- EMPTY_SUBS (Dict[type, Any]) - converts type of not None expression to the
+    correct empty value
+
 Methods:
 - get_loc_from_coords(Tuple[int, int]) -> str
 - get_coords_from_loc(str) -> Tuple[int, int]
 - convert_to_bool(Any, type) -> bool
+- compare_values(Any, Any, Tuple[type, type], str) -> bool
 
 '''
 
 
 import re
+import operator
 from typing import Tuple, Any
 from decimal import Decimal
 
+from .cell_error import CellError
+
+
+COMP_OPERATORS = {
+    ">": operator.gt,
+    "<": operator.lt,
+    "<=": operator.le,
+    ">=": operator.ge,
+    "=": operator.eq,
+    "==": operator.eq,
+    "!=": operator.ne,
+    "<>": operator.ne
+}
+
+EMPTY_SUBS = {
+    str: '',
+    Decimal: Decimal(0),
+    bool: False
+}
 
 def get_loc_from_coords(coords: Tuple[int, int]) -> str:
     '''
@@ -99,4 +126,55 @@ def convert_to_bool(inp: Any, inp_type: type) -> bool:
     elif inp_type == Decimal:
         result = bool(inp)
     else: raise TypeError('Cannot convert given type to boolean')
+    return result
+
+def compare_values(left: Any, right: Any, types: Tuple[type, type],
+                        oper: str) -> bool:
+    '''
+    Get the boolean value for a comparison between types of bool, str,
+    and/or Decimal
+
+    Arguments:
+    - left: Any - left side of comparison
+    - right: Any - right side of comparison
+    - types: Tuple[type, type] - types of the left and right sides of the
+        comparison operator
+    - oper: str - comparison operator
+
+    Returns:
+    - boolean result of comparison
+
+    '''
+
+    result = False
+    if (left, right) == (None, None):
+        result = COMP_OPERATORS[oper]('', '')
+
+    elif types[0] == types[-1]:
+        if types == (str, str):
+            left = left.lower()
+            right = right.lower()
+        elif types == (CellError, CellError):
+            left = left.get_type().value
+            right = right.get_type().value
+        result = COMP_OPERATORS[oper](left, right)
+
+    elif (types in [(bool, str), (str, Decimal), (bool, Decimal)]) or \
+        (types[0] == CellError and right is None) or \
+            (types[-1] == CellError and left is not None):
+        if oper in ['>', '>=', '!=', '<>']:
+            result = True
+
+    elif (types in [(str, bool), (Decimal, str), (Decimal, bool)]) or \
+        (types[0] == CellError and right is not None) or \
+            (types[-1] == CellError and left is None):
+        if oper in ['<', '<=', '!=', '<>']:
+            result = True
+
+    else:
+        if left is not None:
+            result = COMP_OPERATORS[oper](left, EMPTY_SUBS[types[0]])
+        else:
+            result = COMP_OPERATORS[oper](EMPTY_SUBS[types[-1]], right)
+
     return result

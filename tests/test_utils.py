@@ -11,6 +11,7 @@ Classes:
     - test_get_coords_from_loc(object) -> None
     - test_get_loc_from_coords(object) -> None
     - test_convert_to_bool(object) -> None
+    - test_compare_values(object) -> None
 
 '''
 
@@ -22,7 +23,7 @@ import pytest
 
 import context
 from sheets.utils import get_loc_from_coords, get_coords_from_loc,\
-    convert_to_bool
+    convert_to_bool, compare_values
 
 
 class TestUtils:
@@ -143,3 +144,13 @@ class TestUtils:
 
         booly = convert_to_bool(Decimal('-0.231'), Decimal)
         assert booly
+
+    def test_compare_values(self) -> None:
+        '''
+        Test comparing two values
+
+        TODO - ADD MORE
+
+        '''
+
+        assert compare_values(None, None, (type(None), type(None)), '=')

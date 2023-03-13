@@ -6,12 +6,6 @@ described Lark grammar found at formulas.Lark.
 
 See the Workbook, Sheet, and Cell modules for implementation.
 
-Global Variables:
-- COMP_OPERATORS (Dict[str, built_in_function]) - converts string of operator
-    to the operator function
-- EMPTY_SUBS (Dict[type, Any]) - converts type of not None expression to the
-    correct empty value
-
 Classes:
 - Evaluator
 
@@ -41,32 +35,14 @@ Classes:
 
 import re
 from decimal import Decimal, DecimalException, InvalidOperation
-from typing import List, Tuple, Any
-import operator
+from typing import List, Tuple
 
 from lark import Tree, Transformer, Token
 
 from .cell_error import CellError, CellErrorType, CELL_ERRORS
 from .function_handler import FunctionHandler
-from .utils import convert_to_bool
+from .utils import convert_to_bool, compare_values
 
-
-COMP_OPERATORS = {
-    ">": operator.gt,
-    "<": operator.lt,
-    "<=": operator.le,
-    ">=": operator.ge,
-    "=": operator.eq,
-    "==": operator.eq,
-    "!=": operator.ne,
-    "<>": operator.ne
-}
-
-EMPTY_SUBS = {
-    str: '',
-    Decimal: Decimal(0),
-    bool: False
-}
 
 class Evaluator(Transformer):
     '''
@@ -360,7 +336,7 @@ class Evaluator(Transformer):
             if isinstance(y, CellError):
                 return Tree('cell_error', [y])
 
-            result = self.__compare_values(x, y, (x_type, y_type), oper)
+            result = compare_values(x, y, (x_type, y_type), oper)
 
             return Tree('bool', [result])
 
@@ -396,7 +372,7 @@ class Evaluator(Transformer):
             if not re.match(r"^[A-Z]{1,4}[1-9][0-9]{0,3}$", cell_name.upper()):
                 raise KeyError('Cell location out of bounds')
 
-            result = self.workbook.get_cell_value(working_sheet, cell_name)
+            result = self.workbook.get_cell_value(working_sheet, cell_name.upper())
 
             # Check for propogating errors
             if isinstance(result, CellError):
@@ -569,43 +545,43 @@ class Evaluator(Transformer):
         _, _, exp = norm.as_tuple()
         return norm if exp <= 0 else norm.quantize(1)
 
-    def __compare_values(self, left: Any, right: Any, types: Tuple[type, type],
-                         oper: str) -> bool:
-        '''
-        Get the boolean value for a comparison between types of bool, str,
-        and/or Decimal
+    # def __compare_values(self, left: Any, right: Any, types: Tuple[type, type],
+    #                      oper: str) -> bool:
+    #     '''
+    #     Get the boolean value for a comparison between types of bool, str,
+    #     and/or Decimal
 
-        Arguments:
-        - left: Any - left side of comparison
-        - right: Any - right side of comparison
-        - types: Tuple[type, type] - types of the left and right sides of the
-            comparison operator
-        - oper: str - comparison operator
+    #     Arguments:
+    #     - left: Any - left side of comparison
+    #     - right: Any - right side of comparison
+    #     - types: Tuple[type, type] - types of the left and right sides of the
+    #         comparison operator
+    #     - oper: str - comparison operator
 
-        Returns:
-        - boolean result of comparison
+    #     Returns:
+    #     - boolean result of comparison
 
-        '''
+    #     '''
 
-        result = False
-        if types[0] == types[-1]:
-            if types == (str, str):
-                left = left.lower()
-                right = right.lower()
-            result = COMP_OPERATORS[oper](left, right)
+    #     result = False
+    #     if types[0] == types[-1]:
+    #         if types == (str, str):
+    #             left = left.lower()
+    #             right = right.lower()
+    #         result = COMP_OPERATORS[oper](left, right)
 
-        elif types in [(bool, str), (str, Decimal), (bool, Decimal)]:
-            if oper in ['>', '>=', '!=', '<>']:
-                result = True
+    #     elif types in [(bool, str), (str, Decimal), (bool, Decimal)]:
+    #         if oper in ['>', '>=', '!=', '<>']:
+    #             result = True
 
-        elif types in [(str, bool), (Decimal, str), (Decimal, bool)]:
-            if oper in ['<', '<=', '!=', '<>']:
-                result = True
+    #     elif types in [(str, bool), (Decimal, str), (Decimal, bool)]:
+    #         if oper in ['<', '<=', '!=', '<>']:
+    #             result = True
 
-        else:
-            if left is not None:
-                result = COMP_OPERATORS[oper](left, EMPTY_SUBS[types[0]])
-            else:
-                result = COMP_OPERATORS[oper](EMPTY_SUBS[types[-1]], right)
+    #     else:
+    #         if left is not None:
+    #             result = COMP_OPERATORS[oper](left, EMPTY_SUBS[types[0]])
+    #         else:
+    #             result = COMP_OPERATORS[oper](EMPTY_SUBS[types[-1]], right)
 
-        return result
+    #     return result

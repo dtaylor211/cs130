@@ -786,3 +786,95 @@ class TestWorkbook:
         value = wb1.get_cell_value('Sheet2', 'A1')
         assert contents == '=2 * IFERROR(D2)'
         assert value == Decimal('0')
+
+    def test_sort_area(self) -> None:
+        '''
+        One test case to account for everything - todo
+        '''
+
+        wb1 = Workbook()
+        wb1.new_sheet('S')
+        wb1.set_cell_contents('S', 'A1', 'a')
+        wb1.set_cell_contents('S', 'A2', 's')
+        wb1.set_cell_contents('S', 'A3', 's')
+        wb1.set_cell_contents('S', 'A4', 'ben')
+        wb1.set_cell_contents('S', 'B1', '=200')
+        wb1.set_cell_contents('S', 'B2', '=-40')
+        wb1.set_cell_contents('S', 'B3', '1')
+        wb1.set_cell_contents('S', 'B4', '=1')
+        wb1.set_cell_contents('S', 'C1', 'True')
+        wb1.set_cell_contents('S', 'C2', '=True')
+        wb1.set_cell_contents('S', 'C4', '=FALSe')
+        wb1.set_cell_contents('S', 'D2', '=$e$2')
+        wb1.set_cell_contents('S', 'D3', '=e$1')
+        wb1.set_cell_contents('S', 'D4', '=e1')
+        wb1.set_cell_contents('S', 'E1', '=1')
+        wb1.set_cell_contents('S', 'E2', '=2')
+
+        wb1.sort_region('S', 'A1', 'D4', [3, -1, -2])
+
+        expected = {
+            "sheets": [{
+                    "name": "S",
+                    "cell-contents": {
+                        "A1": "s",
+                        "A2": "ben",
+                        "A3": "s",
+                        "A4": "a",
+                        "B1": "1",
+                        "B2": "=1",
+                        "B3": "= - 40",
+                        "B4": "=200",
+                        "C2": "=FALSe",
+                        "C3": "=True",
+                        "C4": "True",
+                        "D1": "=E$1",
+                        "D2": "=#REF!",
+                        "D3": "=$E$2",
+                        "E1": "=1",
+                        "E2": "=2"
+                    }
+            }]
+        }
+
+        with io.StringIO('') as fp:
+            wb1.save_workbook(fp)
+            fp.seek(0)
+            act = json.load(fp)
+            exp = json.loads(json.dumps(expected))
+            assert sorted(act.items()) == sorted(exp.items())
+
+    def test_sort_area2(self) -> None:
+        '''
+        One test case to account for everything - todo
+        '''
+
+        wb1 = Workbook()
+        wb1.new_sheet('S')
+        wb1.set_cell_contents('S', 'A1', '=A1A1')
+        wb1.set_cell_contents('S', 'A2', '=VERSION(1)')
+        wb1.set_cell_contents('S', 'A4', 'dallas')
+        wb1.set_cell_contents('S', 'A5', '1')
+        wb1.set_cell_contents('S', 'A6', 'False')
+
+        wb1.sort_region('S', 'A1', 'A6', [1])
+
+        expected = {
+            "sheets": [{
+                    "name": "S",
+                    "cell-contents": {
+                        "A2": "=A1A1",
+                        "A3": "=VERSION(1)",
+                        "A4": "1",
+                        "A5": "dallas",
+                        "A6": "False"
+                    }
+            }]
+        }
+
+        with io.StringIO('') as fp:
+            wb1.save_workbook(fp)
+            fp.seek(0)
+            act = json.load(fp)
+            exp = json.loads(json.dumps(expected))
+            assert sorted(act.items()) == sorted(exp.items())

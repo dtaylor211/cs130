@@ -92,7 +92,7 @@ class _CellTreeInterpreter(Interpreter):
         else:
             cell_sheet = self.sheet
             cell = str(tree[0]).replace('$','')
-        self.children.add((cell_sheet, cell))
+        self.children.add((cell_sheet, cell.upper()))
 
     def func_expr(self, tree: Tree) -> None:
         '''
@@ -425,7 +425,7 @@ class Cell:
             except ValueError:
                 return f'{beg}#REF!{end}'
 
-            split = re.split(r'(\d+)', loc.upper())
+            split = re.split(r'(\d+)', loc)
             return f'{beg}{c_mark}{split[0]}{r_mark}{split[1]}{end}'
 
         new_contents = ''

@@ -201,6 +201,7 @@ class Sheet:
 
         cells = self.get_all_cells()
         coords = get_coords_from_loc(location)
+
         if coords not in cells:
             return None
         return cells[coords].get_value()
@@ -220,7 +221,7 @@ class Sheet:
         cells = self.get_all_cells()
         for cell in cells.values():
             name = self.get_name()
-            adj_list[(name, cell.get_loc())] = cell.get_children()
+            adj_list[(name, cell.get_loc().upper())] = cell.get_children()
         return adj_list
 
     def save_sheet(self) -> Dict[str, str]:
@@ -269,7 +270,7 @@ class Sheet:
         bottom_right_row = max(start_row, end_row)
 
         return [
-            (top_left_col, top_left_row), 
+            (top_left_col, top_left_row),
             (bottom_right_col, bottom_right_row)
         ]
 

@@ -33,6 +33,7 @@ Classes:
     - copy_sheet(object, str) -> Tuple[int, str]
     - move_cells(object, str, str, str, str, Optional[str]) -> None
     - copy_cells(object, str, str, str, str, Optional[str]) -> None
+    - sort_region(object, str, str, str, List) -> None
 
     Static Methods:
     - load_workbook(TextIO) -> Workbook
@@ -84,9 +85,7 @@ class Workbook:
         appear within the workbook.
 
         In this project, the sheet names appear in the order that the user
-        created them; later, when the user is able to move and copy sheets,
-        the ordering of the sheets in this function's result will also reflect
-        such operations.
+        created them.
 
         A user should be able to mutate the return-value without affecting the
         workbook's internal state.
@@ -154,10 +153,9 @@ class Workbook:
 
     def new_sheet(self, sheet_name: Optional[str] = None) -> Tuple[int, str]:
         '''
-        Add a new sheet to the workbook.  If the sheet name is specified, it
-        must be unique.  If the sheet name is None, a unique sheet name is
-        generated.  "Uniqueness" is determined in a case-insensitive manner,
-        but the case specified for the sheet name is preserved.
+        Add a new sheet to the workbook.  Sheet names must be unique
+        (case-insensitive). If the sheet name is None, a unique sheet name
+        is generated.
 
         The function returns a tuple with two elements:
         (0-based index of sheet in workbook, sheet name).
@@ -179,18 +177,16 @@ class Workbook:
         # check if sheet name is specified
         if sheet_name is not None:
 
-            # checking empty string
             if sheet_name == "":
                 raise ValueError("Invalid Sheet name: cannot be empty string")
             # check whitespace
             if sheet_name != sheet_name.strip():
                 raise ValueError(
                     "Invalid Sheet name: cannot start/end with whitespace")
-            # check valid (letters, numbers, spaces, .?!,:;!@#$%^&*()-_)
             if not re.match(R'^[a-zA-Z0-9 .?!,:;!@#$%^&*\(\)\-\_]+$',
                               sheet_name):
                 raise ValueError("Invalid Sheet name: improper characters used")
-            # check uniqueness
+
             self.__validate_sheet_uniqueness(sheet_name)
 
         # sheet name not specified -> generate ununused "Sheet" + "#" name
@@ -201,7 +197,6 @@ class Workbook:
                 curr_sheet_num += 1
                 sheet_name = "Sheet" + str(curr_sheet_num)
 
-        # update list of sheet names and sheet dictionary
         sheet_names.append(sheet_name)
         sheet_objects[sheet_name.lower()] = Sheet(
             sheet_name, self.evaluator)
@@ -214,10 +209,7 @@ class Workbook:
 
     def del_sheet(self, sheet_name: str) -> None:
         '''
-        Delete the spreadsheet with the specified name.
-
-        The sheet name match is case-insensitive; the text must match but the
-        case does not have to.
+        Delete the spreadsheet with the specified name (case-insensitive).
 
         If the specified sheet name is not found, a KeyError is raised.
 
@@ -228,7 +220,6 @@ class Workbook:
 
         sheet_names = self.list_sheets()
         sheet_objects = self.get_sheet_objects()
-
         self.__validate_sheet_existence(sheet_name)
 
         original_sheet_name = sheet_objects[sheet_name.lower()].get_name()
@@ -242,10 +233,7 @@ class Workbook:
 
     def get_sheet_extent(self, sheet_name: str) -> Tuple[int, int]:
         '''
-        Get the current extent of the specified spreadsheet.
-
-        The sheet name match is case-insensitive; the text must match but the
-        case does not have to.
+        Get the current extent of the specified spreadshee (case-insensitive).
 
         If the specified sheet name is not found, a KeyError is raised.
 
@@ -258,7 +246,6 @@ class Workbook:
         '''
 
         sheet_objects = self.get_sheet_objects()
-
         self.__validate_sheet_existence(sheet_name)
 
         return sheet_objects[sheet_name.lower()].get_extent()
@@ -266,19 +253,14 @@ class Workbook:
     def set_cell_contents(self, sheet_name: str, location: str,
                           contents: Optional[str]) -> None:
         '''
-        Set the contents of the specified cell on the specified sheet.
-
-        The sheet name and cell location matches are case-insensitive.
+        Set the contents of the specified cell on the specified sheet
+        (case-insensitive).
 
         If the specified sheet name is not found, a KeyError is raised.
         If the cell location is invalid, a ValueError is raised.
 
-        A cell may be set to "empty" by specifying a contents of None.
-
-        Leading and trailing whitespace are removed from the contents before
-        storing them in the cell.  Storing a zero-length string "" (or a
-        string composed entirely of whitespace) is equivalent to setting the
-        cell contents to None.
+        A cell may be set to "empty" by specifying a contents of None or
+        storing a zero-length string "".
 
         If the cell contents appear to be a formula, and the formula is
         invalid for some reason, the cell's value will be a CellError object
@@ -294,11 +276,10 @@ class Workbook:
 
         sheet_objects = self.get_sheet_objects()
         sheet_name_lower = sheet_name.lower()
-
         self.__validate_sheet_existence(sheet_name_lower)
 
         prev_value = sheet_objects[sheet_name_lower].get_cell_value(location)
-        # set cell contents
+
         sheet_objects[sheet_name_lower].set_cell_contents(
             location, contents)
         new_value = sheet_objects[sheet_name_lower].get_cell_value(location)
@@ -311,21 +292,11 @@ class Workbook:
 
     def get_cell_contents(self, sheet_name: str, location: str)-> Optional[str]:
         '''
-        Return the contents of the specified cell on the specified sheet.
-
-        The sheet name match is case-insensitive; the text must match but the
-        case does not have to.  Additionally, the cell location can be
-        specified in any case.
+        Return the contents of the specified cell on the specified sheet
+        (case-insensitive).
 
         If the specified sheet name is not found, a KeyError is raised.
         If the cell location is invalid, a ValueError is raised.
-
-        Any string returned by this function will not have leading or trailing
-        whitespace, as this whitespace will have been stripped off by the
-        set_cell_contents() function.
-
-        This method will never return a zero-length string; instead, empty
-        cells are indicated by a value of None.
 
         Arguments:
         - sheet_name: str - sheet's name
@@ -339,7 +310,6 @@ class Workbook:
         sheet_objects = self.get_sheet_objects()
         self.evaluator.set_working_sheet(sheet_name)
         sheet_name = sheet_name.lower()
-
         self.__validate_sheet_existence(sheet_name)
 
         return sheet_objects[sheet_name].get_cell_contents(location)
@@ -347,22 +317,12 @@ class Workbook:
     def get_cell_value(self, sheet_name: str, location: str) -> Any:
         '''
         Return the evaluated value of the specified cell on the specified
-        sheet.
-
-        The sheet name match is case-insensitive; the text must match but the
-        case does not have to.  Additionally, the cell location can be
-        specified in any case.
+        sheet (case-insensitive).
 
         If the specified sheet name is not found, a KeyError is raised.
         If the cell location is invalid, a ValueError is raised.
 
-        The value of empty cells is None.  Non-empty cells may contain a
-        value of str, decimal.Decimal, or CellError.
-
-        Decimal values will not have trailing zeros to the right of any
-        decimal place, and will not include a decimal place if the value is a
-        whole number.  For example, this function would not return
-        Decimal('1.000'); rather it would return Decimal('1').
+        Cells may contain a value of str, decimal.Decimal, CellError, or None.
 
         Arguments:
         - sheet_name: str - sheet's name
@@ -375,7 +335,6 @@ class Workbook:
 
         sheet_objects = self.get_sheet_objects()
         sheet_name = sheet_name.lower()
-
         self.__validate_sheet_existence(sheet_name)
 
         return sheet_objects[sheet_name].get_cell_value(location)
@@ -444,7 +403,7 @@ class Workbook:
                                                 adj[(sheet, cell)])
                 self.__set_sheet_objects(sheet_objects)
         else:
-            updated_cells = [(updated_sheet, updated_cell)]
+            updated_cells = [(updated_sheet, updated_cell.upper())]
 
         # call helper to update and notify cells that need updating
         self.__update_notify_cells(updated_cells,
@@ -454,24 +413,17 @@ class Workbook:
     @staticmethod
     def load_workbook(fp: TextIO) -> 'Workbook':
         '''
-        This is a static method (not an instance method) to load a workbook
-        from a text file or file-like object in JSON format, and return the
-        new Workbook instance.  Note that the _caller_ of this function is
-        expected to have opened the file; this function merely reads the file.
+        Load a workbook from a text file or file-like object in JSON format,
+        and return the new Workbook instance.
 
         If the contents of the input cannot be parsed by the Python json
         module then a json.JSONDecodeError should be raised by the method.
-        (Just let the json module's exceptions propagate through.)  Similarly,
-        if an IO read error occurs (unlikely but possible), let any raised
-        exception propagate through.
+        Let any raised exception propagate through.
 
-        If any expected value in the input JSON is missing (e.g. a sheet
-        object doesn't have the "cell-contents" key), raise a KeyError with
-        a suitably descriptive message.
+        If any expected value in the input JSON is missing raise a KeyError.
 
         If any expected value in the input JSON is not of the proper type
-        (e.g. an object instead of a list, or a number instead of a string),
-        raise a TypeError with a suitably descriptive message.
+        raise a TypeError.
 
         Arguments:
         - fp: TextIO - json file to load
@@ -522,13 +474,9 @@ class Workbook:
 
     def save_workbook(self, fp: TextIO) -> None:
         '''
-        Instance method (not a static/class method) to save a workbook to a
-        text file or file-like object in JSON format.  Note that the _caller_
-        of this function is expected to have opened the file; this function
-        merely writes the file.
+        Save a workbook to a text file or file-like object in JSON format.
 
-        If an IO write error occurs (unlikely but possible), let any raised
-        exception propagate through.
+        Let any raised exception propagate through.
 
         Arguments:
         - fp: TextIO - write supporting file like object to save to
@@ -544,10 +492,7 @@ class Workbook:
             sheet  = sheet_objects[sheet_name.lower()]
             json_sheets.append(sheet.save_sheet())
 
-        obj = {
-            "sheets": json_sheets
-        }
-
+        obj = {"sheets": json_sheets}
         json.dump(obj=obj, fp=fp)
 
     def notify_cells_changed(self, notify_function:
@@ -556,22 +501,12 @@ class Workbook:
         Request that all changes to cell values in the workbook are reported
         to the specified notify_function.  The values passed to the notify
         function are the workbook, and an iterable of 2-tuples of strings,
-        of the form ([sheet name], [cell location]).  The notify_function is
-        expected not to return any value; any return-value will be ignored.
+        ([sheet name], [cell location]).
 
-        Multiple notification functions may be registered on the workbook;
-        functions will be called in the order that they are registered.
+        Functions will be called in the order that they are registered.
 
         A given notification function may be registered more than once; it
         will receive each notification as many times as it was registered.
-
-        If the notify_function raises an exception while handling a
-        notification, this will not affect workbook calculation updates or
-        calls to other notification functions.
-
-        A notification function is expected to not mutate the workbook or
-        iterable that it is passed to it.  If a notification function violates
-        this requirement, the behavior is undefined.
 
         Arguments:
         - notify_function: Callable[['Workbook', Iterable[Tuple], None]] -
@@ -583,21 +518,13 @@ class Workbook:
 
     def rename_sheet(self, sheet_name: str, new_sheet_name: str) -> None:
         '''
-        Rename the specified sheet to the new sheet name.  Additionally, all
-        cell formulas that referenced the original sheet name are updated to
-        reference the new sheet name (using the same case as the new sheet
-        name, and single-quotes iff [if and only if] necessary).
+        Rename the specified sheet to the new sheet name.  All relevant
+        cell formulas are updated with the new sheet name (case-insensitive).
 
-        The sheet_name match is case-insensitive; the text must match but the
-        case does not have to.
-
-        As with new_sheet(), the case of the new_sheet_name is preserved by
-        the workbook.
+        Case of the new_sheet_name is preserved by the workbook.
 
         If the sheet_name is not found, a KeyError is raised.
-
-        If the new_sheet_name is an empty string or is otherwise invalid, a
-        ValueError is raised.
+        If the new_sheet_name is invalid, a ValueError is raised.
 
         Arguments:
         - sheet_name: str - name of sheet to be renamed
@@ -609,20 +536,17 @@ class Workbook:
         sheet_objects = self.get_sheet_objects()
         self.__validate_sheet_existence(sheet_name)
 
-        # assume new_sheet_name is not None
         # checking empty string
         if new_sheet_name == "":
             raise ValueError("Invalid Sheet name: cannot be empty string")
-        # check whitespace
+
         if new_sheet_name != new_sheet_name.strip():
             raise ValueError(
                 "Invalid Sheet name: cannot start/end with whitespace")
-        # check valid (letters, numbers, spaces, .?!,:;!@#$%^&*()-_)
         if not re.match(R'^[a-zA-Z0-9 .?!,:;!@#$%^&*\(\)\-\_]+$',
                             new_sheet_name):
             raise ValueError("Invalid Sheet name: improper characters used")
 
-        # check uniqueness
         self.__validate_sheet_uniqueness(new_sheet_name)
 
         # Update sheet_names (list preserving order & case of sheet names)
@@ -639,23 +563,15 @@ class Workbook:
         del sheet_objects[sheet_name.lower()]
         self.__set_sheet_objects(sheet_objects)
 
-        # updates the contents of all cells referencing the cell name
         self.update_cell_values(sheet_name, renamed_sheet = new_sheet_name)
 
 
     def move_sheet(self, sheet_name: str, index: int) -> None:
         '''
         Move the specified sheet to the specified index in the workbook's
-        ordered sequence of sheets.  The index can range from 0 to
-        workbook.num_sheets() - 1.  The index is interpreted as if the
-        specified sheet were removed from the list of sheets, and then
-        re-inserted at the specified index.
-
-        The sheet name match is case-insensitive; the text must match but the
-        case does not have to.
+        ordered sequence of sheets (case-insensitive).
 
         If the specified sheet name is not found, a KeyError is raised.
-
         If the index is outside the valid range, an IndexError is raised.
 
         Arguments:
@@ -671,7 +587,6 @@ class Workbook:
         if index < 0 or index >= self.num_sheets():
             raise IndexError("Provided index is outside valid range")
 
-        # Handles case when "shEEt1" is provided to move "Sheet1"
         sheet_name = sheet_objects[sheet_name.lower()].get_name()
         sheet_names.remove(sheet_name)
         sheet_names.insert(index, sheet_name)
@@ -680,20 +595,9 @@ class Workbook:
     def copy_sheet(self, sheet_name: str) -> Tuple[int, str]:
         '''
         Make a copy of the specified sheet, storing the copy at the end of the
-        workbook's sequence of sheets.  The copy's name is generated by
-        appending "_1", "_2", ... to the original sheet's name (preserving the
-        original sheet name's case), incrementing the number until a unique
-        name is found.  As usual, "uniqueness" is determined in a
-        case-insensitive manner.
-
-        The sheet name match is case-insensitive; the text must match but the
-        case does not have to.
-
-        The copy should be added to the end of the sequence of sheets in the
-        workbook.  Like new_sheet(), this function returns a tuple with two
-        elements:  (0-based index of copy in workbook, copy sheet name).  This
-        allows the function to report the new sheet's name and index in the
-        sequence of sheets.
+        workbook's sequence of sheets.  The copy's name is unique, and is
+        generated by appending "_1", "_2", ... to the original sheet's name
+        (case-insensitive).
 
         If the specified sheet name is not found, a KeyError is raised.
 
@@ -709,7 +613,6 @@ class Workbook:
         sheet_objects = self.get_sheet_objects()
         self.__validate_sheet_existence(sheet_name)
 
-        # generate sheet name for copy
         og_sheet_name = sheet_objects[sheet_name.lower()].get_name()
         copy_num = 1
         sheet_copy_name = og_sheet_name + "_" + str(copy_num)
@@ -737,14 +640,8 @@ class Workbook:
 
         Cells in the source area (and not target area) are set to empty.
 
-        The start_location value does not necessarily have to be the top left
-        corner of the area to move, nor does the end_location value have to be
-        the bottom right corner of the area; they are simply two corners of
-        the area to move.
-
         If any specified sheet name is not found, a KeyError is raised.
         If any cell location is invalid, a ValueError is raised.
-
         If the target area would extend outside the valid area of the
         spreadsheet , a ValueError is raised, and no changes are made.
 
@@ -808,14 +705,8 @@ class Workbook:
         Cells in the source area (that are not also in the target area) are
         left unchanged by the copy operation.
 
-        The start_location value does not necessarily have to be the top left
-        corner of the area to copy, nor does the end_location value have to be
-        the bottom right corner of the area; they are simply two corners of
-        the area to copy.
-
         If any specified sheet name is not found, a KeyError is raised.
         If any cell location is invalid, a ValueError is raised.
-
         If the target area would extend outside the valid area of the
         spreadsheet, a ValueError is raised, and no changes are made.
 
@@ -855,130 +746,46 @@ class Workbook:
         for loc, contents in target_cells.items():
             self.set_cell_contents(to_sheet, loc, contents)
 
-    def sort_region(self, sheet_name: str, start_location: str, 
+    def sort_region(self, sheet_name: str, start_location: str,
                     end_location: str, sort_cols: List) -> None:
         '''
         Sort the specified region of a spreadsheet with a stable sort, using
-        the specified columns for the comparison.
+        the specified columns for the comparison (case-insensitive).
 
-        The sheet name match is case-insensitive.
+        The sort_cols argument specifies one or more columns to sort on.
+        Column indexes are one-based, and are positive for ascending order, or
+        negative for descending order. Ordering occurs for first column index,
+        then the second, etc. Sort_cols cannot be empty.
 
-        The start_location and end_location specify the corners of an area of
-        cells in the sheet to be sorted.
+        The sorting implementation is a stable sort.
 
-        The start_location value does not necessarily have to be the top left
-        corner of the area to sort, nor does the end_location value have to be
-        the bottom right corner of the area; they are simply two corners of
-        the area to sort.
-
-        The sort_cols argument specifies one or more columns to sort on.  Each
-        element in the list is the one-based index of a column in the region,
-        with 1 being the leftmost column in the region.  A column's index in
-        this list may be positive to sort in ascending order, or negative to
-        sort in descending order.  For example, to sort the region B3..J12 on
-        the first two columns, but with the second column in descending order,
-        one would specify sort_cols=[1, -2].
-        
-        The sorting implementation is a stable sort:  if two rows compare as
-        "equal" based on the sorting columns, then they will appear in the
-        final result in the same order as they are at the start.
-        
-        If multiple columns are specified, the behavior is as one would
-        expect:  the rows are ordered on the first column indicated in
-        sort_cols; when multiple rows have the same value for the first
-        column, they are then ordered on the second column indicated in
-        sort_cols; and so forth.
-        
-        No column may be specified twice in sort_cols; e.g. [1, 2, 1] or
-        [2, -2] are both invalid specifications.
-        
-        The sort_cols list may not be empty.  No index may be 0, or refer
-        beyond the right side of the region to be sorted.
-        
         If the specified sheet name is not found, a KeyError is raised.
         If any cell location is invalid, a ValueError is raised.
-        If the sort_cols list is invalid in any way, a ValueError is raised.***
+        If the sort_cols list is invalid in any way, a ValueError is raised.
 
         '''
 
         self.__validate_sheet_existence(sheet_name)
-        sheet_objects = self.get_sheet_objects()
-        sheet = sheet_objects[sheet_name.lower()]
-
+        sheet =  self.get_sheet_objects()[sheet_name.lower()]
         tl_br_corners = sheet.get_tl_br_corners(start_location, end_location)
-        row_orders = range(1, tl_br_corners[-1][1] - tl_br_corners[0][1] + 2)
-        row_len = tl_br_corners[1][0] - tl_br_corners[0][0] + 1
-
         source_cells = sheet.get_source_cells(start_location, end_location)
-        # print(source_cells)
 
-        all_rows = []
-        for row_idx in row_orders:
-            cells = {}
-            temp_cells = source_cells[row_idx - 1 :: row_len+1]
-            # print('t', temp_cells)
-            for col_idx, cell in enumerate(temp_cells):
-                cells[col_idx + 1] = self.get_cell_value(sheet_name, cell)
-            all_rows.append(Row(row_idx, cells))
+        all_rows = self.__populate_row_sorter(tl_br_corners, source_cells, sheet_name)
 
         prev_cols = []
         for sort_col in sort_cols[::-1]:
             if abs(sort_col) in prev_cols:
                 raise ValueError
             prev_cols.append(abs(sort_col))
-            reverse = (sort_col < 0)
-            # print(reverse)
-            all_rows = sorted(
-                all_rows,
-                key=lambda row: row.get_column_value(abs(sort_col)),
-                reverse=reverse
-            )
+            for row in all_rows:
+                row.set_current_column(abs(sort_col))
+            all_rows = sorted(all_rows, reverse=sort_col < 0)
 
-        # print(all_rows)
-        # _, temp_sheet_name = self.new_sheet()
+        all_target_cells = self.__get_sorted_row_contents(all_rows, tl_br_corners, sheet)
 
-        # source_cells_to_move = []
-        all_target_cells = {}
-        for i, row in enumerate(all_rows):
-            # print(i, row)
-            if row.row_order != i + 1:
-                start_loc = get_loc_from_coords(
-                    (tl_br_corners[0][0], tl_br_corners[0][-1]+row.row_order-1))
-                end_loc = get_loc_from_coords(
-                    (tl_br_corners[1][0], tl_br_corners[0][-1]+row.row_order-1))
-                to_loc = get_loc_from_coords(
-                    (tl_br_corners[0][0], tl_br_corners[0][-1]+i))
-                # print(start_loc, end_loc, to_loc)
-                source_cells = sheet.get_source_cells(start_loc, end_loc)
-                # print(source_cells)
-                all_target_cells.update(sheet.get_target_cells(start_loc, end_loc,
-                                                      to_loc, source_cells))
-                # print(target_cells)
-                # for s_cell in source_cells:
-                #     print(s_cell)
-                    # t_cell = target_cells[s_cell]
-                    # print(s_cell, t_cell)
-                    # source_cells_to_move.append(s_cell)
-                    # all_target_cells.u(t_cell)
-                # self.move_cells(sheet_name, start_loc, end_loc, to_loc, temp_sheet_name)
-        # source_set = set(source_cells_to_move)
-        # target_set = set(all_target_cells)
-        # for target_cells in all_target_cells:
-        #     for target_cell in target_cells:
-        #         target_set.add(target_cell)
-        # print(target_set)
-        # source_target_set_diff = source_set.difference(target_set)
-        # for loc in list(source_target_set_diff):
-        #     self.set_cell_contents(sheet_name, loc, None)
-
-        # Set contents of target cells (within same sheet if to_sheet is None)
-        # print('t', all_target_cells)
-        for loc, contents in all_target_cells.items():
-            # print(loc, contents)
-            self.set_cell_contents(sheet_name, loc, contents)
-        # not most efficient way to do this, prob could save last row of data and move all rows within the same sheet?
-        # self.move_cells(temp_sheet_name, start_location, end_location, start_location, sheet_name)
-        # self.del_sheet(temp_sheet_name)
+        # Set contents of target cells
+        for cell in all_target_cells.items():
+            self.set_cell_contents(sheet_name, cell[0], cell[-1])
 
     ########################################################################
     # Private Helpers
@@ -1077,6 +884,70 @@ class Workbook:
         # get the topological sort of non-circular nodes needing to be updated
         cell_topological = cell_graph.topological_sort()
         return cell_topological
+
+    def __populate_row_sorter(self, tl_br_corners: List[Tuple[int, int]],
+                        source_cells: List[str], sheet_name: str) -> List[Row]:
+        '''
+        Populate a list of Rows to be sorted
+
+        Arguments:
+        - tl_br_corners: List[Tuple[int, int]] - coordinates for the top left
+            and bottom right corners
+        - source_cells: List[str] - list of source cell locations
+        - sheet_name: str - name of the sheet where cells are being sorted
+
+        Returns:
+        - list of Rows to be sorted
+
+        '''
+
+        row_orders = range(1, tl_br_corners[-1][1] - tl_br_corners[0][1] + 2)
+        row_len = tl_br_corners[1][0] - tl_br_corners[0][0] + 1
+
+        all_rows = []
+        for row_idx in row_orders:
+            cells = {}
+            if row_len == 1:
+                temp_cells = [source_cells[row_idx - 1]]
+            else:
+                temp_cells = source_cells[row_idx - 1 :: row_len]
+
+            for col_idx, cell in enumerate(temp_cells):
+                cells[col_idx + 1] = self.get_cell_value(sheet_name, cell)
+
+            all_rows.append(Row(row_idx, cells, row_len))
+        return all_rows
+
+    def __get_sorted_row_contents(self, all_rows: List[Row],
+                    tl_br_corners: List[Tuple], sheet: Sheet) -> Dict[str, str]:
+        '''
+        Get the shifted contents of a sorted list of rows
+
+        Arguments:
+        - all_rows: List[Row] - sorted rows
+        - tl_br_corners: List[Tuple] - coordinates for the top left
+            and bottom right corners
+        - sheet: Sheet - sheet where sorting is occur
+
+        Returns:
+        - dictionary mapping cell locations to their sorted contents
+
+        '''
+
+        all_target_cells = {}
+        for i, row in enumerate(all_rows):
+            if row.row_order != i + 1:
+                start_loc = get_loc_from_coords(
+                    (tl_br_corners[0][0], tl_br_corners[0][-1]+row.row_order-1))
+                end_loc = get_loc_from_coords(
+                    (tl_br_corners[1][0], tl_br_corners[0][-1]+row.row_order-1))
+                to_loc = get_loc_from_coords(
+                    (tl_br_corners[0][0], tl_br_corners[0][-1]+i))
+                source_cells = sheet.get_source_cells(start_loc, end_loc)
+                all_target_cells.update(sheet.get_target_cells(start_loc,
+                                                end_loc, to_loc, source_cells))
+
+        return all_target_cells
 
     # pylint: disable=broad-exception-caught
 
