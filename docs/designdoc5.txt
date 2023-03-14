@@ -1,0 +1,106 @@
+CS130 Project 5 - Design Document
+=================================
+
+Please answer all questions in this design document.  Note that the final
+feedback section is optional, and you are not required to answer it if you
+don't want to.
+
+Unanswered or incompletely answered questions, or answers that don't actually
+match the code/repository, will result in deductions.
+
+Answers don't have to be deeply detailed!  We are mainly looking for an
+overview or summary description of how your project works, and your team's
+experiences working on this project.
+
+Logistics (7 points)
+--------------------
+
+L1.  [2pts] Enumerate all teammates here.
+
+    Benjamin (Ben) Juarez, Kyle McGraw, Dallas Taylor
+
+L2.  [2pts] What did each teammate focus on during this project?
+
+    Ben:    Performance improvement, design/code review
+    Kyle:   Cell-change notifications, design/code review
+    Dallas: Sorting regions of spreadsheets
+
+L3.  [3pts] Approximately how many hours did each teammate spend on the project?
+
+    Ben:    5
+    Kyle:   7
+    Dallas: 11
+
+Spreadsheet Engine Design (10 points)
+-------------------------------------
+
+D1.  [4pts] Give an overview of how you implemented sorting.  Do you sort the
+     rows directly?  Do you use adapter objects instead?  Some other technique?
+
+    TODO @Dallas
+
+D2.  [3pts] How does your implementation solve the problem of supporting the
+     user-specified row ordering based on both the columns and the ordering to
+     sort by?  Did you create any classes or functions to help specifically with
+     this task?
+
+    TODO @Dallas
+
+D3.  [3pts] Briefly describe the changes you made to your spreadsheet engine to
+     satisfy the stricter cell-change notification behaviors.  Did you find this
+     to be largely straightforward to change?  Why or why not?
+
+    TODO @Dallas @Kyle
+
+Performance Improvement (13 pts)
+--------------------------------
+
+In this project you must improve the performance of operations that involve
+bulk updating of cell formulas and/or values.  In the previous project your
+team should have written some performance-testing code in preparation for this
+effort, and should have run it under a profiler to get an initial sense of
+where improvements can be made.  In this project you need to follow through on
+this setup, and address performance issues in your code.
+
+P1.  [7pts] Give a brief overview of 2-3 of the worst hot-spots you identified
+     in your performance testing and analysis.  For each one, describe how your
+     team was able to resolve it.
+
+    TODO @Ben
+
+P2.  [3pts] Did your team try anything to address performance issues and find
+     that it didn't improve things at all?  If so, were you able to identify why
+     the intended fix didn't produce the desired benefit?
+
+    TODO @Ben
+
+P3.  [3pts] Did your performance updates cause any regressions in functionality?
+     If so, briefly describe any issues that emerged.  How were these issues
+     identified (e.g. automated test failures, manual testing, etc.)?  How
+     quickly were issues identified?
+
+    TODO @Ben
+
+Section F:  CS130 Project 4 Feedback [OPTIONAL]
+-----------------------------------------------
+
+These questions are OPTIONAL, and you do not need to answer them.  Your grade
+will not be affected by answering or not answering them.  Also, your grade will
+not be affected by negative feedback - we want to know what went poorly so that
+we can improve future versions of the course.
+
+F1.  What parts of the assignment did you find highly enjoyable?  Conversely,
+     what parts of the assignment did you find unenjoyable?
+
+
+F2.  What parts of the assignment helped you learn more about software
+     engineering best-practices, or other useful development skills?
+     What parts were not helpful in learning these skills?
+
+
+F3.  Were there any parts of the assignment that seemed _unnecessarily_ tedious?
+     (Some parts of software development are always tedious, of course.)
+
+
+F4.  Do you have any feedback and/or constructive criticism about how this
+     project can be made better in future iterations of CS130?
