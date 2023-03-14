@@ -18,7 +18,28 @@ codebase are structured in a highly effective way?  What areas of the
 codebase could be restructured to have higher cohesion and/or lower
 coupling?  Give specific suggestions for how to achieve this in the code.
 
-<your team's feedback here>
+Team platypus's codebase is generally structured well.  Their design is 
+organized enough such that it was generally easy to develop a decent 
+understanding of their design decisions in regards to the main areas of 
+functionality.  More specifically, we thought their Graph class was structured
+effectively since any graph-related changes are essentially isolated to this 
+location which helps to ensure low coupling.  On a similar note, we appreciated
+the separation of functionality between their FormulaEditor and FormulaParser
+classes.  Since the operations contained within these  classes are relatively 
+complex, we thought this structure was valuable to their overall design 
+effectiveness.  Also, we thought the design decision to separate the Workbook, 
+Sheet, and Cell from one another was appropriate and effective. However, perhaps 
+some of the operations and functionality contained within the Workbook class 
+could be redistributed throughout the Sheet and Cell classes.  At the point 
+during which the code review was performed, the Workbook class by far was the 
+most complex and handled the majority of the operations.  While the private 
+helper functions help to reuse repeated functionality and to make the code more
+readable, we suggest that some operations are cascaded into the Sheet class and 
+perhaps even the Cell class.  Some of the methods in workbook.py seem to be too 
+long/complex (sort_region, rename_sheet, set_cell_contents).  These aspects 
+might contribute to lower cohesion.  Besides these thoughts, we generally 
+thought that the design and structure of the `sheets` library was effective and 
+efficient particularly in regards to the GRASP principles.
 
 Feedback comments on implementation aspects of the `sheets` library
 -------------------------------------------------------------------
@@ -31,7 +52,28 @@ for concise, readable and maintainable code?  What practices could or
 should be incorporated to improve the quality, expressiveness, readability
 and maintainability of the code?
 
-<your team's feedback here>
+Team platypus's coding style is generally satisfactory, but we think there is 
+room for improvement in several areas.  Their naming conventions and formatting 
+overall seem quite clear and appropriate, but there does not seem to be a 
+consistent documentation/commenting framework in place.  At times, mainly in the 
+Workbook class, perhaps their commenting is a bit overly descriptive considering
+the idiomatic use of Python.  Also, function decomposition was seemingly 
+considered with the usage of private helper functions, etc.  We acknowledge that 
+the volume of comments is mostly up to par, but perhaps more complex files like 
+workbook.py could be cleaned up a bit more in order to make it more readable 
+(and subsequently maintainable).  As mentioned in the previous section, we think 
+that there is too much content in their Workbook class (file is over 1500 lines 
+with some methods over 100 lines long).  Something else worth mentioning is that 
+we suggest converting the method description comments into docstrings in order 
+to increase quality and readability.  As previously mentioned, we suggest moving 
+some of the functionality out of the Workbook class in order to make it more 
+maintainable.  Function decomposition is already utilized in their Workbook 
+class which would have also been a useful suggestion.  Overall, proper naming 
+conventions, a decent volume of meaningful comments, and function decomposition
+greatly helps to make their codebase more concise, readable, and maintainable.
+The usage of docstrings, redistribution of functionality, and a more consistent
+commenting system are suggestions that we have in order to improve the overall
+quality of their codebase.
 
 Feedback comments on testing aspects of the project
 ---------------------------------------------------
@@ -44,7 +86,22 @@ etc.  What testing practices are employed effectively in the project?  What
 testing practices should be incorporated to improve the quality-assurance
 aspects of the project?
 
-<your team's feedback here>
+Team platypus's appear to be sufficiently comprehensive in regards to checking
+the workbook's functionalities.  They utilize the unittest framework in order
+help them achieve thorough test cases.  There seems to be an appriopriate 
+balance between testing the "most valuable" functionality vs. "trivial code".
+A suggestion might be to break up some of the test cases from workbooktests.py
+into multiple files, but this is not extremely necessary since the test cases
+are broken up within the single file.  This separation of testing would allow 
+them to quickly isolate where certain tests might fail which is an effective 
+practice.  Something else we noted was that there does not seem to be any 
+system in place for automating tests.  They do have a Makefile, but at the time
+of this code review, there were not any make targets for any of the test files.
+This means they would have to manually run each test which is not an ideal 
+practice.  So, we highly recommend utilizing the Makefile in order to streamline
+the testing process.  More specifically, targets can be made for individual 
+testing files as well as related groups of files.  We believe this practice 
+would greatly improve the quality-assurance of their codebase.
 
 Consider the implementation quality of the testing code itself, in the same
 areas described in the previous section.  What practices are used effectively
@@ -52,7 +109,13 @@ in the testing code to make it concise, readable and maintainable?  What
 practices could or should be incorporated to improve the quality of the
 testing code?
 
-<your team's feedback here>
+Team platypus's test file names are appropriately descriptive which helps the 
+overall readability.  It seems that differing areas of functionalities are split
+up properly considering the naming and number of test files.  This would allow 
+them to more easily maintain their testing framework.  However, their test files
+seem to be almost completely undocumented, so we suggest examining these files 
+and adding comments appropriately in order to improve readability.  Furthermore,
+the usage of docstrings could also help with this aspect.
 
 Feedback comments on other aspects of the project
 -------------------------------------------------
@@ -60,4 +123,7 @@ Feedback comments on other aspects of the project
 If you have any other comments - compliments or suggestions for improvement -
 that aren't covered by previous sections, please include them here.
 
-<your team's feedback here>
+Great job!  Overall, we were impressed with the implementation and we found it 
+interesting to see where things differed from ours.  Another suggestion might
+be to use a more meaningful commit message system since some of the commit 
+messages are quite short and hard to interpret.
