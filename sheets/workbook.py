@@ -69,7 +69,8 @@ class Workbook:
         '''
 
         self.evaluator = Evaluator(self, '')
-        self.notify_functions = []
+        self._notify_cells = set()
+        self._notify_functions = []
         self._sheet_names = []
         # dictionary that maps lowercase sheet name to Sheet object
         self._sheet_objects: Dict[str, Sheet] = {}
@@ -205,6 +206,7 @@ class Workbook:
         self.__set_sheet_objects(sheet_objects)
 
         self.update_cell_values(sheet_name)
+        self.__notify()
         return self.num_sheets() - 1, sheet_name
 
     def del_sheet(self, sheet_name: str) -> None:
@@ -230,6 +232,7 @@ class Workbook:
         self.__set_sheet_objects(sheet_objects)
         # update all cells dependent on deleted sheet
         self.update_cell_values(sheet_name)
+        self.__notify()
 
     def get_sheet_extent(self, sheet_name: str) -> Tuple[int, int]:
         '''
@@ -251,7 +254,8 @@ class Workbook:
         return sheet_objects[sheet_name.lower()].get_extent()
 
     def set_cell_contents(self, sheet_name: str, location: str,
-                          contents: Optional[str]) -> None:
+                          contents: Optional[str], notify: Optional[bool] = True
+                          ) -> None:
         '''
         Set the contents of the specified cell on the specified sheet
         (case-insensitive).
@@ -289,6 +293,8 @@ class Workbook:
             self.update_cell_values(sheet_name, location, notify=False)
         else:
             self.update_cell_values(sheet_name, location)
+        if notify:
+            self.__notify()
 
     def get_cell_contents(self, sheet_name: str, location: str)-> Optional[str]:
         '''
@@ -514,7 +520,7 @@ class Workbook:
 
         '''
 
-        self.notify_functions.append(notify_function)
+        self._notify_functions.append(notify_function)
 
     def rename_sheet(self, sheet_name: str, new_sheet_name: str) -> None:
         '''
@@ -564,6 +570,7 @@ class Workbook:
         self.__set_sheet_objects(sheet_objects)
 
         self.update_cell_values(sheet_name, renamed_sheet = new_sheet_name)
+        self.__notify()
 
 
     def move_sheet(self, sheet_name: str, index: int) -> None:
@@ -626,8 +633,10 @@ class Workbook:
         cells_dict = sheet_objects[sheet_name.lower()].get_all_cells()
         for coords, cell in cells_dict.items():
             loc = get_loc_from_coords(coords)
-            self.set_cell_contents(sheet_copy_name, loc, cell.get_contents())
+            self.set_cell_contents(sheet_copy_name, loc, cell.get_contents(),
+                                    notify=False)
 
+        self.__notify()
         return sheet_copy_idx, sheet_copy_name
 
     def move_cells(self, sheet_name: str, start_location: str,
@@ -678,7 +687,7 @@ class Workbook:
 
         # Set contents of source cells (not in target area) to None
         # could set all values in source area to None **
-        if to_sheet is None:
+        if to_sheet is None or to_sheet == sheet_name:
             to_sheet = sheet_name
             source_set = set(source_cells)
             target_set = set(target_cells.keys())
@@ -687,11 +696,13 @@ class Workbook:
             self.__validate_sheet_existence(to_sheet)
             source_target_set_diff = source_cells
         for loc in list(source_target_set_diff):
-            self.set_cell_contents(sheet_name, loc, None)
+            self.set_cell_contents(sheet_name, loc, None, notify=False)
 
         # Set contents of target cells (within same sheet if to_sheet is None)
         for loc, contents in target_cells.items():
-            self.set_cell_contents(to_sheet, loc, contents)
+            self.set_cell_contents(to_sheet, loc, contents, notify=False)
+        
+        self.__notify()
 
 
     def copy_cells(self, sheet_name: str, start_location: str,
@@ -744,7 +755,8 @@ class Workbook:
 
         # Set contents of target cells (within same sheet if to_sheet is None)
         for loc, contents in target_cells.items():
-            self.set_cell_contents(to_sheet, loc, contents)
+            self.set_cell_contents(to_sheet, loc, contents, notify=False)
+        self.__notify()
 
     def sort_region(self, sheet_name: str, start_location: str,
                     end_location: str, sort_cols: List) -> None:
@@ -785,7 +797,8 @@ class Workbook:
 
         # Set contents of target cells
         for cell in all_target_cells.items():
-            self.set_cell_contents(sheet_name, cell[0], cell[-1])
+            self.set_cell_contents(sheet_name, cell[0], cell[-1], notify=False)
+        self.__notify()
 
     ########################################################################
     # Private Helpers
@@ -986,8 +999,12 @@ class Workbook:
                     notify_cells.append((sheet, cell))
 
         self.__set_sheet_objects(sheet_objects)
-        for notify_function in self.notify_functions:
+        self._notify_cells.update(notify_cells)
+
+    def __notify(self):
+        for notify_function in self._notify_functions:
             try:
-                notify_function(self, notify_cells)
+                notify_function(self, list(self._notify_cells))
             except Exception:
                 pass
+        self._notify_cells = set()

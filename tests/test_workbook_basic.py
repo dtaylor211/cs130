@@ -407,10 +407,18 @@ class TestWorkbook:
         wb1.set_cell_contents('Sheet1', 'C1', '=A1+B1')
         assert test_changed[-1] == [('Sheet1', 'C1')]
         wb1.set_cell_contents('Sheet1', 'B1', '5.3')
-        assert test_changed[-1] == [('Sheet1', 'B1'), ('Sheet1', 'C1')]
-        wb1.move_cells('Sheet1', 'C1', 'C1', 'C2')
-        assert test_changed[-2] == [('Sheet1', 'C1')]
-        assert test_changed[-1] == [('Sheet1', 'C2')]
+        assert set(test_changed[-1]) == set([('Sheet1', 'B1'),
+                                            ('Sheet1', 'C1')])
+        wb1.set_cell_contents('Sheet1', 'D1', '1')
+        assert test_changed[-1] == [('Sheet1', 'D1')]
+        wb1.set_cell_contents('Sheet1', 'D2', '1')
+        assert test_changed[-1] == [('Sheet1', 'D2')]
+        wb1.set_cell_contents('Sheet1', 'D3', '0')
+        assert test_changed[-1] == [('Sheet1', 'D3')]
+        print("move")
+        wb1.move_cells('Sheet1', 'C1', 'D3', 'C2')
+        assert set(test_changed[-1]) == set([('Sheet1', 'C1'), ('Sheet1', 'C2'),
+                        ('Sheet1', 'D1'), ('Sheet1', 'D3'), ('Sheet1', 'D4')])
         wb1.set_cell_contents('Sheet1', 'C2', None)
         assert test_changed[-1] == [('Sheet1', 'C2')]
         wb1.del_sheet('Sheet1')
@@ -435,9 +443,10 @@ class TestWorkbook:
         assert test_changed[-2] == [('Test', 'C1')]
         assert test_changed[-1] == [Decimal(2)]
         wb1.set_cell_contents('Test', 'A1', '2')
-        assert test_changed[-2] == [('Test', 'A1'), ('Test', 'B1'),
-                                    ('Test', 'C1')]
-        assert test_changed[-1] == [Decimal(2), Decimal(2), Decimal(4)]
+        assert set(test_changed[-2]) == set([('Test', 'A1'), ('Test', 'B1'),
+                                            ('Test', 'C1')])
+        assert set(test_changed[-1]) == set([Decimal(2), Decimal(2),
+                                            Decimal(4)])
         def on_cells_changed3(workbook, changed_cells):
             '''
             This function gets called when cells change in the workbook that the
