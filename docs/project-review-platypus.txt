@@ -1,0 +1,63 @@
+CS130 Project Review
+====================
+
+Team performing review:  koala
+Work being reviewed:  platypus
+
+The first two sections are for reviewing the `sheets` library code itself,
+excluding the test code and other aspects of the project.  The remaining
+sections are for those other supporting parts of the project.
+
+Feedback comments on design aspects of the `sheets` library
+-----------------------------------------------------------
+
+Consider the overall design and structure of the `sheets` library from
+the perspective of the GRASP principles (Lecture 20) - in particular the
+principles of high cohesion and low coupling.  What areas of the project
+codebase are structured in a highly effective way?  What areas of the
+codebase could be restructured to have higher cohesion and/or lower
+coupling?  Give specific suggestions for how to achieve this in the code.
+
+<your team's feedback here>
+
+Feedback comments on implementation aspects of the `sheets` library
+-------------------------------------------------------------------
+
+Consider the actual implementation of the project from the perspectives
+of coding style (naming, commenting, code formatting, decomposition into
+functions, etc.), and idiomatic use of the Python language and language
+features.  What practices are used effectively in the codebase to make
+for concise, readable and maintainable code?  What practices could or
+should be incorporated to improve the quality, expressiveness, readability
+and maintainability of the code?
+
+<your team's feedback here>
+
+Feedback comments on testing aspects of the project
+---------------------------------------------------
+
+Consider the testing aspects of the project, from the perspective of "testing
+best practices" (Lectures 4-6):  completeness/thoroughness of testing,
+automation of testing, focus on testing the "most valuable" functionality vs.
+"trivial code," following the Arrange-Act-Assert pattern in individual tests,
+etc.  What testing practices are employed effectively in the project?  What
+testing practices should be incorporated to improve the quality-assurance
+aspects of the project?
+
+<your team's feedback here>
+
+Consider the implementation quality of the testing code itself, in the same
+areas described in the previous section.  What practices are used effectively
+in the testing code to make it concise, readable and maintainable?  What
+practices could or should be incorporated to improve the quality of the
+testing code?
+
+<your team's feedback here>
+
+Feedback comments on other aspects of the project
+-------------------------------------------------
+
+If you have any other comments - compliments or suggestions for improvement -
+that aren't covered by previous sections, please include them here.
+
+<your team's feedback here>
