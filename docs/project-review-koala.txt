@@ -1,0 +1,121 @@
+CS130 Project Review
+====================
+
+Team performing review:  wombat
+Work being reviewed:  koala
+
+The first two sections are for reviewing the `sheets` library code itself,
+excluding the test code and other aspects of the project.  The remaining
+sections are for those other supporting parts of the project.
+
+Feedback comments on design aspects of the `sheets` library
+-----------------------------------------------------------
+
+Consider the overall design and structure of the `sheets` library from
+the perspective of the GRASP principles (Lecture 20) - in particular the
+principles of high cohesion and low coupling.  What areas of the project
+codebase are structured in a highly effective way?  What areas of the
+codebase could be restructured to have higher cohesion and/or lower
+coupling?  Give specific suggestions for how to achieve this in the code.
+
+Team koala's codebase is very well organized and use abstractions well to 
+ensure high cohension and low coupling. They made good design decisions in 
+creating their classes, separating workbook from sheets and sheets from cells. 
+We found the Cell object to be particularly interesting, as it was able to 
+extract many operations that would have been spread across the Workbook,
+Evaluator, and Sheet classes, therefore increasing cohesion across all classes. 
+For example, including cell evaluations and operations (such as getting children 
+cells from the tree of a cell) greatly reduces the clutter invloved in classes
+with many operations like Workbook. Similarly, creating an entirely new Graph 
+object was also innovative, as instead of implementing Tarjan's algorithm as 
+a helper method in the Workbook class, they were able to clean up the Workbook 
+class. Also, the Graph class ensures that any changes made to graph operations 
+only needs to be changed in one place, improving cohesion and lowering coupling. 
+We couldn't find any improvements to be made to their code, as we found it to 
+already be ideal in terms of design and structure for the reasons listed above. 
+
+Feedback comments on implementation aspects of the `sheets` library
+-------------------------------------------------------------------
+
+Consider the actual implementation of the project from the perspectives
+of coding style (naming, commenting, code formatting, decomposition into
+functions, etc.), and idiomatic use of the Python language and language
+features.  What practices are used effectively in the codebase to make
+for concise, readable and maintainable code?  What practices could or
+should be incorporated to improve the quality, expressiveness, readability
+and maintainability of the code?
+
+The codebase is incredibly well documented with great codestyle as well. They
+always have descriptive variables names, improving readability of code for those
+who aren't as familiar with the codebase. With both detailed docstrings and 
+in-line comments, we found it very easy to understand their implementation
+after just a few minutes. 
+None of their functions were incredibly long (i.e. over 50 lines of code),
+largely in part due to their effective decomposition of larger functions into
+smaller functions. They also effectively took advantage of the idiomatic
+use of Python to make the code more readable as well,. A number of other things
+also help with readability: separating function handling from the actual core
+evaluator cleans up the lark parser, and including a utils.py file with 
+miscellaneous helpers used across multiple files also declutters the main code.
+Again, we could not find any improvements to be made in regards to the code style 
+of the code, as every file was well-documented with great decomposition of 
+functions as well.
+
+Feedback comments on testing aspects of the project
+---------------------------------------------------
+
+Consider the testing aspects of the project, from the perspective of "testing
+best practices" (Lectures 4-6):  completeness/thoroughness of testing,
+automation of testing, focus on testing the "most valuable" functionality vs.
+"trivial code," following the Arrange-Act-Assert pattern in individual tests,
+etc.  What testing practices are employed effectively in the project?  What
+testing practices should be incorporated to improve the quality-assurance
+aspects of the project?
+
+The tests are all very comprehensive and thorough in testing every workbook
+functionality. Each individual test contains multiple test cases testing 
+different scenarios that effectively encompass all edge cases and basic 
+functionalities as well. They do, of course, test the trivial code, however 
+most of the tests are centered around testing the "most valuable" functionality. 
+Their tests also have good code coverage, showing that majority, if not all, of 
+their code is being tested in some way. None of the tests have out-of-process
+or shared dependencies either. They also utilize a Makefile to automate testing,
+making running the test code very quick and simple. Not only that, they included
+various make commands to ensure that different tests could be run without needing
+to run the command manually for each specific test. Overall, we found their 
+testing practices to be effective in ensuring quality-assurance throughout their
+code for the reasons above.
+
+Consider the implementation quality of the testing code itself, in the same
+areas described in the previous section.  What practices are used effectively
+in the testing code to make it concise, readable and maintainable?  What
+practices could or should be incorporated to improve the quality of the
+testing code?
+
+Their tests are also well-commented with docstrings, making the goal of each 
+test easy to understand. Each individual functionality is split up into
+multiple tests, not only making it more readable but also making it easier to 
+run specific tests. We liked how they directly tested the function handler using 
+the lark parser and evaluator rather than using workbook operations instead,
+which shortened the tests and reduced clutter. 
+The only feedback we have would be to factor out the rename sheet tests from 
+test_workbook.py, since majority of the tests in that file pertain to testing 
+moving and copying cells. This way, instead of naming the file test_workbook.py, 
+it could be renamed to something more specific such as test_move_copy_cells.py to
+improve readability. However, we also saw the benefit of the current setup of 
+separating the more simple workbook tests from the more complex ones.
+
+Feedback comments on other aspects of the project
+-------------------------------------------------
+
+If you have any other comments - compliments or suggestions for improvement -
+that aren't covered by previous sections, please include them here.
+
+The codebase was so well-maintained!! We were all very impressed, and we also 
+liked the commit message system used. A potential area for improvement may be 
+in the graph implementation; because Tarjan's algorithm is able to find both the
+strongly connected components along with the topological sort of the graph, it 
+may be simpler to combine the get_strongly_connected_components and 
+topological_sort methods. This implementation does separate the cells involved 
+in cycles from those that aren't making the code cleaner and more readable, 
+but we also aren't sure how much faster this implementation makes the code.
