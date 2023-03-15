@@ -4,8 +4,29 @@ CS130 Project 5 - Performance Improvement
 Improvement 1
 -------------
 
-Theory: TODO
+Theory: Every major operation appears slower than expected, so there seems to be
+a large underlying issue that we will try to identify in order to improve the
+overall performance of our program. 
 
-Rationale: TODO
+Rationale: After analyzing the profiler data associated with our performance 
+tests, we seem to have located the issue such that our program spends a lot of 
+time dealing with lark and loading the grammar.  More specifically, with a test
+that simulates the LongChainUpdateBenchmark test, the cumulative time was almost
+50 seconds which is too long.  We believe this is because each time we create a
+cell, we load the lark grammar.  We can fix this by moving one line of code 
+outside of the Cell __init__() in order to only load the grammar once.
 
-Outcome: TODO
+Outcome: With this fix, the cumulative time with the same performance test drops
+to about 8 seconds.  This performance improvement seems to have been applied 
+across all major operations, as expected, after confirmation with other 
+performance tests.  This fix alone will cause us to reach most of the benchmarks
+for the peformance benchmark tests.  Yay we were right!
+
+Improvement 2
+-------------
+
+Theory:
+
+Rationale:
+
+Outcome:
