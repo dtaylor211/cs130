@@ -25,8 +25,52 @@ for the peformance benchmark tests.  Yay we were right!
 Improvement 2
 -------------
 
-Theory:
+Theory: We think copy sheet operation is too slow, so we will try to investigate
+and improve it.
 
-Rationale:
+Rationale: We know that this operation is slow due to our own performance tests 
+as well as the benchmark test results from project 4.  Specifically, our test in
+test_copy_sheet_bulk.py (make target test-perforamnce-copy-sheet-bulk) takes 
+about 75-80 seconds which certainly indicates sub par performance.  Also, the 
+benchmark test CopySheetBenchmark is 14.7x slower than the reference 
+implementation.
 
-Outcome:
+Outcome: TODO
+
+Improvement 3
+-------------
+
+Theory: We think our rename sheet operation is too slow in certain cases, so we 
+will try to investigate and improve it.
+
+Rationale: We thought that our rename sheet operation was fast enough according
+to our own performance tests, but the project 4 benchmark test results suggest 
+otherwise.  While RenameSheetCellrefUpdateBenchmark is only 2.1x slower, our 
+RenameSheetNoCellrefUpdateBenchmark is 17.7x slower.  This is interesting since
+we would expect the benchmark with cell references to be slower.
+
+Outcome: TODO
+
+Improvement 4
+-------------
+
+Theory: We think our move cell operation is still too slow, so we will try to 
+investigate and improve it.
+
+Rationale: While our own perfomance tests seem to suggest that our move cell 
+operation is decently fast, the project 4 benchmark test results suggest 
+otherwise.  The MoveCellsSameSheetBenchmark is 7.8x slower and the 
+MoveCellsDifferentSheetBenchmark is 8x slower.
+
+Outcome: TODO
+
+NOTES: 
+New benchmarks: 
+-*MoveCellsSameSheetBenchmark: 7.8x slower
+-*MoveCellsDifferentSheetBenchmark: 8x slower
+-*CopySheetBenchmark: 14.7x slower
+-*RenameSheetNoCellrefUpdateBenchmark: 17.7x slower
+-JsonLoadBenchmark: 1.2x slower
+-CopyCellsSameSheetBenchmark: 1.7x slower
+-CopyCellsDifferentSheetBenchmark: 1.7x slower
+-RenameSheetCellrefUpdateBenchmark: 2.1x slower
