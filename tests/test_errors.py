@@ -108,6 +108,7 @@ class TestErrors:
     def test_parse_error_in_func(self) -> None:
         '''
         Test when given a function formula with a parse error
+        Also tests error ordering within a function call
 
         '''
 
@@ -143,6 +144,13 @@ class TestErrors:
         result_contents = WB.get_cell_contents('Test','A3')
         result_value = WB.get_cell_value('Test', 'A3')
         assert result_contents == '=valid_func(arg'
+        assert isinstance(result_value, CellError)
+        assert result_value.get_type() == CellErrorType.PARSE_ERROR
+
+        WB.set_cell_contents('Test', 'A3', '=valid_func(arg,)')
+        result_contents = WB.get_cell_contents('Test','A3')
+        result_value = WB.get_cell_value('Test', 'A3')
+        assert result_contents == '=valid_func(arg,)'
         assert isinstance(result_value, CellError)
         assert result_value.get_type() == CellErrorType.PARSE_ERROR
 
@@ -520,6 +528,11 @@ class TestErrors:
         value = WB.get_cell_value('Test', 'a2')
         assert isinstance(value, CellError)
         assert value.get_type() == CellErrorType.DIVIDE_BY_ZERO
+
+        WB.set_cell_contents('Test', 'a1', '=INDIRECT("A1")')
+        value = WB.get_cell_value('Test', 'a1')
+        assert isinstance(value, CellError)
+        assert value.get_type() == CellErrorType.CIRCULAR_REFERENCE
 
     def test_error_ordering(self) -> None:
         '''

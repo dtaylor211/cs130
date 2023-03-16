@@ -9,7 +9,7 @@
 
 ?formula : "=" expression
 
-?expression : add_expr | concat_expr | comp_expr
+?expression : concat_expr | comp_expr
 
 //========================================
 // Arithmetic expressions
@@ -17,6 +17,10 @@
 // This generates right-deep trees:  ?add_expr : mul_expr (ADD_OP add_expr)?
 // Instead we would prefer to generate left-deep trees when given a sequence
 // of operators at the same precedence level.
+//========================================
+// Comparison expressions - lowest precedence
+
+?comp_expr: (comp_expr COMP)? add_expr
 
 ?add_expr : (add_expr ADD_OP)? mul_expr
 
@@ -27,17 +31,12 @@
 //========================================
 // String concatenation
 
-?concat_expr : (concat_expr "&")? base
-
-//========================================
-// Comparison expressions - lowest precedence
-
-?comp_expr : (comp_expr COMP)? expression
+?concat_expr : (base "&" base) | (concat_expr "&" base)
 
 //========================================
 // Function expressions
 
-?args_expr : (expression ("," args_expr)? )?
+?args_expr : (expression ("," args_expr )* )? 
 
 
 //========================================
@@ -49,11 +48,13 @@
       | STRING                            -> string
       | BOOL                              -> bool
       | "(" expression ")"                -> parens
-      | (FUNC_NAME) "(" (args_expr)? ")"  -> func_expr
+      | (FUNC_NAME) (args_expr) ")"  -> func_expr
 
-cell : (_sheetname "!")? CELLREF
+cell: SHEET_CELL | CELLREF
 
-_sheetname : SHEET_NAME | QUOTED_SHEET_NAME
+SHEET_CELL.3 : (SHEET_NAME | QUOTED_SHEET_NAME) "!" CELLREF
+
+// _sheetname : SHEET_NAME | QUOTED_SHEET_NAME
 
 //========================================
 // Lexer terminals
@@ -82,12 +83,12 @@ SHEET_NAME: /[A-Za-z_][A-Za-z0-9_]*/
 // deal here.
 QUOTED_SHEET_NAME: /\'[^']*\'/
 
-FUNC_NAME: /[A-Za-z][A-Za-z0-9_]*/
+FUNC_NAME.2: /[A-Za-z][A-Za-z0-9_]*[ ]*\(/
 
 // Don't need to support signs on numbers because we have unary +/- operator
 // support in the parser.
-NUMBER: /([0-9]+(\.[0-9]*)?)|(\.[0-9]+)/
+NUMBER.2: /([0-9]+(\.[0-9]*)?)|(\.[0-9]+)/
 
-STRING: /\"[^"]*\"/
+STRING.3: /\"[^"]*\"/
 
-BOOL: /[Tt][Rr][Uu][Ee]/ | /[Ff][Aa][Ll][Ss][Ee]/
+BOOL.2: /[Tt][Rr][Uu][Ee]/ | /[Ff][Aa][Ll][Ss][Ee]/

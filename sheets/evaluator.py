@@ -37,7 +37,7 @@ import re
 from decimal import Decimal, DecimalException, InvalidOperation
 from typing import List, Tuple
 
-from lark import Tree, Transformer, Token
+from lark import Tree, Transformer, Token, exceptions
 
 from .cell_error import CellError, CellErrorType, CELL_ERRORS
 from .function_handler import FunctionHandler
@@ -359,14 +359,23 @@ class Evaluator(Transformer):
         '''
 
         try:
-            if len(args) == 2:
-                working_sheet = args[0]
+            # print('a', args)
+            # print(args[-1].split('!'))
+            # print('A1'.split('!'))
+            args_split = args[-1].split('!')
+            if len(args_split) == 2:
+                # print('huh')
+                working_sheet = args_split[0]
+                # print(working_sheet)
                 if working_sheet[0] == "'":
                     working_sheet = working_sheet[1:-1]
-                cell_name = args[1].replace('$', '')
+                cell_name = args_split[-1].replace('$', '')
             else:
+                # print('oop')
                 working_sheet = self.get_working_sheet()
-                cell_name = args[0].replace('$', '')
+                # print()
+                cell_name = args_split[-1].replace('$', '')
+                # print(cell_name)
 
             # Check that cell location is within bounds
             if not re.match(r"^[A-Z]{1,4}[1-9][0-9]{0,3}$", cell_name.upper()):
@@ -403,16 +412,21 @@ class Evaluator(Transformer):
         '''
 
         try:
-            func_name = args[0].lower()
+            func_name = args[0][:-1].replace(' ', '').lower()
+            print(func_name+'p')
+            # func_name = args[0][:-1].lower()
             args_list = args[-1].children
             if len(args_list) == 1:
                 args_list = [args[-1]]
-
+            # print(func_name, args)
             result = self.function_handler.map_func(func_name)
             result = result(args_list)
+            # print(result)
+            # print(self._working_sheet)
 
             if isinstance(result, Tuple):
                 temp =  self.transform(result[0])
+                # print(temp)
 
                 if temp.children[-1] is None:
                     return Tree('cell_error', [CellError(CellErrorType.BAD_REFERENCE, '')])
@@ -439,12 +453,21 @@ class Evaluator(Transformer):
         Evaluate an expression of function arguments:
 
         '''
+        # print('a', args)
 
         if args == []:
+            # print('arg')
+            # raise exceptions.LarkError
             return Tree('args_list', [])
 
         if len(args[-1].children) == 1:
+            # print(1)
             return Tree('args_list', [args[0]]+[args[-1]])
+        
+        # print(2)
+        # print(args[-1].children)
+        if args[-1].children == []:
+            raise exceptions.LarkError
 
         return Tree('args_list', [args[0]]+args[-1].children)
 

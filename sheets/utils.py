@@ -60,7 +60,7 @@ def get_loc_from_coords(coords: Tuple[int, int]) -> str:
     '''
 
     col, row = coords
-    if col < 1 or row < 1 or col > 9999 or row > 9999:
+    if col < 1 or row < 1 or col > 475254 or row > 9999:
         raise ValueError("Invalid coordinates")
 
     col_name = ""

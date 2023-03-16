@@ -84,14 +84,17 @@ class _CellTreeInterpreter(Interpreter):
 
         '''
 
-        if len(tree) == 2:
-            cell_sheet = str(tree[0])
+        # if len(tree) == 2:
+        # print('tree',tree[-1].split('!'))
+        tree_split = tree[-1].split('!')
+        if len(tree_split) == 2:
+            cell_sheet = str(tree_split[0])
             if cell_sheet[0] == "'":
                 cell_sheet = cell_sheet[1:-1]
-            cell = str(tree[1]).replace('$', '')
+            cell = str(tree_split[1]).replace('$', '')
         else:
             cell_sheet = self.sheet
-            cell = str(tree[0]).replace('$','')
+            cell = str(tree_split[-1]).replace('$','')
         self.children.add((cell_sheet, cell.upper()))
 
     def func_expr(self, tree: Tree) -> None:
@@ -103,16 +106,16 @@ class _CellTreeInterpreter(Interpreter):
 
         '''
 
-        if tree.children[0] == "IF":
+        if tree.children[0] == "IF(":
             self.__handle_if(tree)
 
-        elif tree.children[0] == "IFERROR":
+        elif tree.children[0] == "IFERROR(":
             self.__handle_iferror(tree)
 
-        elif tree.children[0] == "CHOOSE":
+        elif tree.children[0] == "CHOOSE(":
             self.__handle_choose(tree)
 
-        elif tree.children[0] == "INDIRECT":
+        elif tree.children[0] == "INDIRECT(":
             self.__handle_indirect(tree)
 
         else:
@@ -199,7 +202,7 @@ class Cell:
     '''
 
     PARSER = lark.Lark.open('formulas.lark', start='formula',
-                rel_to=__file__)
+                rel_to=__file__, parser='lalr')
 
     def __init__(self, loc: str, evaluator: Evaluator):
         '''
@@ -381,6 +384,7 @@ class Cell:
 
         source_contents = self.get_contents()
         source_value = self.get_value()
+        # print(source_contents, source_value)
 
         # check if source cell contents are None or not formula, return
         if source_contents is None or source_contents[0] != "=":

@@ -55,7 +55,7 @@ class Row:
         - value of the specified cell
 
         '''
-        print(self._current_column, self._cells[self._current_column])
+        # print(self._current_column, self._cells[self._current_column])
         return self._cells[self._current_column]
 
     def set_current_column(self, column: int) -> None:

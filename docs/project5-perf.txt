@@ -14,13 +14,16 @@ time dealing with lark and loading the grammar.  More specifically, with a test
 that simulates the LongChainUpdateBenchmark test, the cumulative time was almost
 50 seconds which is too long.  We believe this is because each time we create a
 cell, we load the lark grammar.  We can fix this by moving one line of code 
-outside of the Cell __init__() in order to only load the grammar once.
+outside of the Cell __init__() in order to only load the grammar once. We also
+changed the Lark parser to be a LALR parser, since this parser only has O(n)
+complexity while the default Earley parser has O(n^3) complexity.  This required
+a few changes to the grammar, so that every input had only one possible match.
 
-Outcome: With this fix, the cumulative time with the same performance test drops
-to about 8 seconds.  This performance improvement seems to have been applied 
-across all major operations, as expected, after confirmation with other 
-performance tests.  This fix alone will cause us to reach most of the benchmarks
-for the peformance benchmark tests.  Yay we were right!
+Outcome: With these fixes, the cumulative time with the same performance test
+drops to about 1 second.  This performance improvement seems to have been
+applied across all major operations, as expected, after confirmation with other 
+performance tests.  These fixes alone will cause us to reach most (if not all)
+of the benchmarks for the peformance benchmark tests.  Yay we were right!
 
 Improvement 2
 -------------
@@ -30,7 +33,7 @@ and improve it.
 
 Rationale: We know that this operation is slow due to our own performance tests 
 as well as the benchmark test results from project 4.  Specifically, our test in
-test_copy_sheet_bulk.py (make target test-perforamnce-copy-sheet-bulk) takes 
+test_copy_sheet_bulk.py (make target test-performance-copy-sheet-bulk) takes 
 about 75-80 seconds which certainly indicates sub par performance.  Also, the 
 benchmark test CopySheetBenchmark is 14.7x slower than the reference 
 implementation.

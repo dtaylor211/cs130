@@ -41,7 +41,7 @@ from sheets.workbook import Workbook
 WB = Workbook()
 WB.new_sheet('Test')
 EVALUATOR = Evaluator(WB, 'Test')
-PARSER = Lark.open('../sheets/formulas.lark', start='formula', rel_to=__file__)
+PARSER = Lark.open('../sheets/formulas.lark', start='formula', rel_to=__file__, parser='lalr')
 
 class TestEvaluator:
     '''

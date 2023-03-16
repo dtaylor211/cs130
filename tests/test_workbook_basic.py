@@ -864,9 +864,11 @@ class TestWorkbook:
         wb1.set_cell_contents('S', 'A2', '=VERSION(1)')
         wb1.set_cell_contents('S', 'A4', 'dallas')
         wb1.set_cell_contents('S', 'A5', '1')
-        wb1.set_cell_contents('S', 'A6', 'False')
+        wb1.set_cell_contents('S', 'A6', '=OR(A7, True)')
+        wb1.set_cell_contents('S', 'A7', 'false')
+        wb1.set_cell_contents('S', 'A8', '=A1')
 
-        wb1.sort_region('S', 'A1', 'A6', [1])
+        wb1.sort_region('S', 'A1', 'A7', [1])
 
         expected = {
             "sheets": [{
@@ -876,7 +878,9 @@ class TestWorkbook:
                         "A3": "=VERSION(1)",
                         "A4": "1",
                         "A5": "dallas",
-                        "A6": "False"
+                        "A6": "false",
+                        "A7": "=OR(A8, True)",
+                        "A8": "=A1"
                     }
             }]
         }
@@ -887,3 +891,6 @@ class TestWorkbook:
             act = json.load(fp)
             exp = json.loads(json.dumps(expected))
             assert sorted(act.items()) == sorted(exp.items())
+
+        result = wb1.get_cell_value('S', 'A8')
+        assert result == Decimal('0')

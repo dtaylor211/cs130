@@ -35,7 +35,7 @@ class FunctionHandler:
     '''
 
     PARSER = Lark.open('formulas.lark', start='formula',
-                rel_to=__file__)
+                rel_to=__file__, parser='lalr')
 
     def __init__(self):
         '''
@@ -379,7 +379,10 @@ class FunctionHandler:
             return args[0]
 
         try:
+            # print(1)
+            # print(args[0].children[-1])
             tree = self.PARSER.parse(f'={str(args[0].children[-1])}')
+            # print(tree.data)
             if tree.data != 'cell':
                 raise lark.exceptions.LarkError
             return tree, 'Y'

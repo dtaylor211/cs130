@@ -915,3 +915,11 @@ class TestWorkbook:
         assert contents == '=#REF! + B1'
         assert isinstance(value, CellError)
         assert value.get_type() == CellErrorType.BAD_REFERENCE
+
+        wb1.set_cell_contents('Sheet2', 'A1', '=INDIRECT(B1)')
+        wb1.move_cells('Sheet2', 'A1', 'A1', 'ZZZZ1')
+        contents = wb1.get_cell_contents('Sheet2', 'ZZZZ1')
+        value = wb1.get_cell_value('Sheet2', 'ZZZZ1')
+        assert contents == '=INDIRECT(#REF!)'
+        assert isinstance(value, CellError)
+        assert value.get_type() == CellErrorType.BAD_REFERENCE
