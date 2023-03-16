@@ -37,20 +37,31 @@ Spreadsheet Engine Design (10 points)
 D1.  [4pts] Give an overview of how you implemented sorting.  Do you sort the
      rows directly?  Do you use adapter objects instead?  Some other technique?
 
-    TODO @Dallas
+    We implemented sorting by creating adapter Row objects for each row that is
+    being sorted.  The Row class stores the original order, the length, and a
+    dictionary mapping column index to the cell's value at that column. We then
+    implemented the built in dunder __lt__, __eq__, __gt__, ..., etc.
+    methods so that we could properly call sorted(list_of_rows).  We were able
+    to move our comparison code from Project 4 from the Evaluator to Utils, and
+    thus we did not have to repeat any code while still maintaining all
+    specified behavior from Project 4.
 
 D2.  [3pts] How does your implementation solve the problem of supporting the
      user-specified row ordering based on both the columns and the ordering to
      sort by?  Did you create any classes or functions to help specifically with
      this task?
 
-    TODO @Dallas
+    Our implementation calls sorted(list_of_rows) once for each column to be
+    sorted, in the reverse order that they are provided. For each column to be
+    sorted, we set the marked column of each row to be that column, so that we
+    can easily access the desired cell value.  This only required a specific
+    attribute within the Row class.
 
 D3.  [3pts] Briefly describe the changes you made to your spreadsheet engine to
      satisfy the stricter cell-change notification behaviors.  Did you find this
      to be largely straightforward to change?  Why or why not?
 
-    TODO @Dallas @Kyle
+    TODO @Kyle
 
 Performance Improvement (13 pts)
 --------------------------------
@@ -66,20 +77,39 @@ P1.  [7pts] Give a brief overview of 2-3 of the worst hot-spots you identified
      in your performance testing and analysis.  For each one, describe how your
      team was able to resolve it.
 
-    TODO @Ben
+    1. set_cell_contents/update_cell_values - In a lot of the operations that
+    involve moving or dealing with a large volume of cell references, the
+    number of calls to both of these functions, especially update_cell_values,
+    blows up.  We were able to resolve this by switching from a recursive
+    implementation of update_cell_values to an iterative version that stored a
+    list of all updated cells and then updated them in order of their
+    topological sort. Thus, we heavily reduce the number of calls to both
+    functions, as desired.
+
+    2. Lark earley parsing - We would often have tens to hundreds of thousands
+    of calls to our parser, which is obviously undesired. Our team decided to
+    switch to a LALR parser, and update the Lark grammar as needed (removing
+    Collisions). This was able to resolve our issues as needed.
 
 P2.  [3pts] Did your team try anything to address performance issues and find
      that it didn't improve things at all?  If so, were you able to identify why
      the intended fix didn't produce the desired benefit?
 
-    TODO @Ben
+    We were able to address all of our performance issues! We increased our
+    performance by a large amount.
 
 P3.  [3pts] Did your performance updates cause any regressions in functionality?
      If so, briefly describe any issues that emerged.  How were these issues
      identified (e.g. automated test failures, manual testing, etc.)?  How
      quickly were issues identified?
 
-    TODO @Ben
+    When we were trying to implement both of the main performance updates
+    mentioned in 1 and 2, we often ran into bugs with functionality. This was
+    especially the case with #2, as changing the Lark grammar to be compatible
+    with a LALR parser often caused issues with functionality.  All of these
+    issues were caught, identified, and easily fixed through the use of
+    automated testing. We could just run `make test` from the terminal to see
+    if any of our previously passing tests now failed.
 
 Section F:  CS130 Project 4 Feedback [OPTIONAL]
 -----------------------------------------------
