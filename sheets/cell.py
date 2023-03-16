@@ -84,8 +84,6 @@ class _CellTreeInterpreter(Interpreter):
 
         '''
 
-        # if len(tree) == 2:
-        # print('tree',tree[-1].split('!'))
         tree_split = tree[-1].split('!')
         if len(tree_split) == 2:
             cell_sheet = str(tree_split[0])
@@ -384,7 +382,6 @@ class Cell:
 
         source_contents = self.get_contents()
         source_value = self.get_value()
-        # print(source_contents, source_value)
 
         # check if source cell contents are None or not formula, return
         if source_contents is None or source_contents[0] != "=":

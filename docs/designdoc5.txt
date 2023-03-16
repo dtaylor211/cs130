@@ -27,9 +27,9 @@ L2.  [2pts] What did each teammate focus on during this project?
 
 L3.  [3pts] Approximately how many hours did each teammate spend on the project?
 
-    Ben:    5
-    Kyle:   7
-    Dallas: 11
+    Ben:    6
+    Kyle:   9
+    Dallas: 16
 
 Spreadsheet Engine Design (10 points)
 -------------------------------------

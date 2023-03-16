@@ -379,10 +379,7 @@ class FunctionHandler:
             return args[0]
 
         try:
-            # print(1)
-            # print(args[0].children[-1])
             tree = self.PARSER.parse(f'={str(args[0].children[-1])}')
-            # print(tree.data)
             if tree.data != 'cell':
                 raise lark.exceptions.LarkError
             return tree, 'Y'

@@ -40,6 +40,10 @@ Classes:
 
 '''
 
+# pylint: disable=too-many-lines
+
+# due to the complexity of workbook, we require just over the specified limit
+# of 1000, but want to keep this limit across all other files
 
 import re
 import json
@@ -73,7 +77,6 @@ class Workbook:
         self._notify_functions = []
         self._update_cells = set()
         self._sheet_names = []
-        # dictionary that maps lowercase sheet name to Sheet object
         self._sheet_objects: Dict[str, Sheet] = {}
 
     ########################################################################
@@ -176,7 +179,6 @@ class Workbook:
         sheet_names = self.list_sheets()
         sheet_objects = self.get_sheet_objects()
 
-        # check if sheet name is specified
         if sheet_name is not None:
 
             if sheet_name == "":
@@ -366,7 +368,6 @@ class Workbook:
 
         sheet_objects = self.get_sheet_objects()
 
-        # get all the cell children
         adj = {}
         for sheet in sheet_objects.values():
             adj.update(sheet.get_cell_adjacency_list())
@@ -390,10 +391,10 @@ class Workbook:
                 # get the adjacency list of the cell parents graph
                 parent_adj = cell_graph.get_adjacency_list()
                 # get the cells that references to cells on sheet
-                refer_cells = set([(child_sheet, child_cell)
+                refer_cells = {(child_sheet, child_cell)
                 for children in adj.values()
                 for (child_sheet, child_cell) in children
-                if child_sheet == updated_sheet])
+                if child_sheet == updated_sheet}
                 ref_cells = set()
                 for ref in refer_cells:
                     for cell in parent_adj[ref]:
@@ -408,7 +409,6 @@ class Workbook:
                                     contents, flags=re.IGNORECASE)
                     contents=re.sub("'"+updated_sheet+"'"+"!",
                     renamed_sheet+"!", contents, flags=re.IGNORECASE)
-
                     # set the new contents with new sheet name
                     sheet_objects[sheet.lower()].set_cell_contents(
                         cell, contents)
@@ -421,7 +421,7 @@ class Workbook:
         # call helper to update and notify cells that need updating
         self.__update_notify_cells(updated_cells,
             self.__get_topological(cell_graph, updated_cells, adj),
-            notify, updated_cell)
+            notify)
 
     @staticmethod
     def load_workbook(fp: TextIO) -> 'Workbook':
@@ -434,7 +434,6 @@ class Workbook:
         Let any raised exception propagate through.
 
         If any expected value in the input JSON is missing raise a KeyError.
-
         If any expected value in the input JSON is not of the proper type
         raise a TypeError.
 
@@ -483,9 +482,6 @@ class Workbook:
 
                 new_wb.set_cell_contents(sheet_name, location, contents)
 
-        # new_wb.update_cell_values(sheet_name, list(new_wb._update_cells))
-        # new_wb._update_cells = set()
-        # new_wb._notify_cells()
         return new_wb
 
     def save_workbook(self, fp: TextIO) -> None:
@@ -713,7 +709,7 @@ class Workbook:
         # Set contents of target cells (within same sheet if to_sheet is None)
         for loc, contents in target_cells.items():
             self.set_cell_contents(to_sheet, loc, contents, notify=False)
-        
+
         self.update_cell_values(to_sheet, list(self._update_cells))
         self._update_cells = set()
         self.__notify()
@@ -989,8 +985,7 @@ class Workbook:
     # function, and we are unsure of exception types
 
     def __update_notify_cells(self, updated_cells: List[Tuple],
-        cell_topological: List[Tuple], notify: bool, updated_cell: Optional[str]
-        ) -> None:
+        cell_topological: List[Tuple], notify: bool) -> None:
         '''
         Updates and notifies cells using the topological sort provided.
 

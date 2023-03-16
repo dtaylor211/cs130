@@ -413,20 +413,14 @@ class Evaluator(Transformer):
 
         try:
             func_name = args[0][:-1].replace(' ', '').lower()
-            print(func_name+'p')
-            # func_name = args[0][:-1].lower()
             args_list = args[-1].children
             if len(args_list) == 1:
                 args_list = [args[-1]]
-            # print(func_name, args)
             result = self.function_handler.map_func(func_name)
             result = result(args_list)
-            # print(result)
-            # print(self._working_sheet)
 
             if isinstance(result, Tuple):
                 temp =  self.transform(result[0])
-                # print(temp)
 
                 if temp.children[-1] is None:
                     return Tree('cell_error', [CellError(CellErrorType.BAD_REFERENCE, '')])
@@ -453,19 +447,14 @@ class Evaluator(Transformer):
         Evaluate an expression of function arguments:
 
         '''
-        # print('a', args)
 
         if args == []:
-            # print('arg')
-            # raise exceptions.LarkError
             return Tree('args_list', [])
 
         if len(args[-1].children) == 1:
             # print(1)
             return Tree('args_list', [args[0]]+[args[-1]])
-        
-        # print(2)
-        # print(args[-1].children)
+
         if args[-1].children == []:
             raise exceptions.LarkError
 
@@ -567,44 +556,3 @@ class Evaluator(Transformer):
         norm = num.normalize()
         _, _, exp = norm.as_tuple()
         return norm if exp <= 0 else norm.quantize(1)
-
-    # def __compare_values(self, left: Any, right: Any, types: Tuple[type, type],
-    #                      oper: str) -> bool:
-    #     '''
-    #     Get the boolean value for a comparison between types of bool, str,
-    #     and/or Decimal
-
-    #     Arguments:
-    #     - left: Any - left side of comparison
-    #     - right: Any - right side of comparison
-    #     - types: Tuple[type, type] - types of the left and right sides of the
-    #         comparison operator
-    #     - oper: str - comparison operator
-
-    #     Returns:
-    #     - boolean result of comparison
-
-    #     '''
-
-    #     result = False
-    #     if types[0] == types[-1]:
-    #         if types == (str, str):
-    #             left = left.lower()
-    #             right = right.lower()
-    #         result = COMP_OPERATORS[oper](left, right)
-
-    #     elif types in [(bool, str), (str, Decimal), (bool, Decimal)]:
-    #         if oper in ['>', '>=', '!=', '<>']:
-    #             result = True
-
-    #     elif types in [(str, bool), (Decimal, str), (Decimal, bool)]:
-    #         if oper in ['<', '<=', '!=', '<>']:
-    #             result = True
-
-    #     else:
-    #         if left is not None:
-    #             result = COMP_OPERATORS[oper](left, EMPTY_SUBS[types[0]])
-    #         else:
-    #             result = COMP_OPERATORS[oper](EMPTY_SUBS[types[-1]], right)
-
-    #     return result
