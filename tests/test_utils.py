@@ -22,6 +22,7 @@ from decimal import Decimal
 import pytest
 
 import context
+from sheets import CellError, CellErrorType
 from sheets.utils import get_loc_from_coords, get_coords_from_loc,\
     convert_to_bool, compare_values
 
@@ -149,8 +150,25 @@ class TestUtils:
         '''
         Test comparing two values
 
-        TODO - ADD MORE
-
         '''
 
-        assert compare_values(None, None, (type(None), type(None)), '=')
+        booly = compare_values(None, None, (type(None), type(None)), '=')
+        assert booly
+
+        booly = compare_values(Decimal('1'), True, (Decimal, bool), '<')
+        assert booly
+
+        booly = compare_values(Decimal('1'), "true", (Decimal, str), '<')
+        assert booly
+
+        booly = compare_values(None, "true", (type(None), str), '<')
+        assert booly
+
+        booly = compare_values(CellError(CellErrorType.BAD_REFERENCE, ""),
+                               "true", (CellError, str), '<')
+        assert booly
+
+        booly = compare_values(CellError(CellErrorType.BAD_REFERENCE, ""),
+                               None, (CellError, type(None)), '>')
+        assert booly
+
