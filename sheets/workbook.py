@@ -71,6 +71,7 @@ class Workbook:
         self.evaluator = Evaluator(self, '')
         self._notify_cells = set()
         self._notify_functions = []
+        self._update_cells = set()
         self._sheet_names = []
         # dictionary that maps lowercase sheet name to Sheet object
         self._sheet_objects: Dict[str, Sheet] = {}
@@ -282,19 +283,23 @@ class Workbook:
         sheet_name_lower = sheet_name.lower()
         self.__validate_sheet_existence(sheet_name_lower)
 
+        prev_contents = sheet_objects[sheet_name_lower].get_cell_contents(location)
         prev_value = sheet_objects[sheet_name_lower].get_cell_value(location)
 
         sheet_objects[sheet_name_lower].set_cell_contents(
             location, contents)
         new_value = sheet_objects[sheet_name_lower].get_cell_value(location)
 
-        # update other cells
-        if new_value == prev_value:
-            self.update_cell_values(sheet_name, location, notify=False)
-        else:
-            self.update_cell_values(sheet_name, location)
         if notify:
+            # update other cells
+            if new_value == prev_value and prev_contents is not None:
+                self.update_cell_values(sheet_name, [(sheet_name, location.upper())], notify=False)
+            else:
+                self.update_cell_values(sheet_name, [(sheet_name, location.upper())])
             self.__notify()
+        else:
+            if new_value != prev_value:
+                self._update_cells.add((sheet_name, location.upper()))
 
     def get_cell_contents(self, sheet_name: str, location: str)-> Optional[str]:
         '''
@@ -365,7 +370,6 @@ class Workbook:
         adj = {}
         for sheet in sheet_objects.values():
             adj.update(sheet.get_cell_adjacency_list())
-
         # make a graph of cell children, transpose to get graph of cell parents
         cell_graph = Graph(adj)
         cell_graph.transpose()
@@ -376,7 +380,8 @@ class Workbook:
             updated_cells = [(child_sheet, child_cell)
             for children in adj.values()
             for (child_sheet, child_cell) in children
-            if child_sheet in (updated_sheet, renamed_sheet)]
+            if (renamed_sheet is None and child_sheet == updated_sheet)
+            or (renamed_sheet is not None and child_sheet == renamed_sheet)]
             # rename references if we have a renamed sheet
             if renamed_sheet is not None:
                 # fix new sheet name
@@ -385,11 +390,14 @@ class Workbook:
                 # get the adjacency list of the cell parents graph
                 parent_adj = cell_graph.get_adjacency_list()
                 # get the cells that references to cells on sheet
+                refer_cells = set([(child_sheet, child_cell)
+                for children in adj.values()
+                for (child_sheet, child_cell) in children
+                if child_sheet == updated_sheet])
                 ref_cells = set()
-                for ref in updated_cells:
+                for ref in refer_cells:
                     for cell in parent_adj[ref]:
                         ref_cells.add(cell)
-
                 # go through cells that reference the cells on sheet
                 for (sheet, cell) in ref_cells:
                     # get cell contents
@@ -409,8 +417,7 @@ class Workbook:
                                                 adj[(sheet, cell)])
                 self.__set_sheet_objects(sheet_objects)
         else:
-            updated_cells = [(updated_sheet, updated_cell.upper())]
-
+            updated_cells = updated_cell
         # call helper to update and notify cells that need updating
         self.__update_notify_cells(updated_cells,
             self.__get_topological(cell_graph, updated_cells, adj),
@@ -476,6 +483,9 @@ class Workbook:
 
                 new_wb.set_cell_contents(sheet_name, location, contents)
 
+        # new_wb.update_cell_values(sheet_name, list(new_wb._update_cells))
+        # new_wb._update_cells = set()
+        # new_wb._notify_cells()
         return new_wb
 
     def save_workbook(self, fp: TextIO) -> None:
@@ -636,6 +646,8 @@ class Workbook:
             self.set_cell_contents(sheet_copy_name, loc, cell.get_contents(),
                                     notify=False)
 
+        self.update_cell_values(sheet_copy_name, list(self._update_cells))
+        self._update_cells = set()
         self.__notify()
         return sheet_copy_idx, sheet_copy_name
 
@@ -702,6 +714,8 @@ class Workbook:
         for loc, contents in target_cells.items():
             self.set_cell_contents(to_sheet, loc, contents, notify=False)
         
+        self.update_cell_values(to_sheet, list(self._update_cells))
+        self._update_cells = set()
         self.__notify()
 
 
@@ -756,6 +770,9 @@ class Workbook:
         # Set contents of target cells (within same sheet if to_sheet is None)
         for loc, contents in target_cells.items():
             self.set_cell_contents(to_sheet, loc, contents, notify=False)
+
+        self.update_cell_values(to_sheet, list(self._update_cells))
+        self._update_cells = set()
         self.__notify()
 
     def sort_region(self, sheet_name: str, start_location: str,
@@ -798,6 +815,9 @@ class Workbook:
         # Set contents of target cells
         for cell in all_target_cells.items():
             self.set_cell_contents(sheet_name, cell[0], cell[-1], notify=False)
+
+        self.update_cell_values(sheet_name, list(self._update_cells))
+        self._update_cells = set()
         self.__notify()
 
     ########################################################################
@@ -984,12 +1004,12 @@ class Workbook:
 
         # get cells to notify
         notify_cells = []
-        if notify and updated_cell is not None:
+        if notify:
             notify_cells = updated_cells
 
         # update cells
         for sheet, cell in cell_topological:
-            if (sheet, cell) not in updated_cells:
+            if len(updated_cells) > 1 or (sheet, cell) not in updated_cells:
                 name = sheet.lower()
                 prev_value = sheet_objects[name].get_cell_value(cell)
                 sheet_objects[name].set_cell_contents(cell,
@@ -997,7 +1017,6 @@ class Workbook:
                 new_value = sheet_objects[name].get_cell_value(cell)
                 if new_value != prev_value:
                     notify_cells.append((sheet, cell))
-
         self.__set_sheet_objects(sheet_objects)
         self._notify_cells.update(notify_cells)
 

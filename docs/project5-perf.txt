@@ -36,9 +36,15 @@ as well as the benchmark test results from project 4.  Specifically, our test in
 test_copy_sheet_bulk.py (make target test-performance-copy-sheet-bulk) takes 
 about 75-80 seconds which certainly indicates sub par performance.  Also, the 
 benchmark test CopySheetBenchmark is 14.7x slower than the reference 
-implementation.
+implementation. We also think that we are calling update_cell_values too often,
+and should instead perform a topological sort on a list of all cells that are
+updated in an operation. The main fixes for these problems come from the switch
+to a LALR parser, which is described in Improvement 1's Rationale, as well as
+the implementation of an iterative update_cell_values.
 
-Outcome: TODO
+Outcome: With these fixes, the cumulative time with the same performance test
+drops to about 2 seconds.  Similar to above, the performance improvement
+seems to have been applied across all major operations. Yay! We did it!
 
 Improvement 3
 -------------
@@ -52,7 +58,12 @@ otherwise.  While RenameSheetCellrefUpdateBenchmark is only 2.1x slower, our
 RenameSheetNoCellrefUpdateBenchmark is 17.7x slower.  This is interesting since
 we would expect the benchmark with cell references to be slower.
 
-Outcome: TODO
+Outcome: With the same fixes mentioned above, we were able to decrease the
+cumulative run time for our renaming sheet performance tests for renaming that 
+causes a chain, renaming that causes a large volume of cells to update, and 
+renaming a sheet 10 times from 5.7, 1.4, and 30 seconds to 0.7, 0.1, and 1.8
+seconds, respectively.  This is awesome yay! Our performance fixes are working
+everywhere!
 
 Improvement 4
 -------------
@@ -65,7 +76,11 @@ operation is decently fast, the project 4 benchmark test results suggest
 otherwise.  The MoveCellsSameSheetBenchmark is 7.8x slower and the 
 MoveCellsDifferentSheetBenchmark is 8x slower.
 
-Outcome: TODO
+Outcome: We tested to see if the same main fixes we have mentioned earlier would
+also positively impact the performance of moving cells.  Cumulative time for
+moving a large group of source cells decreased from 4.8 to 1 seconds. Cumulative
+time for moving a group of cells 10 times decreased from 24.3 to 0.2 seconds.
+Yay! It all worked as desired. Go us!
 
 NOTES: 
 New benchmarks: 

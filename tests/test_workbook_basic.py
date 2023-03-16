@@ -415,7 +415,6 @@ class TestWorkbook:
         assert test_changed[-1] == [('Sheet1', 'D2')]
         wb1.set_cell_contents('Sheet1', 'D3', '0')
         assert test_changed[-1] == [('Sheet1', 'D3')]
-        print("move")
         wb1.move_cells('Sheet1', 'C1', 'D3', 'C2')
         assert set(test_changed[-1]) == set([('Sheet1', 'C1'), ('Sheet1', 'C2'),
                         ('Sheet1', 'D1'), ('Sheet1', 'D3'), ('Sheet1', 'D4')])
