@@ -20,7 +20,7 @@ import lark
 from lark import Tree, Lark
 
 # import sheets
-from .utils import convert_to_bool
+from .utils import convert_to_bool, get_loc_from_coords
 from .cell_error import CellError, CellErrorType
 from .configs import VERSION
 
@@ -55,7 +55,13 @@ class FunctionHandler:
             'isblank': self.__isblank,
             'iserror': self.__iserror,
             'version': self.__version,
-            'indirect': self.__indirect
+            'indirect': self.__indirect,
+            'min': self.__min,
+            'max': self.__max,
+            'sum': self.__sum,
+            'average': self.__average,
+            'hlookup': self.__hlookup,
+            'vlookup': self.__vlookup
         }
 
     def map_func(self, func_name: str) -> Callable:
@@ -231,6 +237,7 @@ class FunctionHandler:
         if isinstance(arg, CellError):
             return Tree('cell_error', [arg])
         res = convert_to_bool(arg, type(arg))
+
         if res:
             if args[1].children[-1] is None:
                 args[1].children[-1] = Decimal('0')
@@ -387,3 +394,176 @@ class FunctionHandler:
         except lark.exceptions.LarkError:
             return Tree('cell_error', [
                 CellError(CellErrorType.BAD_REFERENCE, '')])
+
+    def __min(self, args: List) -> Tree:
+        '''
+        MIN functionality
+
+        Arguments:
+        - args: List - list of arguments to given function
+
+        Returns:
+        - Tree containing Decimal result
+
+        '''
+
+        all_values = self.__populate_all_range_values(args)
+
+        min_val = min(all_values) if all_values else Decimal(0)
+        return Tree('number', [min_val])
+
+    def __max(self, args: List) -> Tree:
+        '''
+        MAX functionality
+
+        Arguments:
+        - args: List - list of arguments for given function
+
+        Returns:
+        - Tree with Decimal result
+
+        '''
+
+        all_values = self.__populate_all_range_values(args)
+
+        max_val = max(all_values) if all_values else Decimal(0)
+        return Tree('number', [max_val])
+
+    def __sum(self, args: List) -> Tree:
+        '''
+        SUM functionality
+        
+        Arguments:
+        - args: List - list of arguments for given function
+
+        Returns:
+        - Tree with Decimal result
+
+        '''
+
+        all_values = self.__populate_all_range_values(args)
+
+        sum_val = sum(all_values) if all_values else Decimal(0)
+        return Tree('number', [sum_val])
+
+    def __average(self, args: List) -> Tree:
+        '''
+        AVERAGE functionality
+        
+        Arguments:
+        - args: List - list of arguments for given function
+        
+        Returns:
+        - Tree containing Decimal result
+
+        '''
+
+        all_values = self.__populate_all_range_values(args)
+
+        if not all_values:
+            raise ZeroDivisionError('All given values are empty')
+
+        avg_val = sum(all_values) / len(all_values)
+        return Tree('number', [avg_val])
+
+    def __hlookup(self, args: List) -> Tree:
+        '''
+        HLOOKUP functionality
+        
+        Arguments:
+        - args: List - list of arguments for given function
+        
+        Returns:
+        - Tree containing cell reference result
+
+        '''
+
+        key = args[0].children[-1]
+        tl_br_corners = args[1].children[-1]['tl_br_corners']
+        ran = args[1].children[-1]['cells']
+        index = args[-1].children[-1]
+
+        if index < 1:
+            raise TypeError(f'invalid index given: {index}')
+        curr_col, curr_row = tl_br_corners[0]
+        max_col, max_row = tl_br_corners[-1]
+
+        while ran[get_loc_from_coords((curr_col, curr_row))] != key:
+            if curr_col > max_col:
+                raise TypeError('No column found')
+            curr_col += 1
+
+        if curr_row + index - 1 > max_row:
+            raise TypeError(f'invalid index given: {index}')
+        loc = get_loc_from_coords((curr_col, curr_row+index-1))
+        res = [ran[loc]]
+
+        return Tree('cell_ref', res)
+
+    def __vlookup(self, args: List) -> Tree:
+        '''
+        VLOOKUP functionality
+        
+        Arguments:
+        - args: List - list of arguments for given function
+        
+        Returns:
+        - Tree containing cell reference result
+
+        '''
+        key = args[0].children[-1]
+        tl_br_corners = args[1].children[-1]['tl_br_corners']
+        ran = args[1].children[-1]['cells']
+        index = args[-1].children[-1]
+
+        if index < 1:
+            raise TypeError(f'invalid index given: {index}')
+        curr_col, curr_row = tl_br_corners[0]
+        max_col, max_row = tl_br_corners[-1]
+
+        while ran[get_loc_from_coords((curr_col, curr_row))] != key:
+            if curr_row > max_row:
+                raise TypeError('No row found')
+            curr_row += 1
+
+        if curr_col + index - 1 > max_col:
+            raise TypeError(f'invalid index given: {index}')
+        loc = get_loc_from_coords((curr_col+index-1, curr_row))
+        res = [ran[loc]]
+
+        return Tree('cell_ref', res)
+
+    ########################################################################
+    # Helper Functions
+    ########################################################################
+
+    def __populate_all_range_values(self, args: List) -> List:
+        '''
+        Populate a list of all values in a range of cells
+
+        Arguments:
+        - args: List - list of arguments for a given common math function
+
+        Returns:
+        - List of relevant, non-empty values, converted to Decimals
+
+        '''
+
+        all_values = []
+        if len(args) < 1:
+            raise TypeError('Invalid number of arguments')
+
+        for arg in args:
+            try:
+                if arg.data == 'cell_range':
+                    for cell_val in list(arg.children[-1]['cells'].values()):
+                        if cell_val is None:
+                            continue
+                        all_values.append(Decimal(cell_val))
+                else:
+                    all_values.append(arg.children[-1])
+
+            except InvalidOperation as e:
+                raise TypeError(f'Cannot convert argument {arg} to Decimal') \
+                    from e
+        return all_values

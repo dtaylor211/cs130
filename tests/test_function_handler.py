@@ -26,6 +26,7 @@ Classes:
     - test_version(object) -> None
     - test_indirect(object) -> None
     - test_indirect2(object) -> None
+    - test_common_math(object) -> None
 
 '''
 
@@ -687,3 +688,73 @@ class TestFunctionHandler:
         result = EVALUATOR.transform(tree).children[-1]
         assert isinstance(result, CellError)
         assert result.get_type() == CellErrorType.BAD_REFERENCE
+
+    def test_common_math(self) -> None:
+        '''
+        test MIN, MAX, SUM, AVG functionality
+
+        '''
+
+        WB.set_cell_contents('Test', 'A1', '=0')
+        WB.set_cell_contents('Test', 'A2', '=-100')
+        WB.set_cell_contents('Test', 'B2', '=130')
+        WB.set_cell_contents('Test', 'D1', '=True')
+        WB.set_cell_contents('Test', 'D2', '="string"')
+        tree = PARSER.parse('=MIN(1, 3, A1:B2)')
+        result = EVALUATOR.transform(tree).children[-1]
+        assert result == Decimal(-100)
+
+        tree = PARSER.parse('=MAX(1, 3, A1:B2)')
+        result = EVALUATOR.transform(tree).children[-1]
+        assert result == Decimal(130)
+
+        tree = PARSER.parse('=SUM(1, 3, A1:B2)')
+        result = EVALUATOR.transform(tree).children[-1]
+        assert result == Decimal(34)
+
+        tree = PARSER.parse('=AVERAGE(1, 3, A1:B2)')
+        result = EVALUATOR.transform(tree).children[-1]
+        assert result == Decimal('6.8')
+
+        tree = PARSER.parse('=SUM(C1:C2)')
+        result = EVALUATOR.transform(tree).children[-1]
+        assert result == Decimal(0)
+
+        tree = PARSER.parse('=MAX(20, D1:D2)')
+        result = EVALUATOR.transform(tree).children[-1]
+        assert isinstance(result, CellError)
+        assert result.get_type() == CellErrorType.TYPE_ERROR
+
+        WB.set_cell_contents('Test', 'B1', '=True')
+        WB.set_cell_contents('Test', 'C1', '=1')
+        WB.set_cell_contents('Test', 'C2', '=1')
+        WB.set_cell_contents('Test', 'C3', '=1')
+        WB.set_cell_contents('Test', 'C4', '=1')
+        WB.set_cell_contents('Test', 'C5', '=1')
+
+        tree = PARSER.parse('=SUM(IF(B1, C1:C5, D1:D10))')
+        result = EVALUATOR.transform(tree).children[-1]
+        assert result == Decimal(5)
+
+    def test_lookups(self) -> None:
+        '''
+        test HLOOKUP and VLOOKUP functionality
+
+        '''
+
+        WB.set_cell_contents('Test', 'A1', '=0')
+        WB.set_cell_contents('Test', 'A2', '=-100')
+        WB.set_cell_contents('Test', 'B1', '="sparkles"')
+        WB.set_cell_contents('Test', 'B2', '=130')
+        WB.set_cell_contents('Test', 'C1', '="sparkles"')
+        WB.set_cell_contents('Test', 'C2', '=134')
+        WB.set_cell_contents('Test', 'D1', '=True')
+        WB.set_cell_contents('Test', 'D2', '="string"')
+
+        tree = PARSER.parse('=HLOOKUP("sparkles", A1:D2, 2)')
+        result = EVALUATOR.transform(tree).children[-1]
+        assert result == Decimal(130)
+
+        tree = PARSER.parse('=VLOOKUP(0, D2:A1, 2)')
+        result = EVALUATOR.transform(tree).children[-1]
+        assert result == "sparkles"

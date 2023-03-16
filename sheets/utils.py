@@ -15,6 +15,7 @@ Methods:
 - get_loc_from_coords(Tuple[int, int]) -> str
 - get_coords_from_loc(str) -> Tuple[int, int]
 - convert_to_bool(Any, type) -> bool
+- get_tl_br_corners()
 - compare_values(Any, Any, Tuple[type, type], str) -> bool
 
 '''
@@ -22,7 +23,7 @@ Methods:
 
 import re
 import operator
-from typing import Tuple, Any
+from typing import Tuple, Any, List
 from decimal import Decimal
 
 from .cell_error import CellError
@@ -127,6 +128,64 @@ def convert_to_bool(inp: Any, inp_type: type) -> bool:
         result = bool(inp)
     else: raise TypeError('Cannot convert given type to boolean')
     return result
+
+def get_tl_br_corners(start_location: str, end_location: str
+                          ) -> List[Tuple[int, int]]:
+    '''
+    Get the top left and bottom right corner coordinates from given
+    corners that define the desired cell range
+
+    Arguments:
+    - start_location: str - corner cell location of source area
+    - end_location: str - corner cell location of source area
+
+    Returns:
+    - List of top left, bottom right coordinates where each tuple 
+        contains the col, row integer
+
+    '''
+
+    # get_coords_from_loc raises ValueError for invalid location
+    start_col, start_row = get_coords_from_loc(start_location)
+    end_col, end_row = get_coords_from_loc(end_location)
+
+    top_left_col = min(start_col, end_col)
+    top_left_row = min(start_row, end_row)
+    bottom_right_col = max(start_col, end_col)
+    bottom_right_row = max(start_row, end_row)
+
+    return [
+        (top_left_col, top_left_row),
+        (bottom_right_col, bottom_right_row)
+    ]
+
+def get_source_cells(start_location: str,
+        end_location: str) -> List[str]:
+    '''
+    Gets the list of source cell locations using start/end locations.
+
+    Arguments:
+    - start_location: str - corner cell location of source area
+    - end_location: str - corner cell location of source area
+
+    Returns:
+    - List of string locations in the source area
+
+    '''
+
+    corners = get_tl_br_corners(start_location, end_location)
+    top_left_col, top_left_row = corners[0]
+    bottom_right_col, bottom_right_row = corners[-1]
+
+    # List[str] = List[cell location]
+    # get_loc_from_coords raises ValueError for invalid coords
+    source_cells: List[str] = []
+    for col in range(top_left_col, bottom_right_col + 1):
+        for row in range(top_left_row, bottom_right_row + 1):
+            loc = get_loc_from_coords((col, row))
+            source_cells.append(loc)
+
+    return source_cells
 
 def compare_values(left: Any, right: Any, types: Tuple[type, type],
                         oper: str) -> bool:

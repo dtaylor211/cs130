@@ -24,7 +24,7 @@ import pytest
 import context
 from sheets import CellError, CellErrorType
 from sheets.utils import get_loc_from_coords, get_coords_from_loc,\
-    convert_to_bool, compare_values
+    convert_to_bool, compare_values, get_source_cells
 
 
 class TestUtils:
@@ -146,6 +146,34 @@ class TestUtils:
         booly = convert_to_bool(Decimal('-0.231'), Decimal)
         assert booly
 
+    def test_get_source_cells(self) -> None:
+        '''
+        Test getting a group of source cells
+
+        '''
+
+        source_cells = get_source_cells('A1', 'A1')
+        assert source_cells == ['A1']
+
+        source_cells = get_source_cells('A1', 'B3')
+        result_list = ['A1', 'A2', 'A3', 'B1', 'B2', 'B3']
+        assert source_cells == result_list
+
+        source_cells = get_source_cells('B3', 'A1')
+        assert source_cells == result_list
+
+        source_cells = get_source_cells('A3', 'B1')
+        assert source_cells == result_list
+
+        source_cells = get_source_cells('B1', 'A3')
+        assert source_cells == result_list
+
+        with pytest.raises(ValueError):
+            get_source_cells('AAAAA1', 'B2')
+
+        with pytest.raises(ValueError):
+            get_source_cells('A1', 'BB12345')
+
     def test_compare_values(self) -> None:
         '''
         Test comparing two values
@@ -171,4 +199,3 @@ class TestUtils:
         booly = compare_values(CellError(CellErrorType.BAD_REFERENCE, ""),
                                None, (CellError, type(None)), '>')
         assert booly
-

@@ -41,7 +41,7 @@ from lark import Tree, Transformer, Token, exceptions
 
 from .cell_error import CellError, CellErrorType, CELL_ERRORS
 from .function_handler import FunctionHandler
-from .utils import convert_to_bool, compare_values
+from .utils import convert_to_bool, compare_values, get_tl_br_corners, get_source_cells
 
 
 class Evaluator(Transformer):
@@ -359,23 +359,15 @@ class Evaluator(Transformer):
         '''
 
         try:
-            # print('a', args)
-            # print(args[-1].split('!'))
-            # print('A1'.split('!'))
             args_split = args[-1].split('!')
             if len(args_split) == 2:
-                # print('huh')
                 working_sheet = args_split[0]
-                # print(working_sheet)
                 if working_sheet[0] == "'":
                     working_sheet = working_sheet[1:-1]
                 cell_name = args_split[-1].replace('$', '')
             else:
-                # print('oop')
                 working_sheet = self.get_working_sheet()
-                # print()
                 cell_name = args_split[-1].replace('$', '')
-                # print(cell_name)
 
             # Check that cell location is within bounds
             if not re.match(r"^[A-Z]{1,4}[1-9][0-9]{0,3}$", cell_name.upper()):
@@ -442,6 +434,30 @@ class Evaluator(Transformer):
 
     # We enable the checks for catching broad exceptions.
 
+    def cell_range_expr(self, args: List) -> Tree:
+        '''
+        Evaluate a cell range expression
+
+        Arguments:
+        - args: List - list of corners defining range area
+
+        Returns:
+        - Tree containing a dictionary with the top left and bottom right
+            corners as well as the cells in the range with their values
+
+        '''
+
+        start_loc = args[0]
+        end_loc = args[-1]
+        tl_br = get_tl_br_corners(start_loc, end_loc)
+        res = {}
+        source_cells = get_source_cells(start_loc, end_loc)
+        for cell in source_cells:
+            res[cell] = self.workbook.get_cell_value(
+                self.get_working_sheet(), cell)
+
+        return Tree('cell_range', [{'tl_br_corners': tl_br, 'cells': res}])
+
     def args_expr(self, args: List) -> Tree:
         '''
         Evaluate an expression of function arguments:
@@ -452,7 +468,6 @@ class Evaluator(Transformer):
             return Tree('args_list', [])
 
         if len(args[-1].children) == 1:
-            # print(1)
             return Tree('args_list', [args[0]]+[args[-1]])
 
         if args[-1].children == []:

@@ -22,7 +22,6 @@ Classes:
     - get_cell_adjacency_list(object) -> Dict[Tuple[str, str],
         List[Tuple[str, str]]]
     - save_sheet(object) -> Dict[str, str]
-    - get_source_cells(object, str, str) -> List[str]
     - get_target_cells(object, str, str, str, List[str]) -> Dict[str, str]
 
 '''
@@ -32,7 +31,7 @@ from typing import Dict, List, Tuple, Optional, Any
 
 from .cell import Cell
 from .evaluator import Evaluator
-from .utils import get_loc_from_coords, get_coords_from_loc
+from .utils import get_loc_from_coords, get_coords_from_loc, get_tl_br_corners
 
 
 class Sheet:
@@ -244,64 +243,6 @@ class Sheet:
             "cell-contents": cell_contents
         }
 
-    def get_tl_br_corners(self, start_location: str, end_location: str
-                          ) -> List[Tuple[int, int]]:
-        '''
-        Get the top left and bottom right corner coordinates from given
-        corners that define the desired cell range
-
-        Arguments:
-        - start_location: str - corner cell location of source area
-        - end_location: str - corner cell location of source area
-
-        Returns:
-        - List of top left, bottom right coordinates where each tuple 
-            contains the col, row integer
-
-        '''
-
-        # get_coords_from_loc raises ValueError for invalid location
-        start_col, start_row = get_coords_from_loc(start_location)
-        end_col, end_row = get_coords_from_loc(end_location)
-
-        top_left_col = min(start_col, end_col)
-        top_left_row = min(start_row, end_row)
-        bottom_right_col = max(start_col, end_col)
-        bottom_right_row = max(start_row, end_row)
-
-        return [
-            (top_left_col, top_left_row),
-            (bottom_right_col, bottom_right_row)
-        ]
-
-    def get_source_cells(self, start_location: str,
-        end_location: str) -> List[str]:
-        '''
-        Gets the list of source cell locations using start/end locations.
-
-        Arguments:
-        - start_location: str - corner cell location of source area
-        - end_location: str - corner cell location of source area
-
-        Returns:
-        - List of string locations in the source area
-
-        '''
-
-        corners = self.get_tl_br_corners(start_location, end_location)
-        top_left_col, top_left_row = corners[0]
-        bottom_right_col, bottom_right_row = corners[-1]
-
-        # List[str] = List[cell location]
-        # get_loc_from_coords raises ValueError for invalid coords
-        source_cells: List[str] = []
-        for col in range(top_left_col, bottom_right_col + 1):
-            for row in range(top_left_row, bottom_right_row + 1):
-                loc = get_loc_from_coords((col, row))
-                source_cells.append(loc)
-
-        return source_cells
-
     def get_target_cells(self, start_location: str, end_location: str,
             to_location: str, source_cells: List[str]) -> Dict[str, str]:
         '''
@@ -319,7 +260,7 @@ class Sheet:
 
         target_top_left = get_coords_from_loc(to_location)
 
-        src_top_left = self.get_tl_br_corners(start_location, end_location)[0]
+        src_top_left = get_tl_br_corners(start_location, end_location)[0]
 
         diff_coords = (
             target_top_left[0] - src_top_left[0],

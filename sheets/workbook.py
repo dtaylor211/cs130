@@ -52,7 +52,7 @@ from typing import Optional, List, Tuple, Any, Dict, Callable, Iterable, TextIO
 from .sheet import Sheet
 from .evaluator import Evaluator
 from .graph import Graph
-from .utils import get_loc_from_coords
+from .utils import get_loc_from_coords, get_source_cells, get_tl_br_corners
 from .sort_handler import Row
 
 
@@ -682,8 +682,7 @@ class Workbook:
         sheet_objects = self.get_sheet_objects()
 
         source_sheet = sheet_objects[sheet_name.lower()]
-        source_cells = source_sheet.get_source_cells(start_location,
-            end_location) # List[locs]
+        source_cells = get_source_cells(start_location, end_location)
 
         if to_sheet is None:
             to_sheet = sheet_name
@@ -752,8 +751,7 @@ class Workbook:
         sheet_objects = self.get_sheet_objects()
 
         source_sheet = sheet_objects[sheet_name.lower()]
-        source_cells = source_sheet.get_source_cells(start_location,
-            end_location) # List[locs]
+        source_cells = get_source_cells(start_location, end_location)
 
         if to_sheet is None:
             to_sheet = sheet_name
@@ -792,8 +790,8 @@ class Workbook:
 
         self.__validate_sheet_existence(sheet_name)
         sheet =  self.get_sheet_objects()[sheet_name.lower()]
-        tl_br_corners = sheet.get_tl_br_corners(start_location, end_location)
-        source_cells = sheet.get_source_cells(start_location, end_location)
+        tl_br_corners = get_tl_br_corners(start_location, end_location)
+        source_cells = get_source_cells(start_location, end_location)
 
         all_rows = self.__populate_row_sorter(tl_br_corners, source_cells, sheet_name)
 
@@ -972,7 +970,7 @@ class Workbook:
                     (tl_br_corners[1][0], tl_br_corners[0][-1]+row.row_order-1))
                 to_loc = get_loc_from_coords(
                     (tl_br_corners[0][0], tl_br_corners[0][-1]+i))
-                source_cells = sheet.get_source_cells(start_loc, end_loc)
+                source_cells = get_source_cells(start_loc, end_loc)
                 all_target_cells.update(sheet.get_target_cells(start_loc,
                                                 end_loc, to_loc, source_cells))
 

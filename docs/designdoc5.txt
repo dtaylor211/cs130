@@ -61,7 +61,15 @@ D3.  [3pts] Briefly describe the changes you made to your spreadsheet engine to
      satisfy the stricter cell-change notification behaviors.  Did you find this
      to be largely straightforward to change?  Why or why not?
 
-    TODO @Kyle
+    We changed our implementation so that large operations (moving/copying),
+    now keep track of all cells that need to be updated and notified instead of
+    doing this recursively for every individual cell.  After we set all of the
+    contents for updated cells, we then do all reference updates and
+    notifications at once.  We found this largely straightforward because our
+    code was already very general with how it handled updating and notifying.
+    The only necessary change was switching from single cell updating and
+    notifying to storing an array of cells to update and notify. All of the core
+    functionality was the same.
 
 Performance Improvement (13 pts)
 --------------------------------

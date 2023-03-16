@@ -36,7 +36,8 @@
 //========================================
 // Function expressions
 
-?args_expr : (expression ("," args_expr )* )? 
+cell_range_expr : CELLREF ":" CELLREF
+?args_expr : ((expression | cell_range_expr) ("," args_expr )* )? 
 
 
 //========================================
