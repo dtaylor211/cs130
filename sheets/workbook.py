@@ -239,7 +239,7 @@ class Workbook:
 
     def get_sheet_extent(self, sheet_name: str) -> Tuple[int, int]:
         '''
-        Get the current extent of the specified spreadshee (case-insensitive).
+        Get the current extent of the specified spreadsheet (case-insensitive).
 
         If the specified sheet name is not found, a KeyError is raised.
 

@@ -39,3 +39,33 @@ If any edits are made to the Sheets module, basic functionality can be tested fr
 - to lint a specific file titled `x`: `make lint-x`
 
 Note, to adjust the linter to accept different style choices, you can edit `.pylintrc` in the main `cs130` directory.
+
+### Notes
+
+Supported functions for this spreadsheet engine include the following:
+- AND
+- OR
+- NOT
+- XOR
+- EXACT
+- IF
+- IFERROR
+- CHOOSE
+- ISBLANK
+- ISERROR
+- VERSION
+- INDIRECT
+- MIN
+- MAX
+- SUM
+- AVERAGE
+- HLOOKUP
+- VLOOKUP
+
+Cell Error types include the following, with this order of importance:
+1. Parse Error (#ERROR!)
+2. Circular Reference (#CIRCREF!)
+3. Bad Reference (#BADREF!)
+4. Bad Name (#NAME?)
+5. Type Error (#VALUE!)
+6. Divide By Zero Error (#DIV/0!)

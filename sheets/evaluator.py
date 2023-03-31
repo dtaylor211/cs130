@@ -41,7 +41,8 @@ from lark import Tree, Transformer, Token, exceptions
 
 from .cell_error import CellError, CellErrorType, CELL_ERRORS
 from .function_handler import FunctionHandler
-from .utils import convert_to_bool, compare_values, get_tl_br_corners, get_source_cells
+from .utils import convert_to_bool, compare_values, get_tl_br_corners,\
+    get_source_cells
 
 
 class Evaluator(Transformer):

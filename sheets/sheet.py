@@ -108,7 +108,7 @@ class Sheet:
 
     def get_extent(self) -> Tuple[int, int]:
         '''
-        Get the extent of spreadsheet (# rows, # cols).
+        Get the extent of spreadsheet (# cols, # rows).
         New empty sheet has extent of (0, 0)
 
         Returns:
